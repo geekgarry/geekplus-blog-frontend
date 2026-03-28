@@ -1,0 +1,158 @@
+:root, body[theme-mode="light"]{
+    --gradualBackground: linear-gradient(to right bottom, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    /* 灰色字体 */
+    --greyFont: #797979;
+    --maxGreyFont: #595A5A;
+    /* info背景 */
+    --info-bg: #868686;
+    /* footer背景 */
+    --gradientBG: linear-gradient(-90deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    /* 白色遮罩 */
+    --whiteMask: rgba(255, 255, 255, 0.3);
+    /* max白色遮罩 */
+    --maxWhiteMask: rgba(255, 255, 255, 0.5);
+    --maxMaxWhiteMask: rgba(255, 255, 255, 0.7);
+    /* mini白色遮罩 */
+    --miniWhiteMask: rgba(255, 255, 255, 0.15);
+    /* 透明 */
+    --transparent: rgba(0, 0, 0, 0);
+    /* mini黑色遮罩 */
+    --miniMask: rgba(0, 0, 0, 0.15);
+    /* 黑色遮罩 */
+    --mask: rgba(0, 0, 0, 0.3);
+    /* 半透明 */
+    --translucent: rgba(0, 0, 0, 0.5);
+    /* 深黑遮罩 */
+    --maxMask: rgba(0, 0, 0, 0.7);
+    --white: white;
+    --red: red;
+    --lightRed: #ff4b2b;
+    --maxLightRed: #ff416c;
+    --orangeRed: #EF794F;
+    --azure: #ECF7FE;
+    --blue: rgb(3, 169, 244);
+    --lightGray: #DDDDDD;
+    --maxLightGray: #EEEEEE;
+    --maxMaxLightGray: rgba(242, 242, 242, 0.5);
+    --lightGreen: #39c5bb;
+    --green: #67C23A;
+    --black: black;
+    --lightYellow: #F4E1C0;
+    /***************************************/
+    --theme-color: #0badb6;
+    /* #6b5bfd; */
+    /* 主题背景 */
+    --themeBackground: rgb(0, 191, 255);
+    /* 主题悬停背景 */
+    --gradualRed: linear-gradient(to right, #ff4b2b, #ff416c);
+    /* 背景 */
+    --background: #f0f0f0;
+    --background-1: #fefefe;
+    --background-2: #fefefe;
+    --hover-background: #ededed;
+    --color-background: #F4F4F4;
+    --background-origin: #ffffff;
+    /* 导航栏背景 */
+    /* 导航菜单背景 */
+    --navbarBackground: #ffffff;
+    /* 字体 */
+    --fontColor: #0b0b0b;
+    --font-color: #565656;
+    /* 导航栏字体颜色 */
+    --navbarFont: #333333;
+    /* 边框 */
+    --borderColor: #e8e9e9;
+    /* 边框颜色 */
+    --border-color: #e6ebf5;
+    /* 边框 */
+    --borderHoverColor: #C0C4CC;
+    /* 文章字体 */
+    --articleFontColor: #1F1F1F;
+    /* 文章灰色字体 */
+    --articleGreyFontColor: #616161;
+    /* 评论背景颜色 */
+    --commentContent: #F7F9FE;
+    --favoriteBg: #f7f9fe;
+    /* 鼠标悬停 */
+    --navbarBackgroundHover: #fefefefb;
+    /* 盒子边框阴影颜色 */
+    --box-shadow: rgba(0, 0, 0, 0.1);
+    /* 通用型灰色 */
+    --plus-grey-3: #333;
+    --plus-grey-top: #333;
+    --plus-grey-4: #444;
+    --plus-grey-5: #555;
+    --plus-grey-6: #666;
+    --plus-grey-7: #777;
+    --plus-search: #777;
+    --plus-grey-8: #888;
+    --plus-grey-9: #999;
+    --plus-grey-c: #ccc;
+    --plus-bread: #666;
+    /* 默认按钮背景颜色 */
+    --default-button-bg: #F5F7FA;
+    /* 禁用上层背景蒙版 */
+    --disabled-background: rgba(255, 255, 255, 0.7);
+    /* 代码显示区域 */
+    --color-article-pre: #28292a;
+    --color-article-pre-font: #bcc0c7;
+    /* --top-banner-bg-img: url("@/assets/img/topBanner1.jpeg") no-repeat center center; */
+    /*白色透明遮罩层*/
+    --mask-plus: var(--maxWhiteMask);
+    --muted-1-color: #999;
+    --interactive-bg-secondary-hover: #0000001a;
+    --interactive-bg-secondary-press: #0000000d;
+}
+
+/* Light 默认主题色*/
+/* :root body[theme-mode="light"] {
+} */
+
+/* Dark主题颜色*/
+:root body[theme-mode="dark"] {
+    /* 背景 */
+    --background: #323232;
+    --background-1: #303030;
+    --background-2: #434343;
+    --hover-background: #383838;
+    --color-background: #262626;
+    --background-origin: #2e2e2e;
+    /* 导航栏背景 */
+    /* 导航菜单背景 */
+    --navbarBackground: #363636;
+    /* 字体 */
+    --fontColor: #f0f0f0;
+    --font-color: #eeeeee;
+    /* 导航栏字体颜色 */
+    --navbarFont: #f3f3f3;
+    /* 边框 */
+    --borderColor: #3c3c3c;
+    /* 边框颜色 */
+    --border-color: #454545;
+    /* 边框 */
+    --borderHoverColor: #565656;
+    /* 文章字体 */
+    --articleFontColor: #E4E4E4;
+    /* 文章灰色字体 */
+    --articleGreyFontColor: #D4D4D4;
+    /* 评论背景颜色 */
+    --commentContent: #D4D4D4;
+    --favoriteBg: #1e1e1e;
+    /* 鼠标悬停 */
+    --navbarBackgroundHover: #2b2b2bfb;
+    /* 盒子边框阴影颜色 */
+    --box-shadow: rgba(38, 38, 38, 0.1);
+    /* 默认按钮背景颜色 */
+    --default-button-bg: #2c2c2c;
+    /* 禁用上层背景蒙版 */
+    --disabled-background: rgba(57, 57, 57, 0.4);
+    /* 代码显示区域 */
+    --color-article-pre: #28292a;
+    --color-article-pre-font: #bcc0c7;
+    /* --top-banner-bg-img: url("@/assets/img/topBanner2.jpeg") no-repeat center center; */
+    /*深黑透明遮罩层*/
+    --mask-plus: var(--maxMask);
+    --muted-1-color: #888a8f;
+    --interactive-bg-secondary-hover: #ffffff1a;
+    --interactive-bg-secondary-press: #ffffff0d;
+}

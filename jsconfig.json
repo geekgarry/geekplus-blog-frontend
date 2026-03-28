@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "esnext",
+    // 删除这一行
+    "baseUrl": "./",
+    "moduleResolution": "node",
+    // "checkJs": true,
+    // "allowJs": true,
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    },
+    // "jsx": "preserve", //添加配置
+    "lib": [
+      "esnext",
+      "dom",
+      "dom.iterable",
+      "scripthost"
+    ]
+  },
+}
