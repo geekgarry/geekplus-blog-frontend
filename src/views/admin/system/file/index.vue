@@ -534,8 +534,8 @@ export default {
     goForward() { if (this.historyIndex < this.history.length - 1) { this.historyIndex++; this.fetchFiles(this.history[this.historyIndex], false); } },
     goUp() { if (this.currentPath === '/') return; const parts = this.currentPath.split('/').filter(p => p); parts.pop(); this.navigateTo(parts.length === 0 ? '/' : '/' + parts.join('/')); },
     jumpToPath() { if (this.inputPath !== this.currentPath) this.navigateTo(this.inputPath); },
-    //跳转到指定路径，并重置分页到第一页，如果 pageNum 不是 1，后端接口会优先使用 pageNum 的值进行分页查询，导致跳转后显示错误
-    navigateTo(path) { this.queryParams.pageNum = 1; this.fetchFiles(path, true); },
+    //跳转到指定路径，后端接口会优先使用 pageNum 并计算原始全部数据分页的值判断pageNum是否超出分页范围进行分页查询，前端不需要计算分页参数了
+    navigateTo(path) { this.fetchFiles(path, true); },
 
     handleItemClick(row) { row.isDirectory ? this.navigateTo(row.path) : this.handleFileAction(row); },
     handleFileAction(row) {
