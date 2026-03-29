@@ -125,6 +125,7 @@
       :total="total"
       :page.sync="queryParams.pageNum"
       :limit.sync="queryParams.pageSize"
+      :page-sizes="[20, 50, 100, 200]"
       @pagination="fetchFiles(currentPath, false)"
     />
 
@@ -303,7 +304,7 @@ export default {
       total: 0,
       queryParams: {
         pageNum: 1,
-        pageSize: 20
+        pageSize: 100
       }
     };
   },
@@ -359,8 +360,10 @@ export default {
       if (!this.searchKeyword.trim()) return this.fetchFiles(this.currentPath, false);
       this.loading = true;
       this.isSearchMode = true;
+      this.queryParams.path = this.currentPath;
+      this.queryParams.keyword = this.searchKeyword.trim();
       try {
-        const res = await search_file({ path: this.currentPath, keyword: this.searchKeyword });
+        const res = await search_file(this.queryParams);
         if (res.code === 200) this.fileList = res.data;
       } finally {
         this.loading = false;
@@ -531,7 +534,8 @@ export default {
     goForward() { if (this.historyIndex < this.history.length - 1) { this.historyIndex++; this.fetchFiles(this.history[this.historyIndex], false); } },
     goUp() { if (this.currentPath === '/') return; const parts = this.currentPath.split('/').filter(p => p); parts.pop(); this.navigateTo(parts.length === 0 ? '/' : '/' + parts.join('/')); },
     jumpToPath() { if (this.inputPath !== this.currentPath) this.navigateTo(this.inputPath); },
-    navigateTo(path) { this.fetchFiles(path, true); },
+    //跳转到指定路径，并重置分页到第一页，如果 pageNum 不是 1，后端接口会优先使用 pageNum 的值进行分页查询，导致跳转后显示错误
+    navigateTo(path) { this.queryParams.pageNum = 1; this.fetchFiles(path, true); },
 
     handleItemClick(row) { row.isDirectory ? this.navigateTo(row.path) : this.handleFileAction(row); },
     handleFileAction(row) {
