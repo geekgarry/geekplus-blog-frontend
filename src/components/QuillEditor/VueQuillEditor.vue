@@ -306,7 +306,7 @@ export default {
     },
     // 失去焦点触发事件
     onEditorBlur(editor) {
-      this.deleteRemovedFile();
+      //this.deleteRemovedFile();
       // console.log("失去焦点")
     },
     // 获得焦点触发事件

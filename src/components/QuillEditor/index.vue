@@ -43,8 +43,6 @@
       </el-tooltip>
     </el-upload>
     <div class="editor" id="quill-editor" ref="editor"
-      @blur="onEditorBlur($event)"
-      @focus="onEditorFocus($event)"
       :style="styles"></div>
     <!-- <quill-editor
       class="editor"
@@ -442,7 +440,7 @@ export default {
     },
     // 失去焦点触发事件
     onEditorBlur() {
-      //console.log("失去焦点！！！");
+      // console.log("失去焦点！！！");
       //所有编辑框中获取的图片文件,编辑框失去焦点时编辑框的所有的图片
       let allMyWebImageArray= new Array();
       //删除的图片

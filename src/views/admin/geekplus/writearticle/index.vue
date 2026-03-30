@@ -13,28 +13,34 @@
                 placeholder="请输入作者ID，用户ID"
               />
             </el-form-item> -->
-      <el-form-item label="文章标题" prop="articleTitle">
+      <el-form-item label="" label-width="0" prop="articleTitle">
         <el-input v-model="form.articleTitle" placeholder="请输入文章标题" />
       </el-form-item>
       <!-- v-if="$common.isEmpty($store.state.user.username)" -->
-      <el-form-item label="作者名称" prop="authorName" >
-        <el-input v-model="form.authorName" placeholder="请输入作者名称，用户名" />
+      <el-form-item label="" label-width="0" prop="authorName" >
+        <el-input v-model="form.authorName" placeholder="请输入作者名称/用户名" />
       </el-form-item>
-      <el-form-item label="文章内容" prop="articleContent">
-        <div style="margin: 0 0 10px 0">
-          <el-radio-group v-model="editorNo" size="small">
+      <el-form-item label="" label-width="0" prop="articleContent">
+        <el-row :gutter="0">
+          <el-col :xs="24" :sm="12" :md="12" :lg="24" :xl="24">
+            <el-radio-group v-model="editorNo" size="small">
             <el-radio-button label="1">TinyEditor</el-radio-button>
             <el-radio-button label="2">Joditor</el-radio-button>
             <el-radio-button label="3">QuillEditor</el-radio-button>
           </el-radio-group>
-        </div>
+          </el-col>
+          <el-col :xs="24" :sm="12" :md="12" :lg="24" :xl="24" style="text-align: right">
+            <div style="margin: 0 0 10px 0">
+              <el-button type="primary" size="small" @click="showFileManager(true)">资源文件</el-button>
+            </div>
+          </el-col>
+        </el-row>
         <tiny-editor v-if="editorNo == 1" v-model="form.articleContent" :article-title="form.articleTitle" />
         <jodit-editor v-else-if="editorNo == 2" v-model="form.articleContent" />
-        <quill-editor v-else v-model="form.articleContent" :min-height="192" @onEditorBlur="onEditorBlur"
-          @onEditorFocus="onEditorFocus" />
+        <quill-editor v-else v-model="form.articleContent" :min-height="192" />
         <!-- <froala-editor v-else v-model="form.articleContent" /> -->
       </el-form-item>
-      <el-form-item label="文章类型" prop="articleCategory">
+      <el-form-item label="" label-width="0" prop="articleCategory">
         <!-- <el-tree :data="getTreeListCategory(listCategory)" v-model="form.articleCategory" ref="treeCategory" show-checkbox
               node-key="id"
               :default-checked-keys="[form.articleCategory]"
@@ -43,7 +49,7 @@
               @check="treeCheck"
               :props="defaultProps" aria-placeholder="请选择文章类型" >
               </el-tree> -->
-        <el-select v-model="form.articleCategory" placeholder="请选择" clearable>
+        <el-select v-model="form.articleCategory" placeholder="请选择文章目录" clearable>
           <!-- <el-option-group
                   v-for="group in listCategory"
                   :key="group.categoryName"
@@ -54,16 +60,16 @@
         </el-select>
         <!-- <el-input v-model="form.articleCategory" placeholder="请输入文章类型" /> -->
       </el-form-item>
-      <el-form-item label="文章标签">
-        <el-select multiple v-model="formArticleTagIds" @change="changeArticleTag" collapse-tags placeholder="请选择一个标签"
+      <el-form-item label="" label-width="0">
+        <el-select multiple v-model="formArticleTagIds" @change="changeArticleTag" collapse-tags placeholder="请选择文章标签"
           clearable>
           <el-option v-for="(item, index) in listArticleTag" :key="index" :label="item.tagName"
             :value="item.id"></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="是否显示" prop="isDisplay">
+      <el-form-item label="" label-width="0" prop="isDisplay">
         <!-- <el-input v-model="form.workVisible" placeholder="请输入0（展示在简历中）或1（不展示）" :disabled="onlyRead" /> -->
-        <el-select v-model="form.isDisplay" placeholder="请选择是否页面显示" :disabled="onlyRead">
+        <el-select v-model="form.isDisplay" placeholder="文章是否展示" :disabled="onlyRead">
           <el-option label="不显示" value="0" />
           <el-option label="显示" value="1" />
         </el-select>
@@ -95,6 +101,15 @@
     <el-dialog :title="publishSuccessTitle" :visible.sync="publishSuccessVisible" width="666px" append-to-body>
       <publish-success :articleId="publishSuccessId"></publish-success>
     </el-dialog>
+
+    <!-- 显示所有文件的对话框 -->
+    <el-dialog :title="title" :visible.sync="fileManagerVisible" width="600px" append-to-body>
+      <file-manager initial-path="/"></file-manager>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="fileManagerVisible = false">取 消</el-button>
+        <el-button type="primary" @click="fileManagerVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -109,6 +124,7 @@ import JoditEditor from "@/components/JoditEditor";
 import GpDialog from '@/components/GpDialog'
 // import FroalaEditor from "@/components/FroalaEditor";
 import PublishSuccess from "@/views/admin/geekplus/writearticle/success.vue"
+import FileManager from "@/views/admin/system/file/index.vue";
 
 export default {
   name: "WriteArticle",
@@ -118,7 +134,8 @@ export default {
     JoditEditor,
     GpDialog,
     // FroalaEditor,
-    PublishSuccess
+    PublishSuccess,
+    FileManager,
   },
   data() {
     return {
@@ -211,6 +228,7 @@ export default {
       publishSuccessVisible: false,
       publishSuccessTitle: "",
       publishSuccessId: 0,
+      fileManagerVisible: false, //显示文件管理器的对话框
     };
   },
   created() {
@@ -467,7 +485,7 @@ export default {
     },
     // 获得焦点触发事件
     onEditorFocus() {
-      //console.log("得到焦点！！！")
+      // console.log("得到焦点！！！quill editor focus event")
       let tempImageArray = new Array();
       let imageArray = document.querySelectorAll(".ql-editor img");
       if (imageArray.length != 0) {
@@ -541,7 +559,17 @@ export default {
     },
     onConfirm() { // “确定”按钮回调
       this.dialog_visible = false
-    }
+    },
+    showFileManager(show) {
+      // console.log("show file manager: " + show);
+      this.title = "选择资源文件";
+      this.fileManagerVisible = show;
+    },
+    //选取当前的资源文件
+    getSelectedFilePath(files) {
+      // console.log(files[0].fullPath);
+      this.fileManagerVisible = false;
+    },
   },
 }
 </script>

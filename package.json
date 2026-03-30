@@ -70,6 +70,7 @@
     "babel-eslint": "^10.1.0",
     "babel-plugin-component": "^1.1.1",
     "babel-plugin-dynamic-import-node": "^2.3.3",
+    "baseline-browser-mapping": "^2.10.12",
     "brotli-webpack-plugin": "^1.1.0",
     "compression-webpack-plugin": "^11.1.0",
     "esbuild-loader": "^4.3.0",

@@ -426,7 +426,7 @@
     <el-dialog
       :title="fileFolderTitle"
       :visible.sync="displayFileFolder"
-      width="75%"
+      width="600px"
       append-to-body
     >
       <!-- <el-row :gutter="20">
@@ -711,7 +711,7 @@ export default {
     },
     getServerFilePath(filePath) {
       return filePath.replace(
-        "https://127.0.0.1" + process.env.VUE_APP_BASE_API,
+        "https://www.geekplus.xyz" + process.env.VUE_APP_BASE_API,
         ""
       );
     },
@@ -900,7 +900,7 @@ export default {
       for (var i = 0; i < len; i++) {
         // let imgInfo={
         //   originalUrl:imgList[i],
-        //   imgUrl:"https://www.127.0.0.1"+process.env.VUE_APP_BASE_API+imgList[i]
+        //   imgUrl:"https://www.geekplus.xyz"+process.env.VUE_APP_BASE_API+imgList[i]
         // };
         resultArr.push("https://" + this.baseHost + this.baseApi + imgList[i]);
         //resultArr.push(imgInfo);
@@ -909,7 +909,7 @@ export default {
       return resultArr;
     },
     deleteFileByPath(pathStr) {
-      //let filePath = pathStr.replace("https://www.127.0.0.1"+process.env.VUE_APP_BASE_API, '');
+      //let filePath = pathStr.replace("https://www.geekplus.xyz"+process.env.VUE_APP_BASE_API, '');
       let filePath = pathStr;
       this.$confirm("是否确认删除所选的文件?", "警告", {
         confirmButtonText: "确定",

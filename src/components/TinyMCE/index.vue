@@ -4,10 +4,10 @@
     name="tinymce"
     v-model="content"
     :init="init"
-    @blur="focusOutEditor"
-    @focus="focusOnEditor"
     model-events="change keydown blur focus paste"
   ></Editor>
+  <!-- @blur="focusOutEditor"
+  @focus="focusOnEditor" -->
 </template>
 
 <script>
@@ -176,7 +176,7 @@ export default {
           // },
           {
             name: "link",
-            items: ["link", "image", "media", "upfile"],//, "attachment"
+            items: ["link", "image", "media", "attachment"],//, "upfile"
           },
           {
             name: "alignment",

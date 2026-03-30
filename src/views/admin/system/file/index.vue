@@ -130,7 +130,7 @@
     />
 
     <!-- 回收站弹窗 -->
-    <el-dialog title="回收站" :visible.sync="recycleDialogVisible" width="75%" top="5vh" append-to-body>
+    <el-dialog title="回收站" :visible.sync="recycleDialogVisible" width="600px" top="5vh" append-to-body>
       <div style="margin-bottom: 15px; display: flex; gap: 10px;">
         <el-button type="success" size="small" icon="el-icon-refresh-left" :disabled="selectedRecycleFiles.length === 0" @click="restoreRecycleBatch">还原选中</el-button>
         <el-button type="danger" size="small" icon="el-icon-delete" :disabled="selectedRecycleFiles.length === 0" @click="hardDeleteRecycleBatch">彻底删除选中</el-button>
@@ -208,7 +208,7 @@
     </el-dialog>
 
     <!-- 预览弹窗 -->
-    <el-dialog :title="previewFileObj ? previewFileObj.name : '预览'" :visible.sync="previewDialogVisible" width="70%" top="5vh" @close="closePreview" append-to-body>
+    <el-dialog :title="previewFileObj ? previewFileObj.name : '预览'" :visible.sync="previewDialogVisible" top="5vh" @close="closePreview" append-to-body>
       <div class="preview-content" v-loading="previewLoading">
         <el-image v-if="previewType === 'image'" :src="previewUrl" fit="contain" style="width: 100%; height: 60vh;" :preview-src-list="[previewUrl]"></el-image>
         <video v-else-if="previewType === 'video'" :src="previewUrl" controls style="width: 100%; max-height: 60vh;"></video>
@@ -451,7 +451,7 @@ export default {
     },
 
     handleCopyPath(row) {
-      const fullPath = this.prefixUrl + (this.currentPath === '/' ? '' : this.currentPath) + row.path;
+      const fullPath = this.prefixUrl + row.path;
       copyToClipboard(fullPath);
     },
     // ---------------- 批量操作与剪贴板 ----------------
