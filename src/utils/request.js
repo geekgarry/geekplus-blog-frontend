@@ -89,7 +89,7 @@ service.interceptors.response.use(
       // })
       return Promise.reject(message)
     } else if (res.code === 500) {
-      Message({ message: message, type: 'error' })
+      _Message({ message: message, type: 'error' })
       return Promise.reject(new Error(message || 'Error'))
     } else if (res.code === 400 || res.code === 404 || res.code === 429 || res.code === 209 || res.code === 409 || res.code === 415 || res.code === 501) {
       // if the custom code is not 20000, it is judged as an error.

@@ -213,6 +213,22 @@
         align="center"
         prop="articleTitle"
       />
+      <el-table-column
+        label="文章封面图片"
+        align="center"
+        width="120"
+        show-overflow-tooltip
+        prop="indexPicture"
+      >
+        <template slot-scope="scope">
+          <el-image
+            v-if="scope.row.indexPicture"
+            :src="scope.row.indexPicture"
+            style="width: 50px; height: 50px;"
+            lazy="true"
+          />
+        </template>
+      </el-table-column>
       <!-- <el-table-column label="文章内容" align="center" width="130" show-overflow-tooltip prop="articleContent" /> -->
       <el-table-column
         label="内容摘要"
@@ -397,6 +413,12 @@
               :value="item.id"
             ></el-option>
           </el-select>
+        </el-form-item>
+        <el-form-item label="文章封面" prop="indexPicture">
+          <el-image :src="form.indexPicture" style="width: 100px; height: 100px; margin-bottom: 10px;" v-if="form.indexPicture" />
+          <el-input v-model="form.indexPicture" placeholder="请输入文章封面图片URL地址" />
+          <span style="color: #9099a4; font-size: 12px;">文章封面图片URL地址（可选）</span>
+          <span style="color: #9099a4; font-size: 12px;">（如果文章内容中有图片，且没有封面图片，则默认使用文章内容中的第一张图片作为封面图片）</span>
         </el-form-item>
         <el-form-item label="是否显示" prop="isDisplay">
           <!-- <el-input v-model="form.workVisible" placeholder="请输入0（展示在简历中）或1（不展示）" :disabled="onlyread" /> -->

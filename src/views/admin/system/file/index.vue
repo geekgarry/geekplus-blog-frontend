@@ -120,6 +120,7 @@
       </el-table-column>
     </el-table>
 
+    <!-- 分页组件 -->
     <pagination
       v-show="total>0"
       :total="total"
@@ -352,6 +353,8 @@ export default {
             }
           }
         }
+      } catch (error) {
+        this.$message.error(error || '文件不存在');
       } finally {
         this.loading = false;
       }
@@ -365,6 +368,8 @@ export default {
       try {
         const res = await search_file(this.queryParams);
         if (res.code === 200) this.fileList = res.data;
+      } catch (error) {
+        this.$message.error(error || '搜索文件不存在');
       } finally {
         this.loading = false;
       }
@@ -458,11 +463,12 @@ export default {
     handleSelectionChange(val) {
       this.selectedFiles = val;
       // console.log('当前选中：', this.selectedFiles);
+      var selectedWithFullPath = this.selectedFiles.map(f => ({ ...f, fullPath: this.prefixUrl + f.path }));
       if (this.selectedFiles.length === 0) {
         // 如果没有选中任何文件，不触发事件但传递空数组
+        selectedWithFullPath = []; // 确保传递一个空数组而不是 undefined
         return;
       }
-      const selectedWithFullPath = this.selectedFiles.map(f => ({ ...f, fullPath: this.prefixUrl + (this.currentPath === '/' ? '' : this.currentPath) + f.path }));
       //console.log('当前选中改变增加全文路径：', selectedWithFullPath);
       this.$emit('select-file', selectedWithFullPath); // 触发一个名为 'select-file' 的事件，返回给引用的父组件并传递数据
     },
@@ -710,7 +716,7 @@ export default {
 .breadcrumb-container { flex: 1 auto; margin: 5px auto; }
 .actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .upload-btn { display: inline-block; }
-.file-name-cell { display: flex; align-items: center; cursor: pointer; }
+.file-name-cell { display: flex; align-items: center; }
 .file-name-cell:hover .name-text { color: #409EFF; text-decoration: underline; }
 .file-name-cell i { font-size: 20px; margin-right: 5px; }
 .file-name-cell .i-btn { margin-right: 5px; border: none; background: none; padding: 3px; }

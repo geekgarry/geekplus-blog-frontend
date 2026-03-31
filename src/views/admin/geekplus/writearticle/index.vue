@@ -67,6 +67,21 @@
             :value="item.id"></el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="" label-width="0" prop="indexPicture">
+        <div class="article-cover-preview" @click.stop="uploadArticleCover">
+          <span class="article-cover-tips">点击选择本地图片上传</span>
+          <div class="remove-cover-overlay"></div>
+          <button class="remove-cover-btn" v-if="form.indexPicture" type="primary" size="small" @click.stop="removeArticleCover"><i class="el-icon-delete"></i></button>
+          <input style="display: none;" type="file" allowexts="gif,jpeg,jpg,png,bmp,JPEG,JPG,PNG,GIF,BMP"
+            accept="image/*" required @change="handleFileChange($event)" id="uploadImageFile" ref="uploadImageFileRef"
+          />
+          <el-image :src="form.indexPicture" style="width: 100px; height: 100px;" v-if="form.indexPicture" />
+        </div>
+        <el-input v-model="form.indexPicture" placeholder="请输入文章封面图片URL地址" clearable />
+        <el-button style="margin-bottom: 10px;" type="primary" size="small" @click="showFileManager(true)">选择云端图片</el-button>
+        <span style="color: #9099a4; font-size: 12px;">文章封面图片URL地址（可选）</span>
+        <span style="color: #9099a4; font-size: 12px;">（如果文章内容中有图片，且没有封面图片，则默认使用文章内容中的第一张图片作为封面图片）</span>
+      </el-form-item>
       <el-form-item label="" label-width="0" prop="isDisplay">
         <!-- <el-input v-model="form.workVisible" placeholder="请输入0（展示在简历中）或1（不展示）" :disabled="onlyRead" /> -->
         <el-select v-model="form.isDisplay" placeholder="文章是否展示" :disabled="onlyRead">
@@ -104,10 +119,10 @@
 
     <!-- 显示所有文件的对话框 -->
     <el-dialog :title="title" :visible.sync="fileManagerVisible" width="600px" append-to-body>
-      <file-manager initial-path="/"></file-manager>
+      <file-manager initial-path="/" @select-file="getSelectedFilePath"></file-manager>
       <span slot="footer" class="dialog-footer">
         <el-button @click="fileManagerVisible = false">取 消</el-button>
-        <el-button type="primary" @click="fileManagerVisible = false">确 定</el-button>
+        <el-button type="primary" @click="confirmFileSelection">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -117,7 +132,7 @@ import { listSubParentCategory, listSubCategory } from "@/api/geekplus/category"
 import { listTags, getTagByArticleId, addArticleMapTag, deleteGpArticleMapTag } from "@/api/geekplus/articletags";
 import { listArticles, getArticles, delArticles, addArticles, updateArticles, exportArticles,
   readAllFileList, getAllImageList } from "@/api/geekplus/articles";
-import { deleteFile, deleteFileList } from "@/api/common";
+import { deleteFile, deleteFileList, uploadFile } from "@/api/common";
 import TinyEditor from "@/components/TinyMCE"
 // import QuillEditor from "@/components/QuillEditor";
 import JoditEditor from "@/components/JoditEditor";
@@ -176,7 +191,8 @@ export default {
         articleTitle: null,
         articleContent: '',
         articleCategory: null,
-        isDisplay: null
+        isDisplay: null,
+        indexPicture: null
       },
       // 表单校验
       rules: {
@@ -229,6 +245,7 @@ export default {
       publishSuccessTitle: "",
       publishSuccessId: 0,
       fileManagerVisible: false, //显示文件管理器的对话框
+      articleCover: '', //文章封面图片URL地址
     };
   },
   created() {
@@ -560,16 +577,124 @@ export default {
     onConfirm() { // “确定”按钮回调
       this.dialog_visible = false
     },
+    // 移除文章封面图片
+    removeArticleCover() {
+      this.articleCover = '';
+      this.form.indexPicture = '';
+    },
+    // 显示文件管理器的对话框,参数show为true显示文件管理器，参数show为false隐藏文件管理器
     showFileManager(show) {
       // console.log("show file manager: " + show);
       this.title = "选择资源文件";
       this.fileManagerVisible = show;
     },
+    // 选择资源文件后，点击确定按钮触发事件
+    confirmFileSelection() {
+      // console.log("confirm file selection");
+      this.form.indexPicture = this.articleCover;
+      this.fileManagerVisible = false;
+      this.articleCover = '';
+    },
     //选取当前的资源文件
     getSelectedFilePath(files) {
-      // console.log(files[0].fullPath);
-      this.fileManagerVisible = false;
+      //console.log(files[0].fullPath);
+      this.articleCover = files[0].fullPath;
+      // this.fileManagerVisible = false;
     },
+    // 触发文件输入框点击事件，上传文件选择对话框
+    uploadArticleCover() {
+      this.$refs.uploadImageFileRef.click();
+    },
+    // 选择文件后触发事件，上传文件并获取URL地址
+    async handleFileChange(e) {
+      const fileInput = e.target;
+      if (fileInput.files && fileInput.files[0]) {
+        await uploadFile({file: fileInput.files[0], pathName: "thumbnail"})
+          .then((response) => {
+            // console.log(response);
+            this.form.indexPicture = response.url;
+          })
+          .catch((error) => {
+            this.$message.error(error || '上传文件失败');
+          });
+        // const reader = new FileReader();
+        // reader.onload = (e) => {
+        //   //console.log(e.target.result);// 将图片转换为Base64字符串
+        //   this.form.indexPicture = this.getObjectURL(fileInput.files[0]);//将图片显示在页面上
+        // };
+        // reader.readAsDataURL(fileInput.files[0]);
+      } else {
+        this.$message.error('请选择一个图片文件');
+      }
+    },
+    // 获取文件的URL地址，兼容不同浏览器的方法
+    getObjectURL(file) {
+      var url = null ;
+      if (window.createObjectURL!=undefined) { // basic
+          url = window.createObjectURL(file) ;
+      } else if (window.URL!=undefined) { // mozilla(firefox)
+          url = window.URL.createObjectURL(file) ;
+      } else if (window.webkitURL!=undefined) { // webkit or chrome
+          url = window.webkitURL.createObjectURL(file) ;
+      }
+      return url ;
+    }
   },
 }
 </script>
+
+<style lang="scss" scoped>
+.article-cover-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 112px;
+  height: 112px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 5px;
+  margin-bottom: 5px;
+  position: relative;
+}
+.article-cover-tips {
+  color: #9099a4;
+  font-size: 12px;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  width: 80%;
+}
+.remove-cover-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 5px;
+  font-size: 12px;
+  display: none;
+  background-color: #f0f0f0;
+  border: 1px solid #dcdcdc;
+  border-radius: 4px;
+}
+.remove-cover-overlay {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.article-cover-preview:hover {
+  .remove-cover-overlay {
+    display: block;
+    z-index: 1;
+  }
+  .remove-cover-btn {
+    display: block;
+    z-index: 2;
+  }
+}
+</style>

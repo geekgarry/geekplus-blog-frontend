@@ -382,7 +382,7 @@ export default {
              **后面发现移动端上没有触发编辑器上的blur事件
              **下面的操作没有触发
              **/
-            self.focusOutEditor();
+            //self.focusOutEditor();
             // console.log("离开焦点")
           });
           editor.on("focus", function () {
@@ -391,7 +391,7 @@ export default {
              **后面发现移动端上没有触发编辑器上的blur事件
              **下面的操作没有触发
              **/
-            self.focusOnEditor();
+            //self.focusOnEditor();
             // console.log("聚焦焦点")
           });
           editor.on("paste", function (e) {
