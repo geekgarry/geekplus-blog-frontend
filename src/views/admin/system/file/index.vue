@@ -72,53 +72,98 @@
 
         <!-- 新增：回收站按钮 -->
         <el-button type="info" size="small" icon="el-icon-delete-solid" @click="openRecycleBin">回收站</el-button>
+        <el-button class="hidden-xs-only" :type="viewMode === 'table' ? 'primary' : 'default'" size="small" icon="el-icon-tickets" @click="toggleView('table')" title="表格视图"></el-button>
+        <el-button class="hidden-xs-only" :type="viewMode === 'icons' ? 'primary' : 'default'" size="small" icon="el-icon-s-grid" @click="toggleView('icons')" title="图标视图"></el-button>
         <el-button size="small" circle icon="el-icon-refresh" @click="fetchFiles(currentPath, false)" title="刷新"></el-button>
       </div>
     </div>
 
     <!-- 文件列表表格 -->
-    <el-table
-      v-loading="loading"
-      :data="fileList"
-      style="width: 100%"
-      height="calc(100vh - 260px)"
-      @selection-change="handleSelectionChange"
-      @sort-change="handleSortChange"
-      :default-sort="{prop: 'isDirectory', order: 'descending'}">
+    <div v-if="viewMode === 'table'">
+      <el-table
+        v-loading="loading"
+        :data="fileList"
+        style="width: 100%"
+        height="calc(100vh - 260px)"
+        @selection-change="handleSelectionChange"
+        @sort-change="handleSortChange"
+        :default-sort="{prop: 'isDirectory', order: 'descending'}">
 
-      <el-table-column type="selection" width="55" align="center"></el-table-column>
+        <el-table-column type="selection" width="55" align="center"></el-table-column>
 
-      <el-table-column prop="name" label="名称" sortable="custom" min-width="250" show-overflow-tooltip>
-        <template slot-scope="scope">
-          <div class="file-name-cell">
-            <i :class="getFileIcon(scope.row)" :style="{ color: getIconColor(scope.row) }"></i>
-            <el-button size="mini" v-show="!scope.row.isDirectory" icon="el-icon-document-copy" class="i-btn" circle @click="handleCopyPath(scope.row)" title="复制"></el-button>
-            <span class="name-text" @click="handleItemClick(scope.row)">{{ scope.row.name }}</span>
-            <el-tag v-if="isSearchMode" size="mini" type="info" style="margin-left: 10px">{{ scope.row.path }}</el-tag>
+        <el-table-column prop="name" label="名称" sortable="custom" min-width="250" show-overflow-tooltip>
+          <template slot-scope="scope">
+            <div class="file-name-cell">
+              <i :class="getFileIcon(scope.row)" :style="{ color: getIconColor(scope.row) }"></i>
+              <el-button size="mini" v-show="!scope.row.isDirectory" icon="el-icon-document-copy" class="i-btn" circle @click="handleCopyPath(scope.row)" title="复制"></el-button>
+              <span class="name-text" @click="handleItemClick(scope.row)">{{ scope.row.name }}</span>
+              <el-tag v-if="isSearchMode" size="mini" type="info" style="margin-left: 10px">{{ scope.row.path }}</el-tag>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="type" label="类型" sortable="custom" width="125" show-overflow-tooltip>
+          <template slot-scope="scope">{{ scope.row.isDirectory ? '文件夹' : (scope.row.type + ' 文件').toUpperCase() }}</template>
+        </el-table-column>
+
+        <el-table-column prop="size" label="大小" sortable="custom" width="135" show-overflow-tooltip>
+          <template slot-scope="scope">{{ scope.row.isDirectory ? '-' : formatSize(scope.row.size) }}</template>
+        </el-table-column>
+
+        <el-table-column prop="updateTime" label="修改时间" sortable="custom" width="160" show-overflow-tooltip>
+          <template slot-scope="scope">{{ formatDate(scope.row.updateTime) }}</template>
+        </el-table-column>
+
+        <el-table-column label="操作" min-width="165">
+          <template slot-scope="scope">
+            <el-button type="text" size="small" icon="el-icon-edit" @click="openRenameDialog(scope.row)">重命名</el-button>
+            <el-button type="text" size="small" icon="el-icon-download" v-if="!scope.row.isDirectory" @click="downloadFile(scope.row)">下载</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
+    <!-- 图标 icon 视图 -->
+    <div v-else class="icon-view" v-loading="loading">
+      <div v-if="fileList.length === 0" class="empty-icon-view">当前目录没有文件</div>
+      <div class="icon-grid">
+        <div class="icon-card" v-for="row in fileList" :key="row.path" @dblclick="handleItemClick(row)">
+          <div class="icon-preview">
+            <template v-if="row.isDirectory">
+              <i class="el-icon-folder" style="font-size: 40px; color: #E6A23C"></i>
+            </template>
+            <template v-else-if="isImageType(row)">
+              <img :src="previewSrc(row)" alt="img" />
+            </template>
+            <template v-else-if="isVideoType(row)">
+              <i class="el-icon-video-camera" style="font-size: 40px; color: #409EFF"></i>
+            </template>
+            <template v-else-if="isAudioType(row)">
+              <i class="el-icon-video-play" style="font-size: 40px; color: #67C23A"></i>
+            </template>
+            <template v-else>
+              <i class="el-icon-document" style="font-size: 40px; color: #909399"></i>
+            </template>
+            <div class="media-action" v-if="isVideoType(row) || isAudioType(row)" @click.stop="toggleMediaPlayback(row)">
+              <i :class="isActiveMedia(row) ? 'el-icon-video-pause' : 'el-icon-video-play'" style="font-size: 18px; color: #fff;"></i>
+            </div>
           </div>
-        </template>
-      </el-table-column>
-
-      <el-table-column prop="type" label="类型" sortable="custom" width="125" show-overflow-tooltip>
-        <template slot-scope="scope">{{ scope.row.isDirectory ? '文件夹' : (scope.row.type + ' 文件').toUpperCase() }}</template>
-      </el-table-column>
-
-      <el-table-column prop="size" label="大小" sortable="custom" width="135" show-overflow-tooltip>
-        <template slot-scope="scope">{{ scope.row.isDirectory ? '-' : formatSize(scope.row.size) }}</template>
-      </el-table-column>
-
-      <el-table-column prop="updateTime" label="修改时间" sortable="custom" width="160" show-overflow-tooltip>
-        <template slot-scope="scope">{{ formatDate(scope.row.updateTime) }}</template>
-      </el-table-column>
-
-      <el-table-column label="操作" min-width="165">
-        <template slot-scope="scope">
-          <!-- <el-button type="text" size="small" icon="el-icon-delete" class="danger-text" @click="handleDelete(scope.row)">删除</el-button> -->
-          <el-button type="text" size="small" icon="el-icon-edit" @click="openRenameDialog(scope.row)">重命名</el-button>
-          <el-button type="text" size="small" icon="el-icon-download" v-if="!scope.row.isDirectory" @click="downloadFile(scope.row)">下载</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+          <div class="icon-meta">
+            <span class="icon-name" :title="row.name">{{ row.name }}</span>
+            <span class="icon-type">{{ row.isDirectory ? '文件夹' : uppercaseType(row.type) }}</span>
+            <span class="icon-size">{{ row.isDirectory ? '-' : formatSize(row.size) }}</span>
+            <div v-if="isDocumentType(row)" class="icon-snippet" @mouseenter="loadTextSnippet(row)">{{ textSnippetCache[row.path] || '悬停载入预览...' }}</div>
+            <div class="icon-actions">
+              <el-button type="text" icon="el-icon-document-copy" size="mini" @click.stop="handleCopyPath(row)" title="复制路径"></el-button>
+              <el-button type="text" icon="el-icon-edit" size="mini" @click.stop="openRenameDialog(row)" title="重命名"></el-button>
+              <el-button type="text" size="mini" icon="el-icon-download" v-if="!row.isDirectory" @click="downloadFile(scope.row)" title="下载"></el-button>
+            </div>
+          </div>
+          <video v-if="isActiveMedia(row) && isVideoType(row)" :src="previewSrc(row)" controls :style="{ width: '100%', marginTop: '6px' }"></video>
+          <audio v-if="isActiveMedia(row) && isAudioType(row)" :src="previewSrc(row)" controls :style="{ width: '100%', marginTop: '6px', minHeight: '30px' }"></audio>
+        </div>
+      </div>
+    </div>
 
     <!-- 分页组件 -->
     <pagination
@@ -301,6 +346,11 @@ export default {
         name: '',
         isFolder: true
       },
+
+      // 列表显示模式：table / icons
+      viewMode: 'table',
+      textSnippetCache: {},
+      activeMediaPath: '',
 
       total: 0,
       queryParams: {
@@ -642,6 +692,57 @@ export default {
       return 'el-icon-document';
     },
     getIconColor(row) { return row.isDirectory ? '#E6A23C' : '#606266'; },
+    toggleView(mode) {
+      if (mode !== 'table' && mode !== 'icons') return;
+      this.viewMode = mode;
+    },
+    isImageType(row) {
+      const type = (row.type || '').toLowerCase();
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'heif', 'heic', 'avif'].includes(type);
+    },
+    isVideoType(row) {
+      const type = (row.type || '').toLowerCase();
+      return ['mp4', 'webm', 'mov', 'f4v', 'avi', 'mkv', 'flv', 'wmv', 'm4v', '3gp', 'rmvb'].includes(type);
+    },
+    isAudioType(row) {
+      const type = (row.type || '').toLowerCase();
+      return ['mp3', 'wav', 'flac', 'aac', 'm4a', 'ogg', 'ape', 'weba'].includes(type);
+    },
+    isDocumentType(row) {
+      const type = (row.type || '').toLowerCase();
+      return ['txt', 'md', 'json', 'js', 'html', 'css', 'java', 'py', 'xml', 'csv', 'log', 'yaml', 'yml', 'pdf'].includes(type);
+    },
+    previewSrc(row) {
+      return `${this.prefixUrl}${row.path}`;
+    },
+    toggleMediaPlayback(row) {
+      if (this.activeMediaPath === row.path) {
+        this.activeMediaPath = '';
+      } else {
+        this.activeMediaPath = row.path;
+      }
+    },
+    isActiveMedia(row) {
+      return this.activeMediaPath === row.path;
+    },
+    uppercaseType(type) {
+      if (!type) return '';
+      return type.toUpperCase();
+    },
+    async loadTextSnippet(row) {
+      if (!this.isDocumentType(row) || this.textSnippetCache[row.path]) return;
+      try {
+        const resp = await fetch(`${this.base_url}/sys/file-manager/download?path=${encodeURIComponent(row.path)}&preview=true`);
+        if (resp.ok) {
+          const text = await resp.text();
+          this.$set(this.textSnippetCache, row.path, text.slice(0, 120).replace(/\n/g, ' '));
+        } else {
+          this.$set(this.textSnippetCache, row.path, '获取预览失败');
+        }
+      } catch (e) {
+        this.$set(this.textSnippetCache, row.path, '获取预览失败');
+      }
+    },
     formatSize(size) {
       if (size === 0) return '0 B';
       const k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -723,6 +824,20 @@ export default {
 .name-text { font-size: 14px; user-select: none; }
 .danger-text { color: #F56C6C; }
 .preview-content { display: flex; justify-content: center; /* background-color: #f8f9fa; align-items: center; */ min-height: 100px; border-radius: 4px; overflow: hidden; }
+
+.icon-view { min-height: 60vh; }
+.icon-grid { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; }
+.icon-card { width: 160px; min-height: 220px; border: 1px solid #e4e7ed; border-radius: 8px; padding: 8px; background: #fff; display: flex; flex-direction: column; position: relative; transition: box-shadow .2s; }
+.icon-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.12); }
+.icon-preview { width: 100%; height: 100px; display: flex; justify-content: center; align-items: center; background: #f9fafb; border-radius: 4px; position: relative; overflow: hidden; }
+.icon-preview img { width: 100%; height: 100%; object-fit: cover; }
+.media-action { position: absolute; right: 6px; bottom: 6px; width: 26px; height: 26px; border-radius: 50%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; cursor: pointer; }
+.icon-meta { margin-top: 6px; display: flex; flex-direction: column; flex: 1; }
+.icon-name { font-size: 13px; line-height: 1.2; color: #303133; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.icon-type, .icon-size { font-size: 11px; color: #909399; margin-top: 2px; }
+.icon-snippet { margin-top: 4px; font-size: 11px; color: #606266; height: 36px; overflow: hidden; text-overflow: ellipsis; }
+.icon-actions { margin-top: auto; display: flex; gap: 4px; }
+.empty-icon-view { color: #909399; text-align: center; padding: 30px; }
 
 /*.file-name-cell @media only screen and (max-width: 767px) {
   .hidden-xs-only { display: none !important; }
