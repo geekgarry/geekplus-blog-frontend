@@ -126,8 +126,11 @@
     <!-- 图标 icon 视图 -->
     <div v-else class="icon-view" v-loading="loading">
       <div v-if="fileList.length === 0" class="empty-icon-view">当前目录没有文件</div>
-      <div class="icon-grid">
-        <div class="icon-card" v-for="row in fileList" :key="row.path" @dblclick="handleItemClick(row)">
+      <div class="icon-grid" @dragover.prevent @drop="onDrop">
+        <div class="icon-card" v-for="(row, index) in fileList" :key="row.path" :class="{ selected: isSelected(row) }" @dblclick="handleItemClick(row)" @click="handleIconSelection(row, index, $event)" draggable="true" @dragstart="onDragStart(row, $event)">
+          <div class="icon-checkbox">
+            <el-checkbox :value="isSelected(row)" @change="handleIconSelection(row, index, { shiftKey: false, ctrlKey: true })" @click.stop></el-checkbox>
+          </div>
           <div class="icon-preview">
             <template v-if="row.isDirectory">
               <i class="el-icon-folder" style="font-size: 40px; color: #E6A23C"></i>
@@ -156,7 +159,7 @@
             <div class="icon-actions">
               <el-button type="text" icon="el-icon-document-copy" size="mini" @click.stop="handleCopyPath(row)" title="复制路径"></el-button>
               <el-button type="text" icon="el-icon-edit" size="mini" @click.stop="openRenameDialog(row)" title="重命名"></el-button>
-              <el-button type="text" size="mini" icon="el-icon-download" v-if="!row.isDirectory" @click="downloadFile(scope.row)" title="下载"></el-button>
+              <el-button type="text" size="mini" icon="el-icon-download" v-if="!row.isDirectory" @click.stop="downloadFile(row)" title="下载"></el-button>
             </div>
           </div>
           <video v-if="isActiveMedia(row) && isVideoType(row)" :src="previewSrc(row)" controls :style="{ width: '100%', marginTop: '6px' }"></video>
@@ -351,6 +354,9 @@ export default {
       viewMode: 'table',
       textSnippetCache: {},
       activeMediaPath: '',
+
+      // 图标视图选择相关
+      lastSelectedIndex: -1,
 
       total: 0,
       queryParams: {
@@ -729,6 +735,68 @@ export default {
       if (!type) return '';
       return type.toUpperCase();
     },
+    isSelected(row) {
+      return this.selectedFiles.some(f => f.path === row.path);
+    },
+    handleIconSelection(row, index, event) {
+      const isShift = event.shiftKey;
+      const isCtrl = event.ctrlKey || event.metaKey;
+      if (isShift && this.lastSelectedIndex !== -1) {
+        const start = Math.min(this.lastSelectedIndex, index);
+        const end = Math.max(this.lastSelectedIndex, index);
+        const toSelect = this.fileList.slice(start, end + 1);
+        this.selectedFiles = [...new Set([...this.selectedFiles, ...toSelect])];
+      } else if (isCtrl) {
+        if (this.isSelected(row)) {
+          this.selectedFiles = this.selectedFiles.filter(f => f.path !== row.path);
+        } else {
+          this.selectedFiles.push(row);
+        }
+      } else {
+        // 没有按键修饰符，直接选择当前项，取消其他选择
+        if (this.isSelected(row) && this.selectedFiles.length === 1) {
+          // 如果当前项已经是唯一选中，再次点击则取消选择
+          this.selectedFiles = [];
+        } else {
+          this.selectedFiles = [row];
+        }
+      }
+      this.lastSelectedIndex = index;
+      console.log('当前选中：', index, this.selectedFiles);
+      console.log('当前选中：', event);
+      this.handleSelectionChange(this.selectedFiles);
+    },
+    onDragStart(row, event) {
+      if (!this.isSelected(row)) {
+        this.selectedFiles = [row];
+        this.handleSelectionChange(this.selectedFiles);
+      }
+      const paths = this.selectedFiles.map(f => f.path);
+      event.dataTransfer.setData('text/plain', JSON.stringify(paths));
+      event.dataTransfer.effectAllowed = 'move';
+    },
+    onDrop(event) {
+      event.preventDefault();
+      const paths = JSON.parse(event.dataTransfer.getData('text/plain'));
+      if (paths.length > 0) {
+        this.moveFilesToCurrent(paths);
+      }
+    },
+    async moveFilesToCurrent(paths) {
+      this.loading = true;
+      try {
+        const res = await move_file({ paths: paths, destPath: this.currentPath });
+        if (res.code === 200) {
+          this.$message.success('移动成功');
+          this.selectedFiles = [];
+          this.fetchFiles(this.currentPath, false);
+        } else {
+          this.$message.error(res.msg);
+        }
+      } finally {
+        this.loading = false;
+      }
+    },
     async loadTextSnippet(row) {
       if (!this.isDocumentType(row) || this.textSnippetCache[row.path]) return;
       try {
@@ -827,8 +895,10 @@ export default {
 
 .icon-view { min-height: 60vh; }
 .icon-grid { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; }
-.icon-card { width: 160px; min-height: 220px; border: 1px solid #e4e7ed; border-radius: 8px; padding: 8px; background: #fff; display: flex; flex-direction: column; position: relative; transition: box-shadow .2s; }
+.icon-card { width: 160px; min-height: 220px; border: 1px solid #e4e7ed; border-radius: 8px; padding: 8px; background: #fff; display: flex; flex-direction: column; position: relative; transition: box-shadow .2s; cursor: pointer; }
 .icon-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.12); }
+.icon-card.selected { border-color: #409EFF; background: #ecf5ff; }
+.icon-checkbox { position: absolute; top: 4px; left: 4px; z-index: 10; }
 .icon-preview { width: 100%; height: 100px; display: flex; justify-content: center; align-items: center; background: #f9fafb; border-radius: 4px; position: relative; overflow: hidden; }
 .icon-preview img { width: 100%; height: 100%; object-fit: cover; }
 .media-action { position: absolute; right: 6px; bottom: 6px; width: 26px; height: 26px; border-radius: 50%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; cursor: pointer; }

@@ -226,6 +226,7 @@
             :src="scope.row.indexPicture"
             style="width: 50px; height: 50px;"
             lazy="true"
+            :preview-src-list="[scope.row.indexPicture]"
           />
         </template>
       </el-table-column>
