@@ -126,72 +126,44 @@
     <!-- 图标 icon 视图 -->
     <div v-else class="icon-view" v-loading="loading" @click="hideContextMenu">
       <div v-if="fileList.length === 0" class="empty-icon-view">当前目录没有文件</div>
-      <div class="icon-layout">
-        <div class="icon-grid" @dragover.prevent @drop="onDrop">
-          <div class="icon-card" v-for="(row, index) in fileList" :key="row.path" :class="{ selected: isSelected(row) }" @dblclick="handleItemClick(row)" @click="handleIconSelection(row, index, $event)" @contextmenu.stop="showContextMenu(row, index, $event)" draggable="true" @dragstart="onDragStart(row, $event)">
-            <div class="icon-checkbox">
-              <el-checkbox :value="isSelected(row)" @change="handleIconSelection(row, index, { shiftKey: false, ctrlKey: true })" @click.stop></el-checkbox>
-            </div>
-            <div class="icon-preview">
-              <template v-if="row.isDirectory">
-                <i class="el-icon-folder" style="font-size: 40px; color: #E6A23C"></i>
-              </template>
-              <template v-else-if="isImageType(row)">
-                <img :src="previewSrc(row)" alt="img" />
-              </template>
-              <template v-else-if="isVideoType(row)">
-                <i class="el-icon-video-camera" style="font-size: 40px; color: #409EFF"></i>
-              </template>
-              <template v-else-if="isAudioType(row)">
-                <i class="el-icon-video-play" style="font-size: 40px; color: #67C23A"></i>
-              </template>
-              <template v-else>
-                <i class="el-icon-document" style="font-size: 40px; color: #909399"></i>
-              </template>
-              <div class="media-action" v-if="isVideoType(row) || isAudioType(row)" @click.stop="toggleMediaPlayback(row)">
-                <i :class="isActiveMedia(row) ? 'el-icon-video-pause' : 'el-icon-video-play'" style="font-size: 18px; color: #fff;"></i>
-              </div>
-            </div>
-            <div class="icon-meta">
-              <span class="icon-name" :title="row.name">{{ row.name }}</span>
-              <span class="icon-type">{{ row.isDirectory ? '文件夹' : uppercaseType(row.type) }}</span>
-              <span class="icon-size">{{ row.isDirectory ? '-' : formatSize(row.size) }}</span>
-              <div v-if="isDocumentType(row)" class="icon-snippet" @mouseenter="loadTextSnippet(row)">{{ textSnippetCache[row.path] || '悬停载入预览...' }}</div>
-              <div class="icon-actions">
-                <el-button type="text" icon="el-icon-document-copy" size="mini" @click.stop="handleCopyPath(row)" title="复制路径"></el-button>
-                <el-button type="text" icon="el-icon-edit" size="mini" @click.stop="openRenameDialog(row)" title="重命名"></el-button>
-                <el-button type="text" size="mini" icon="el-icon-download" v-if="!row.isDirectory" @click.stop="downloadFile(row)" title="下载"></el-button>
-              </div>
-            </div>
-            <video v-if="isActiveMedia(row) && isVideoType(row)" :src="previewSrc(row)" controls :style="{ width: '100%', marginTop: '6px' }"></video>
-            <audio v-if="isActiveMedia(row) && isAudioType(row)" :src="previewSrc(row)" controls :style="{ width: '100%', marginTop: '6px', minHeight: '30px' }"></audio>
+      <div class="icon-grid" @dragover.prevent @drop="onDrop">
+        <div class="icon-card" v-for="(row, index) in fileList" :key="row.path" :class="{ selected: isSelected(row) }" @dblclick="handleItemClick(row)" @click="handleIconSelection(row, index, $event)" @contextmenu.stop="showContextMenu(row, index, $event)" draggable="true" @dragstart="onDragStart(row, $event)">
+          <div class="icon-checkbox">
+            <el-checkbox :value="isSelected(row)" @change="handleIconSelection(row, index, { shiftKey: false, ctrlKey: true })" @click.stop></el-checkbox>
           </div>
-        </div>
-
-        <div class="icon-side-panel" v-if="sideInfoRow">
-          <div class="side-panel-header">
-            <i :class="getFileIcon(sideInfoRow)" :style="{ fontSize: '32px', color: getIconColor(sideInfoRow), marginRight: '12px' }"></i>
-            <div class="side-panel-header-text">
-              <div class="side-panel-title">{{ sideInfoRow.name }}</div>
-              <div class="side-panel-subtitle">{{ sideInfoRow.isDirectory ? '文件夹' : (uppercaseType(sideInfoRow.type) + ' 文件') }}</div>
+          <div class="icon-preview">
+            <template v-if="row.isDirectory">
+              <i class="el-icon-folder" style="font-size: 40px; color: #E6A23C"></i>
+            </template>
+            <template v-else-if="isImageType(row)">
+              <img :src="previewSrc(row)" alt="img" />
+            </template>
+            <template v-else-if="isVideoType(row)">
+              <i class="el-icon-video-camera" style="font-size: 40px; color: #409EFF"></i>
+            </template>
+            <template v-else-if="isAudioType(row)">
+              <i class="el-icon-video-play" style="font-size: 40px; color: #67C23A"></i>
+            </template>
+            <template v-else>
+              <i class="el-icon-document" style="font-size: 40px; color: #909399"></i>
+            </template>
+            <div class="media-action" v-if="isVideoType(row) || isAudioType(row)" @click.stop="toggleMediaPlayback(row)">
+              <i :class="isActiveMedia(row) ? 'el-icon-video-pause' : 'el-icon-video-play'" style="font-size: 18px; color: #fff;"></i>
             </div>
-            <i class="el-icon-close side-panel-close" @click.stop="sideInfoRow = null" title="关闭"></i>
           </div>
-          <div class="side-panel-actions">
-            <el-button type="primary" size="mini" @click="handleItemClick(sideInfoRow)">打开</el-button>
-            <el-button type="warning" size="mini" @click="openRenameDialog(sideInfoRow)">重命名</el-button>
-            <el-button type="info" size="mini" @click="handleCopyPath(sideInfoRow)">复制路径</el-button>
-            <el-button type="success" size="mini" v-if="!sideInfoRow.isDirectory" @click="downloadFile(sideInfoRow)">下载</el-button>
-            <el-button type="text" size="mini" @click="openDetailDialog(sideInfoRow)">更多信息</el-button>
+          <div class="icon-meta">
+            <span class="icon-name" :title="row.name">{{ row.name }}</span>
+            <span class="icon-type">{{ row.isDirectory ? '文件夹' : uppercaseType(row.type) }}</span>
+            <span class="icon-size">{{ row.isDirectory ? '-' : formatSize(row.size) }}</span>
+            <div v-if="isDocumentType(row)" class="icon-snippet" @mouseenter="loadTextSnippet(row)">{{ textSnippetCache[row.path] || '悬停载入预览...' }}</div>
+            <div class="icon-actions">
+              <el-button type="text" icon="el-icon-document-copy" size="mini" @click.stop="handleCopyPath(row)" title="复制路径"></el-button>
+              <el-button type="text" icon="el-icon-edit" size="mini" @click.stop="openRenameDialog(row)" title="重命名"></el-button>
+              <el-button type="text" size="mini" icon="el-icon-download" v-if="!row.isDirectory" @click.stop="downloadFile(row)" title="下载"></el-button>
+            </div>
           </div>
-          <div class="side-panel-row"><span>路径</span><span>{{ sideInfoRow.path }}</span></div>
-          <div class="side-panel-row"><span>大小</span><span>{{ sideInfoRow.isDirectory ? '-' : formatSize(sideInfoRow.size) }}</span></div>
-          <div class="side-panel-row"><span>修改时间</span><span>{{ formatDate(sideInfoRow.updateTime) }}</span></div>
-          <div class="side-panel-row"><span>是否文件夹</span><span>{{ sideInfoRow.isDirectory ? '是' : '否' }}</span></div>
-          <div v-if="isDocumentType(sideInfoRow)" class="side-panel-snippet">
-            <div class="side-panel-snippet-label">预览片段</div>
-            <div>{{ textSnippetCache[sideInfoRow.path] || '悬停加载预览...' }}</div>
-          </div>
+          <video v-if="isActiveMedia(row) && isVideoType(row)" :src="previewSrc(row)" controls :style="{ width: '100%', marginTop: '6px' }"></video>
+          <audio v-if="isActiveMedia(row) && isAudioType(row)" :src="previewSrc(row)" controls :style="{ width: '100%', marginTop: '6px', minHeight: '30px' }"></audio>
         </div>
       </div>
       <div v-if="contextMenuVisible" class="context-menu" :style="contextMenuStyle" @click.stop>
@@ -200,7 +172,6 @@
           <li @click="contextMenuAction('rename')">重命名</li>
           <li @click="contextMenuAction('copy')">复制路径</li>
           <li v-if="contextMenuRow && !contextMenuRow.isDirectory" @click="contextMenuAction('download')">下载</li>
-          <li @click="contextMenuAction('sidebar')">侧边信息</li>
           <li @click="contextMenuAction('info')">查看信息</li>
         </ul>
       </div>
@@ -428,7 +399,6 @@ export default {
       },
       contextMenuRow: null,
       detailDialogVisible: false,
-      sideInfoRow: null,
 
       total: 0,
       queryParams: {
@@ -812,12 +782,12 @@ export default {
     },
     showContextMenu(row, index, event) {
       event.preventDefault();
-      // 右键点击时，不要选择，保持当前状态不变，直接显示菜单
+      // 右键点击时，如果该行未被选中，则先选中该行（支持多选时按住 Ctrl 键进行多选）
       // if (!this.isSelected(row)) {
       //   this.selectedFiles = [row];
       //   this.handleSelectionChange(this.selectedFiles);
       // }
-      // this.lastSelectedIndex = index; // 右键点击不改变 lastSelectedIndex 的值，保持与鼠标选择行为一致
+      // this.lastSelectedIndex = index;
       const { clientX, clientY } = event;
       const menuWidth = 180;
       const menuHeight = 170;
@@ -844,8 +814,6 @@ export default {
         this.handleCopyPath(row);
       } else if (action === 'download') {
         this.downloadFile(row);
-      } else if (action === 'sidebar') {
-        this.openSidePanel(row);
       } else if (action === 'info') {
         this.openDetailDialog(row);
       }
@@ -853,13 +821,6 @@ export default {
     openDetailDialog(row) {
       this.contextMenuRow = row;
       this.detailDialogVisible = true;
-    },
-    openSidePanel(row) {
-      if (!this.isSelected(row)) {
-        this.selectedFiles = [row];
-        this.handleSelectionChange(this.selectedFiles);
-      }
-      this.sideInfoRow = row;
     },
     handleIconSelection(row, index, event) {
       const isShift = event.shiftKey;
@@ -1017,8 +978,7 @@ export default {
 .preview-content { display: flex; justify-content: center; /* background-color: #f8f9fa; align-items: center; */ min-height: 100px; border-radius: 4px; overflow: hidden; }
 
 .icon-view { min-height: 60vh; }
-.icon-layout { display: flex; gap: 16px; }
-.icon-grid { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; flex: 1; }
+.icon-grid { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; }
 .icon-card { width: 160px; min-height: 220px; border: 1px solid #e4e7ed; border-radius: 8px; padding: 8px; background: #fff; display: flex; flex-direction: column; position: relative; transition: box-shadow .2s; cursor: pointer; }
 .icon-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.12); }
 .icon-card.selected { border-color: #409EFF; background: #ecf5ff; }
@@ -1031,18 +991,6 @@ export default {
 .icon-type, .icon-size { font-size: 11px; color: #909399; margin-top: 2px; }
 .icon-snippet { margin-top: 4px; font-size: 11px; color: #606266; height: 36px; overflow: hidden; text-overflow: ellipsis; }
 .icon-actions { margin-top: auto; display: flex; gap: 4px; }
-.icon-side-panel { width: 280px; min-width: 280px; background: #ffffff; border: 1px solid #e4e7ed; border-radius: 10px; padding: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 16px; }
-.side-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.side-panel-header-text { flex: 1; min-width: 0; }
-.side-panel-title { font-size: 16px; font-weight: 600; color: #303133; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.side-panel-subtitle { font-size: 12px; color: #909399; margin-top: 4px; }
-.side-panel-close { cursor: pointer; color: #909399; font-size: 16px; }
-.side-panel-close:hover { color: #606266; }
-.side-panel-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.side-panel-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #606266; font-size: 13px; }
-.side-panel-row span:first-child { color: #909399; }
-.side-panel-snippet { padding: 12px; background: #f4f6fa; border-radius: 8px; color: #606266; font-size: 12px; line-height: 1.6; }
-.side-panel-snippet-label { margin-bottom: 6px; font-size: 12px; color: #909399; }
 .context-menu { position: fixed; z-index: 999; min-width: 180px; background: #fff; border: 1px solid rgba(0,0,0,.12); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,.12); overflow: hidden; }
 .context-menu ul { margin: 0; padding: 8px 0; list-style: none; }
 .context-menu li { padding: 10px 16px; font-size: 13px; color: #303133; cursor: pointer; transition: background .2s; }
