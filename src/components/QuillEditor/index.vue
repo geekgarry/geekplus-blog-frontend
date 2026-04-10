@@ -59,8 +59,8 @@
 </template>
 
 <script>
-// import hljs from 'highlight.js';
-// import "highlight.js/styles/default.css";
+import hljs from 'highlight.js';
+import "highlight.js/styles/default.css";
 // import 'highlight.js/styles/monokai-sublime.css';
 // import 'highlight.js/styles/vs2015.css';
 // import 'highlight.js/styles/stackoverflow-light.css'// 导入高亮主题样式
@@ -213,11 +213,13 @@ export default {
             modules: ["Resize", "DisplaySize", "Toolbar"],
           },
           syntax: {
+            // hljs: hljs是main.js中全局注册的高亮对象，直接使用即可
             hljs: (() => {
-              return this.hljs;
+              return hljs;
             })()
+            // 这里是直接在组件中引入并使用hljs对象，避免了在main.js中全局注册的复杂性
             // highlight: text => {
-            //   return this.hljs.highlightAuto(text).value; // 这里就是代码高亮需要配置的地方
+            //   return hljs.highlightAuto(text).value; // 这里就是代码高亮需要配置的地方
             // }
           }
         },

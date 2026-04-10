@@ -134,7 +134,7 @@ import { listArticles, getArticles, delArticles, addArticles, updateArticles, ex
   readAllFileList, getAllImageList } from "@/api/geekplus/articles";
 import { deleteFile, deleteFileList, uploadFile } from "@/api/common";
 import TinyEditor from "@/components/TinyMCE"
-// import QuillEditor from "@/components/QuillEditor";
+import QuillEditor from "@/components/QuillEditor";
 import JoditEditor from "@/components/JoditEditor";
 import GpDialog from '@/components/GpDialog'
 // import FroalaEditor from "@/components/FroalaEditor";
@@ -145,7 +145,7 @@ export default {
   name: "WriteArticle",
   components: {
     TinyEditor,
-    // QuillEditor,
+    QuillEditor,
     JoditEditor,
     GpDialog,
     // FroalaEditor,

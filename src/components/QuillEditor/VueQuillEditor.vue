@@ -44,6 +44,8 @@
 </template>
 
 <script>
+import hljs from 'highlight.js';
+import "highlight.js/styles/default.css";
 // import Quill from './quill-loader';
 import Quill from "quill";
 import 'quill/dist/quill.core.css'
@@ -148,9 +150,12 @@ export default {
             modules: ["Resize", "DisplaySize", "Toolbar"],
           },
           syntax: {
-            highlight: text => {
-              return this.hljs.highlightAuto(text).value; // 这里就是代码高亮需要配置的地方
-            }
+            hljs: (() => {
+              return hljs;
+            })()
+            // highlight: text => {
+            //   return hljs.highlightAuto(text).value; // 这里就是代码高亮需要配置的地方
+            // }
           },
         },
         placeholder: "请在这里书写...", //提示

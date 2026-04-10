@@ -137,13 +137,17 @@
                 <i class="el-icon-folder" style="font-size: 40px; color: #E6A23C"></i>
               </template>
               <template v-else-if="isImageType(row)">
-                <img :src="previewSrc(row)" alt="img" />
+                <el-image :lazy="true" :src="previewSrc(row)" alt="img" ></el-image>
               </template>
               <template v-else-if="isVideoType(row)">
                 <i class="el-icon-video-camera" style="font-size: 40px; color: #409EFF"></i>
               </template>
               <template v-else-if="isAudioType(row)">
                 <i class="el-icon-video-play" style="font-size: 40px; color: #67C23A"></i>
+                <!-- 显示一个可以暂停播放音频的按钮 -->
+                <!-- <div class="media-action" @click.stop="audioMediaPlayback(row)">
+                  <i :class="isActiveMedia(row) ? 'el-icon-video-pause' : 'el-icon-video-play'" style="font-size: 18px; color: #fff;"></i>
+                </div> -->
               </template>
               <template v-else>
                 <i class="el-icon-document" style="font-size: 40px; color: #909399"></i>
@@ -297,7 +301,7 @@
     <!-- 预览弹窗 -->
     <el-dialog :title="previewFileObj ? previewFileObj.name : '预览'" :visible.sync="previewDialogVisible" top="5vh" @close="closePreview" append-to-body>
       <div class="preview-content" v-loading="previewLoading">
-        <el-image v-if="previewType === 'image'" :src="previewUrl" fit="contain" style="width: 100%; height: 60vh;" :preview-src-list="[previewUrl]"></el-image>
+        <el-image v-if="previewType === 'image'" :lazy="true" :src="previewUrl" fit="contain" style="width: 100%; height: 60vh;" :preview-src-list="[previewUrl]"></el-image>
         <video v-else-if="previewType === 'video'" :src="previewUrl" controls style="width: 100%; max-height: 60vh;"></video>
         <audio v-else-if="previewType === 'audio'" :src="previewUrl" controls style="width: 100%; margin-top: 0px;"></audio>
         <iframe v-else-if="previewType === 'document'" :src="previewUrl" frameborder="0" style="width: 100%; height: 65vh;"></iframe>
@@ -792,6 +796,29 @@ export default {
     },
     previewSrc(row) {
       return `${this.prefixUrl}${row.path}`;
+    },
+    // 写一个点击音频行的函数，控制同一时间只能有一个音频在播放，再次点击同一行则暂停
+    toggleAudioPlayback(row) {
+      if (this.activeMediaPath === row.path) {
+        this.activeMediaPath = '';
+        const audio = document.querySelector('.audio-player-' + row.path.replace(/\//g, '-'));
+        if (audio && typeof audio.pause === 'function') {
+          audio.pause();
+          // audio.currentTime = 0; // 可选：重置播放时间到开头
+          // document.body.removeChild(audio); // 可选：从 DOM 中移除 audio 元素
+        } else {
+          console.error('Audio element not found or pause method not available:', audio);
+        }
+      } else {
+        this.activeMediaPath = row.path;
+        const audio = document.createElement('audio');
+        audio.controls = true;
+        audio.style.display = 'none';
+        audio.src = this.previewSrc(row);
+        audio.setAttribute('class', 'audio-player-' + row.path.replace(/\//g, '-')); // 给 audio 元素添加一个独特的 class，方便后续控制
+        document.body.appendChild(audio);
+        audio.play();
+      }
     },
     toggleMediaPlayback(row) {
       if (this.activeMediaPath === row.path) {

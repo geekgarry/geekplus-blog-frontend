@@ -135,7 +135,7 @@ export default defineComponent({
                 replyId: 41,
                 name: "普拉斯",
                 email: "geekgarry@hotmail.com",
-                website: "yourblog.com",
+                website: window.location.origin,
                 content: "<p>谢谢💗爱心🧡爱心🫰</p>",
                 topicId: null,
                 topicType: null,

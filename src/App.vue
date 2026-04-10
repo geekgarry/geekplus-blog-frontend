@@ -7,7 +7,6 @@
   </div>
 </template>
 <script>
-import DraggableComponent from "plus-draggable-element"
 import GpPlayer from '@/components/ApMusic/GpPlayer'
 const version = require('element-ui/package.json').version // element-ui version from node_modules
 const ORIGINAL_THEME = '#0badb6' // default color
@@ -24,6 +23,7 @@ export default {
     }
   },
   created() {
+    this.preloadLibraries();
     console.log('当前时间：%O', new Date());
     console.log("%c"+window.location.host, "background-image:-webkit-gradient( linear, left top, right top, color-stop(0, #f22), color-stop(0.15, #f2f), color-stop(0.3, #22f), color-stop(0.45, #2ff), color-stop(0.6, #25e),color-stop(0.75, #4f2), color-stop(0.9, #f2f), color-stop(1, #f22) );color:transparent;-webkit-background-clip: text;font-size:2em;")
     // if(this.storageThemeColor) {
@@ -48,11 +48,13 @@ export default {
     }
   },
   mounted() {
-    // 创建一个新的可拖动组件
-    const myComponent = new DraggableComponent({
-      initialPosition: "right", // 初始位置为右边
-      buoyContent: '<svg class="bg-music-buoy" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="12854" width="30" height="30"><path d="M682.666667 384 682.666667 298.666667 512 298.666667 512 533.333333C494.08 520.106667 472.32 512 448 512 389.12 512 341.333333 559.786667 341.333333 618.666667 341.333333 677.546667 389.12 725.333333 448 725.333333 506.88 725.333333 554.666667 677.546667 554.666667 618.666667L554.666667 384 682.666667 384M512 85.333333C747.52 85.333333 938.666667 276.48 938.666667 512 938.666667 747.52 747.52 938.666667 512 938.666667 276.48 938.666667 85.333333 747.52 85.333333 512 85.333333 276.48 276.48 85.333333 512 85.333333Z" p-id="12855" fill="currentColor"></path></svg>', // 设置箭头内容为 Font Awesome 图标
-      //content: "", // 设置组件内容，文本内容，html或者组件
+    // 延后加载拖拽浮层组件，避免其代码进入首屏主包
+    import("plus-draggable-element").then(({ default: DraggableComponent }) => {
+      new DraggableComponent({
+        initialPosition: "right", // 初始位置为右边
+        buoyContent: '<svg class="bg-music-buoy" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="12854" width="30" height="30"><path d="M682.666667 384 682.666667 298.666667 512 298.666667 512 533.333333C494.08 520.106667 472.32 512 448 512 389.12 512 341.333333 559.786667 341.333333 618.666667 341.333333 677.546667 389.12 725.333333 448 725.333333 506.88 725.333333 554.666667 677.546667 554.666667 618.666667L554.666667 384 682.666667 384M512 85.333333C747.52 85.333333 938.666667 276.48 938.666667 512 938.666667 747.52 747.52 938.666667 512 938.666667 276.48 938.666667 85.333333 747.52 85.333333 512 85.333333 276.48 276.48 85.333333 512 85.333333Z" p-id="12855" fill="currentColor"></path></svg>', // 设置箭头内容为 Font Awesome 图标
+        //content: "", // 设置组件内容，文本内容，html或者组件
+      });
     });
   },
   computed: {
@@ -110,6 +112,29 @@ export default {
     }
   },
   methods: {
+    async preloadLibraries() {
+      // 预加载 vue-google-adsense，避免其代码进入首屏主包
+      // try {
+      //   const Ads = await import('vue-google-adsense');
+      //   const AdsModule = Ads.default;
+      //   // 全局注册组件
+      //   Vue.component('Adsense', AdsModule.Adsense);
+      //   Vue.component('InArticleAdsense', AdsModule.InArticleAdsense);
+      //   Vue.component('InFeedAdsense', AdsModule.InFeedAdsense);
+      // } catch (error) {
+      //   console.error('Failed to preload vue-google-adsense:', error);
+      // }
+      try {
+        const Ads = await import('vue-google-adsense');
+        const AdsModule = Ads.default;
+        // 注册组件
+        this.$options.components.Adsense = AdsModule.Adsense;
+        this.$options.components.InArticleAdsense = AdsModule.InArticleAdsense;
+        this.$options.components.InFeedAdsense = AdsModule.InFeedAdsense;
+      } catch (error) {
+        console.error('Failed to load vue-google-adsense:', error);
+      }
+    },
     isMusicPlaying(playing) {
       // const articlePage = document.getElementsByClassName('plus-blog-article article-container');
       // const audios = document.getElementsByTagName('audio');

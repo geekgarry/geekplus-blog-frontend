@@ -468,8 +468,10 @@ import { listGenTableColumn, getGenTableColumn, delGenTableColumn, addGenTableCo
 import { downLoadZip } from "@/utils/downloadZip";
 import GenTableColumn from "./genTableColumn.vue"
 import Clipboard from 'clipboard';
+import lazyLoadDirectives from '@/mixins/lazyLoadDirectives'
 export default {
   name: 'Generator',
+  mixins: [lazyLoadDirectives],
   components:{
     GenTableColumn
   },

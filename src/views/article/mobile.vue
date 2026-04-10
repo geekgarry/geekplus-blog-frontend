@@ -343,12 +343,14 @@ import PostBreadcrumb from '@/layout/components/Breadcrumb/primary'
 import PlusFooter from '@/layout/components/Footer'
 import CommentReply from '@/components/CommentReply'
 import PlusPager from '@/components/PlusPager';
+import lazyLoadDirectives from '@/mixins/lazyLoadDirectives'
 import {
   getArticleDetailIsDisplay, getArticleDetail, getRandomRecommendArt, getTagArticleCount, getFourPlusOneArticles,
   updateViewCountAndLikeCount, getArticleLatestUserComment, getWebHotUserComment, getAllArticleComment, sendArticleComment
 } from '@/api/geekplus/geekplus'
 
 export default {
+  mixins: [lazyLoadDirectives],
   components: {
     PostBreadcrumb,
     PlusFooter,
@@ -419,7 +421,28 @@ export default {
       shareCardImg: ""
     };
   },
-  created() {
+  async created() {
+    // 动态导入 vue-google-adsense
+    // try {
+    //   const Ads = await import('vue-google-adsense');
+    //   const AdsModule = Ads.default;
+    //   // 注册组件
+    //   this.$options.components.Adsense = AdsModule.Adsense;
+    //   this.$options.components.InArticleAdsense = AdsModule.InArticleAdsense;
+    //   this.$options.components.InFeedAdsense = AdsModule.InFeedAdsense;
+    // } catch (error) {
+    //   console.error('Failed to load vue-google-adsense:', error);
+    // }
+    //     2: show the navbar only when the screen width is greater than 768 pixels
+    //     3: show the navbar only when the screen width is greater than 992 pixels
+    //     4: show the navbar only when the screen width is greater than 1200 pixels
+    //图片预览器
+    //用于图片预览的指令方式调用 在元素上加上会处理元素下所有的图片,为图片添加点击事件,点击即可预览
+    // 全局注册指令（仅首次加载时执行）
+    // 注意：this.$app 是 Vue 2 中的写法；Vue 3 中应使用 app.directive()，但需在 main.js 中保留一个空的 app 实例用于后续注册。
+    // this.$app.directive('viewer', viewerDirective({
+    //   //debug: true
+    // }));
     // this.$nextTick(() => {});
     this.getAllArticleTags();
     this.getRecommendArticles();

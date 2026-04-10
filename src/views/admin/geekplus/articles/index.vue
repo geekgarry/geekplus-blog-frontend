@@ -225,7 +225,7 @@
             v-if="scope.row.indexPicture"
             :src="scope.row.indexPicture"
             style="width: 50px; height: 50px;"
-            lazy="true"
+            :lazy="true"
             :preview-src-list="[scope.row.indexPicture]"
           />
         </template>
@@ -607,11 +607,13 @@ import {
   readAllFileList,
   getAllImageList,
 } from "@/api/geekplus/articles";
+import QuillEditor from "@/components/QuillEditor";
 import FileManager from "@/views/admin/system/file/index.vue";
 
 export default {
   name: "Articles",
   components: {
+    QuillEditor,
     FileManager
   },
   data() {
@@ -734,7 +736,7 @@ export default {
     },
     getServerFilePath(filePath) {
       return filePath.replace(
-        "https://www.geekplus.xyz" + process.env.VUE_APP_BASE_API,
+        window.location.origin + process.env.VUE_APP_BASE_API,
         ""
       );
     },
@@ -923,7 +925,7 @@ export default {
       for (var i = 0; i < len; i++) {
         // let imgInfo={
         //   originalUrl:imgList[i],
-        //   imgUrl:"https://www.geekplus.xyz"+process.env.VUE_APP_BASE_API+imgList[i]
+        //   imgUrl:window.location.origin+process.env.VUE_APP_BASE_API+imgList[i]
         // };
         resultArr.push("https://" + this.baseHost + this.baseApi + imgList[i]);
         //resultArr.push(imgInfo);
@@ -932,7 +934,7 @@ export default {
       return resultArr;
     },
     deleteFileByPath(pathStr) {
-      //let filePath = pathStr.replace("https://www.geekplus.xyz"+process.env.VUE_APP_BASE_API, '');
+      //let filePath = pathStr.replace(window.location.origin+process.env.VUE_APP_BASE_API, '');
       let filePath = pathStr;
       this.$confirm("是否确认删除所选的文件?", "警告", {
         confirmButtonText: "确定",

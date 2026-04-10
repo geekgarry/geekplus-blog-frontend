@@ -57,7 +57,7 @@
 </template>
 
 <script>
-// import QuillEditor from "@/components/QuillEditor";
+import QuillEditor from "@/components/QuillEditor";
 import {
   listSubParentCategory,
   listSubCategory,
@@ -67,7 +67,7 @@ import {
 } from "@/api/geekplus/geekplus";
 export default {
   components: {
-    // QuillEditor
+    QuillEditor
   },
   data() {
     return {

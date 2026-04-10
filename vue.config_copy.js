@@ -49,7 +49,7 @@ module.exports = {
       //配置后端的跨域访问，重写API路径
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       [process.env.VUE_APP_BASE_API]: {
-        target: `http://127.0.0.1:8443`, //后端URI地址3443
+        target: `https://127.0.0.1:8443`, //后端URI地址3443
         changeOrigin: true, // 是否改变源地址
         secure: false, //确保使用https，在使用https时可以选择开启
         pathRewrite: {
@@ -58,7 +58,7 @@ module.exports = {
       },
       //再配置后端静态资源的跨域访问，/profile为后端配置静态资源映射的虚拟路径
       "/profile": {
-        target: `http://127.0.0.1:8443`, //后端URI地址3443
+        target: `https://127.0.0.1:8443`, //后端URI地址3443
         changeOrigin: true,
         pathRewrite: {
           "^/profile": "/profile",
@@ -87,7 +87,7 @@ module.exports = {
   },
   css: {
     sourceMap: false,
-    extract: process.env.NODE_ENV === 'production', // 生产环境提取 CSS 到独立文件，加速首屏渲染
+    extract: false,
     loaderOptions: {
       sass: {
         sassOptions: {
@@ -165,7 +165,7 @@ module.exports = {
       //       //配置后端的跨域访问，重写API路径
       //       // detail: https://cli.vuejs.org/config/#devserver-proxy
       //       [process.env.VUE_APP_BASE_API]: {
-      //         target: `http://127.0.0.1:8443`, //后端URI地址3443
+      //         target: `https://127.0.0.1:8443`, //后端URI地址3443
       //         changeOrigin: true, // 是否改变源地址
       //         secure: false, //确保使用https，在使用https时可以选择开启
       //         pathRewrite: {
@@ -174,7 +174,7 @@ module.exports = {
       //       },
       //       //再配置后端静态资源的跨域访问，/profile为后端配置静态资源映射的虚拟路径
       //       '/profile': {
-      //         target: `http://127.0.0.1:8443`, //后端URI地址3443
+      //         target: `https://127.0.0.1:8443`, //后端URI地址3443
       //         changeOrigin: true,
       //         pathRewrite: {
       //           '^/profile': '/profile'
@@ -303,19 +303,22 @@ module.exports = {
               priority: 5,
               reuseExistingChunk: true,
             },
-            echarts: {
-              name: "chunk-echarts",
-              test: /[\\/]node_modules[\\/]echarts[\\/]/,
-              priority: 5,
-              chunks: "initial",
-              enforce: true,
-            },
-            // 这里是为了把highlight.js单独打包成一个chunk，避免被打包到libs中，导致libs过大
-            // highlightjs: {
-            //   name: "chunk-highlightjs",
-            //   test: /[\\/]node_modules[\\/]_?highlight\.js(.*)[\\/]/, // in order to adapt to cnpm
+            // echarts: {
+            //   name: "chunk-echarts",
+            //   test: /[\\/]node_modules[\\/]echarts[\\/]/,
             //   priority: 5,
             //   chunks: "initial",
+            //   // enforce: true,
+            // },
+            // default: { // 默认缓存组
+            //   minChunks: 2, // 被引用次数超过2次则分割
+            //   priority: -20, // 优先级低于vendors组
+            //   reuseExistingChunk: true // 如果当前块包含已从主 bundle 中提取的块，则它将被重用，而不是生成新的
+            // },
+            // styles: {
+            //   name: 'styles',
+            //   test: /\.(css|scss)$/,
+            //   chunks: 'all',
             //   enforce: true,
             // },
           },

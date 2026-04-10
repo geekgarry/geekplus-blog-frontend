@@ -179,10 +179,12 @@
 
 <script>
 import PlusFooter from '@/layout/components/Footer'
+import lazyLoadDirectives from '@/mixins/lazyLoadDirectives'
 import { getArticleCategoryListByPath, getAboutMyGpWeb, displayFriendlyLink } from '@/api/geekplus/geekplus';
 
 export default {
   name: "Articles",
+  mixins: [lazyLoadDirectives],
   components: {
     PlusFooter
   },
@@ -201,7 +203,7 @@ export default {
       webSiteLink: []
     };
   },
-  created() {
+  async created() {
     // this.$router.onReady(() => {
     //   window.document.title = "关于我们 | 拾光梦集-极客普拉斯&梦极客园";
     // });
@@ -209,6 +211,7 @@ export default {
     this.getWebSiteFriendlyLink();
     this.getAllArticleCategory();
   },
+  async mounted() { },
   watch: {
     $route(to, from) {
       if (to.path == '/about') {

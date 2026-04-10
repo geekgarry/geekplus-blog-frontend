@@ -154,6 +154,7 @@
 import PlusFooter from '@/layout/components/Footer'
 import CommentReply from '@/components/CommentReply'
 import PlusPager from '@/components/PlusPager';
+import lazyLoadDirectives from '@/mixins/lazyLoadDirectives'
 
 import {
   getArticleDetailIsDisplay, getArticleDetail, getRandomRecommendArt, getTagArticleCount, getFourPlusOneArticles,
@@ -161,6 +162,7 @@ import {
 } from '@/api/geekplus/geekplus'
 
 export default {
+  mixins: [lazyLoadDirectives],
   components: {
     PlusFooter,
     CommentReply,

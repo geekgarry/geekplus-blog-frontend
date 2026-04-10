@@ -30,7 +30,7 @@
                 </div>
                 <div class="article-card-container">
                   <template v-for="(article, index) in hotArticleList">
-                    <div class="top-article-card" :key="index" v-if="index == 0">
+                    <div class="top-article-card" :key="'top-' + article.id" v-if="index == 0">
                       <div class="top-article-card-cover">
                         <a class="thumbnail-b" href="javascript:void(0);" v-if="article.indexPicture"
                           @click="navToArticle(article.id)"
@@ -41,7 +41,7 @@
                           article.articleTitle }}</router-link></span>
                       </div>
                     </div>
-                    <div class="article-card-list" :key="index" v-else>
+                    <div class="article-card-list" :key="'list-' + article.id" v-else>
                       <div class="article-card-cover">
                         <a class="thumbnail-b" href="javascript:void(0);" v-if="article.indexPicture"
                           @click="navToArticle(article.id)"

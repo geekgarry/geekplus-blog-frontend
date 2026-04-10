@@ -149,7 +149,7 @@ export default {
     this.getRecommendArticles();
     this.getAllArticleCategory();
   },
-  mounted() {
+  async mounted() {
     this.getOneNewestNotice();
   },
   watch: {
