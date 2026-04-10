@@ -136,49 +136,49 @@ import "./assets/css/markdown-highlight.css";
 // register the plugin on vue
 import MetaInfo from 'vue-meta-info'
 Vue.use(MetaInfo)
-// import VueViewer, { directive as viewerDirective } from 'v-viewer';
-// import 'viewerjs/dist/viewer.css'; // 图片预览器的样式
-// Vue.use(VueViewer, {
-//   defaultOptions: {
-//     /**
-//      *数字含义:
-//      *0 or false: hide the navbar
-//     1 or true: show the navbar
-//     2: show the navbar only when the screen width is greater than 768 pixels
-//     3: show the navbar only when the screen width is greater than 992 pixels
-//     4: show the navbar only when the screen width is greater than 1200 pixels
-//      */
-//     toolbar: {
-//       zoomIn: 0,
-//       zoomOut: 0,
-//       oneToOne: 1,
-//       reset: 1,
-//       prev: {
-//         show: 1,
-//         //size: 'large',
-//       },
-//       play: 1,
-//       next: {
-//         show: 1,
-//         //size: 'large',
-//       },
-//       rotateLeft: 0,
-//       rotateRight: 0,
-//       flipHorizontal: 0,
-//       flipVertical: 0,
-//     },
-//     zoomRatio: 0.3 // 缩放比率 默认是0.1
-//   }
-// });
-// //图片预览器
-// //用于图片预览的指令方式调用 在元素上加上会处理元素下所有的图片,为图片添加点击事件,点击即可预览
-// Vue.directive('viewer', viewerDirective({
-//   //debug: true
-// }));
+import VueViewer, { directive as viewerDirective } from 'v-viewer';
+import 'viewerjs/dist/viewer.css'; // 图片预览器的样式
+Vue.use(VueViewer, {
+  defaultOptions: {
+    /**
+     *数字含义:
+     *0 or false: hide the navbar
+    1 or true: show the navbar
+    2: show the navbar only when the screen width is greater than 768 pixels
+    3: show the navbar only when the screen width is greater than 992 pixels
+    4: show the navbar only when the screen width is greater than 1200 pixels
+     */
+    toolbar: {
+      zoomIn: 0,
+      zoomOut: 0,
+      oneToOne: 1,
+      reset: 1,
+      prev: {
+        show: 1,
+        //size: 'large',
+      },
+      play: 1,
+      next: {
+        show: 1,
+        //size: 'large',
+      },
+      rotateLeft: 0,
+      rotateRight: 0,
+      flipHorizontal: 0,
+      flipVertical: 0,
+    },
+    zoomRatio: 0.3 // 缩放比率 默认是0.1
+  }
+});
+//图片预览器
+//用于图片预览的指令方式调用 在元素上加上会处理元素下所有的图片,为图片添加点击事件,点击即可预览
+Vue.directive('viewer', viewerDirective({
+  //debug: true
+}));
 Vue.use(require('vue-script2'));
-// import Ads from 'vue-google-adsense';
+import Ads from 'vue-google-adsense';
 // // Vue.use(Ads.AutoAdsense, { adClient: 'ca-pub-7291512442295477', isNewAdsCode: true })
-// Vue.use(Ads.Adsense);
+Vue.use(Ads.Adsense);
 // Vue.use(Ads.InArticleAdsense);
 // Vue.use(Ads.InFeedAdsense);
 

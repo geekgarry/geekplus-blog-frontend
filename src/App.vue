@@ -23,7 +23,7 @@ export default {
     }
   },
   created() {
-    this.preloadLibraries();
+    // this.preloadLibraries();
     console.log('当前时间：%O', new Date());
     console.log("%c"+window.location.host, "background-image:-webkit-gradient( linear, left top, right top, color-stop(0, #f22), color-stop(0.15, #f2f), color-stop(0.3, #22f), color-stop(0.45, #2ff), color-stop(0.6, #25e),color-stop(0.75, #4f2), color-stop(0.9, #f2f), color-stop(1, #f22) );color:transparent;-webkit-background-clip: text;font-size:2em;")
     // if(this.storageThemeColor) {
@@ -114,26 +114,26 @@ export default {
   methods: {
     async preloadLibraries() {
       // 预加载 vue-google-adsense，避免其代码进入首屏主包
-      // try {
-      //   const Ads = await import('vue-google-adsense');
-      //   const AdsModule = Ads.default;
-      //   // 全局注册组件
-      //   Vue.component('Adsense', AdsModule.Adsense);
-      //   Vue.component('InArticleAdsense', AdsModule.InArticleAdsense);
-      //   Vue.component('InFeedAdsense', AdsModule.InFeedAdsense);
-      // } catch (error) {
-      //   console.error('Failed to preload vue-google-adsense:', error);
-      // }
       try {
         const Ads = await import('vue-google-adsense');
         const AdsModule = Ads.default;
-        // 注册组件
-        this.$options.components.Adsense = AdsModule.Adsense;
-        this.$options.components.InArticleAdsense = AdsModule.InArticleAdsense;
-        this.$options.components.InFeedAdsense = AdsModule.InFeedAdsense;
+        // 全局注册组件
+        Vue.component('Adsense', AdsModule.Adsense);
+        Vue.component('InArticleAdsense', AdsModule.InArticleAdsense);
+        Vue.component('InFeedAdsense', AdsModule.InFeedAdsense);
       } catch (error) {
-        console.error('Failed to load vue-google-adsense:', error);
+        console.error('Failed to preload vue-google-adsense:', error);
       }
+      // try {
+      //   const Ads = await import('vue-google-adsense');
+      //   const AdsModule = Ads.default;
+      //   // 注册组件
+      //   this.$options.components.Adsense = AdsModule.Adsense;
+      //   this.$options.components.InArticleAdsense = AdsModule.InArticleAdsense;
+      //   this.$options.components.InFeedAdsense = AdsModule.InFeedAdsense;
+      // } catch (error) {
+      //   console.error('Failed to load vue-google-adsense:', error);
+      // }
     },
     isMusicPlaying(playing) {
       // const articlePage = document.getElementsByClassName('plus-blog-article article-container');

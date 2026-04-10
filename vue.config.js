@@ -243,16 +243,26 @@ module.exports = {
     // when there are many pages, it will cause too many meaningless requests
     config.plugins.delete("prefetch");
 
-    // config.plugin("html").tap((args) => {
-    // args[0].title = name;
-    // args[0].minify = {
-    //   removeComments: true,
-    //   collapseWhitespace: true,
-    //   removeAttributeQuotes: true
-    // };
-    // return args;
-    // });
+    config.plugin("html").tap((args) => {
+    args[0].title = name;
+    args[0].minify = {
+      removeComments: true,
+      collapseWhitespace: true,
+      removeAttributeQuotes: true
+    };
+    return args;
+    });
     // webpack.config.js 规则典型配置
+    // 确保没有错误地设置资源类型
+    // config.module
+    //   .rule('html')
+    //   .test(/\.html$/)
+    //   .use('html-loader')
+    //   .loader('html-loader')
+    //   .tap(options => {
+    //     // 确保没有错误的 MIME 类型设置
+    //     return options;
+    //   });
     // set svg-sprite-loader
     config.module.rule("svg").exclude.add(resolve("src/icons")).end();
     config.module

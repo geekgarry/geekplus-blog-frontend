@@ -81,36 +81,36 @@ export default {
     }
 
     // Load v-viewer
-    if (!this.$options.directives || !this.$options.directives.viewer) {
-      try {
-        const vViewer = await import('v-viewer');
-        // const VueViewer = vViewer.default;
-        const viewerDirective = vViewer.directive;
-        await import('viewerjs/dist/viewer.css');
+    // if (!this.$options.directives || !this.$options.directives.viewer) {
+    //   try {
+    //     const vViewer = await import('v-viewer');
+    //     // const VueViewer = vViewer.default;
+    //     const viewerDirective = vViewer.directive;
+    //     await import('viewerjs/dist/viewer.css');
 
-        // Register directive locally
-        this.$options.directives = this.$options.directives || {};
-        this.$options.directives.viewer = viewerDirective({
-          defaultOptions: {
-            toolbar: {
-              zoomIn: 0,
-              zoomOut: 0,
-              oneToOne: 1,
-              reset: 1,
-              prev: { show: 1 },
-              play: 1,
-              next: { show: 1 },
-              rotateLeft: 0,
-              rotateRight: 0,
-              flipHorizontal: 0,
-              flipVertical: 0,
-            },
-            zoomRatio: 0.3
-          }
-        });
-      } catch (error) {
-        console.error('Failed to load v-viewer:', error);
-      }
-    }
+    //     // Register directive locally
+    //     this.$options.directives = this.$options.directives || {};
+    //     this.$options.directives.viewer = viewerDirective({
+    //       defaultOptions: {
+    //         toolbar: {
+    //           zoomIn: 0,
+    //           zoomOut: 0,
+    //           oneToOne: 1,
+    //           reset: 1,
+    //           prev: { show: 1 },
+    //           play: 1,
+    //           next: { show: 1 },
+    //           rotateLeft: 0,
+    //           rotateRight: 0,
+    //           flipHorizontal: 0,
+    //           flipVertical: 0,
+    //         },
+    //         zoomRatio: 0.3
+    //       }
+    //     });
+    //   } catch (error) {
+    //     console.error('Failed to load v-viewer:', error);
+    //   }
+    // }
   }
 };
