@@ -61,22 +61,28 @@
 
     <!-- Charts -->
     <el-row :gutter="20" class="mb-4">
-      <el-col :xs="24" :sm="24" :md="8" :lg="8" :xl="8">
+      <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
         <el-card shadow="hover" class="chart-card">
           <div slot="header" class="chart-header">Heap Memory Usage (MB)</div>
           <div ref="heapChart" style="height: 300px; width: 100%;"></div>
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="24" :md="8" :lg="8" :xl="8">
+      <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
         <el-card shadow="hover" class="chart-card">
           <div slot="header" class="chart-header">CPU Usage (%)</div>
           <div ref="cpuChart" style="height: 300px; width: 100%;"></div>
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="24" :md="8" :lg="8" :xl="8">
+      <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
         <el-card shadow="hover" class="chart-card">
           <div slot="header" class="chart-header">Server Memory Usage (GB)</div>
           <div ref="serverMemChart" style="height: 300px; width: 100%;"></div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+        <el-card shadow="hover" class="chart-card">
+          <div slot="header" class="chart-header">(JVM & CPU) Memory Usage (%)</div>
+          <div ref="combinedRateChart" style="height: 300px; width: 100%;"></div>
         </el-card>
       </el-col>
     </el-row>
@@ -84,7 +90,7 @@
     <!-- GC Log Dialog -->
     <el-dialog title="GC Logs Viewer" :visible.sync="gcLogVisible" width="600px">
       <div class="dialog-actions mb-3">
-        <el-select v-model="logLines" @change="fetchGcLog" placeholder="请选择显示多少行">
+        <el-select v-model="logLines" style="max-width: 110px;" @change="fetchGcLog" placeholder="行数" clearable>
           <el-option
             v-for="(item,index) in 10"
             :key="index"
@@ -101,7 +107,7 @@
       <el-alert
         title="提示警告"
         type="error"
-        description="此功能需要你在运行时加上生成GC日志的命令参数(java -Xlog:gc*:file=/xx/xx/gc.log:time,level -jar xx.jar)，日志存储地址和后端的服务severPath一致；"
+        description="此功能需要你在运行时加上生成GC日志的命令参数(java -Xlog:gc*:file=/xx/xx/logs/gc.log:time,level -jar app_name.jar)，日志存储地址/xx/xx就是后端的配置的severPath"
         show-icon
         class="mt-3">
       </el-alert>
@@ -237,6 +243,7 @@ export default {
       heapChartInstance: null,
       cpuChartInstance: null,
       serverMemChartInstance: null,
+      combinedRateChartInstance: null,
       customColors: [
         {color: '#c4b5fd', percentage: 20},
         {color: '#8b5cf6', percentage: 40},
@@ -258,12 +265,14 @@ export default {
     if (this.heapChartInstance) this.heapChartInstance.dispose();
     if (this.cpuChartInstance) this.cpuChartInstance.dispose();
     if (this.serverMemChartInstance) this.serverMemChartInstance.dispose();
+    if (this.combinedRateChartInstance) this.combinedRateChartInstance.dispose();
   },
   methods: {
     initCharts() {
       this.heapChartInstance = echarts.init(this.$refs.heapChart);
       this.cpuChartInstance = echarts.init(this.$refs.cpuChart);
       this.serverMemChartInstance = echarts.init(this.$refs.serverMemChart);
+      this.combinedRateChartInstance = echarts.init(this.$refs.combinedRateChart);
 
       const commonOptions = {
         tooltip: { trigger: 'axis' },
@@ -303,12 +312,32 @@ export default {
           data: []
         }]
       });
+
+      this.combinedRateChartInstance.setOption({
+        ...commonOptions,
+        legend: { data: ['JVM Memory Rate', 'CPU Memory Rate'], top: 0 },
+        yAxis: { type: 'value', name: '%', max: 100 },
+        series: [
+          {
+            name: 'JVM Memory Rate', type: 'line', smooth: true,
+            itemStyle: { color: '#8b5cf6' },
+            data: []
+          },
+          {
+            name: 'CPU Memory Rate', type: 'line', smooth: true,
+            itemStyle: { color: '#3b82f6' },
+            data: []
+          }
+        ]
+      });
     },
     updateCharts() {
       const times = this.historyData.map(d => d.time);
       const heapData = this.historyData.map(d => this.formatMB(d.heapUsed));
       const cpuData = this.historyData.map(d => (d.processCpuLoad * 100).toFixed(1));
       const serverMemData = this.historyData.map(d => this.formatGB(d.usedPhysicalMemory));
+      const cpuMemRateData = this.historyData.map(d => (d.cpuMemoryUsageRate * 100).toFixed(1));
+      const jvmRateData = this.historyData.map(d => (d.jvmMemoryUsageRate * 100).toFixed(1));
 
       this.heapChartInstance.setOption({
         xAxis: { data: times },
@@ -323,6 +352,14 @@ export default {
       this.serverMemChartInstance.setOption({
         xAxis: { data: times },
         series: [{ data: serverMemData }]
+      });
+
+      this.combinedRateChartInstance.setOption({
+        xAxis: { data: times },
+        series: [
+          { data: jvmRateData },
+          { data: cpuMemRateData }
+        ]
       });
     },
     async fetchMetrics() {
@@ -449,6 +486,7 @@ export default {
       if (this.heapChartInstance) this.heapChartInstance.resize();
       if (this.cpuChartInstance) this.cpuChartInstance.resize();
       if (this.serverMemChartInstance) this.serverMemChartInstance.resize();
+      if (this.combinedRateChartInstance) this.combinedRateChartInstance.resize();
     },
     formatMB(bytes) {
       if (!bytes) return 0;
