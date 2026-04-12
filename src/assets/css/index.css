@@ -2199,6 +2199,14 @@ code.hljs {
   border-bottom-color: var(--background-origin, #e6ebf5);
 }
 
+.el-drawer {
+  background-color: var(--background-2,#FFFFFF);
+}
+
+.el-drawer__header {
+  color: var(--font-color, rgb(114, 118, 123));
+}
+
 .el-dialog {
   -webkit-box-shadow: 0 1px 3px var(--box-shadow, rgba(0, 0, 0, 0.3));
   box-shadow: 0 1px 3px var(--box-shadow, rgba(0, 0, 0, 0.3));

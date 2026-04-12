@@ -134,8 +134,8 @@ import "./assets/css/markdown-highlight.css";
 // import "mavon-editor/dist/css/index.css";
 
 // register the plugin on vue
-import MetaInfo from 'vue-meta-info'
-Vue.use(MetaInfo)
+// import MetaInfo from 'vue-meta-info'
+// Vue.use(MetaInfo)
 import VueViewer, { directive as viewerDirective } from 'v-viewer';
 import 'viewerjs/dist/viewer.css'; // 图片预览器的样式
 Vue.use(VueViewer, {

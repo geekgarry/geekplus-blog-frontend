@@ -17,9 +17,11 @@
       <el-main>
         <el-row :gutter="10">
           <el-col :xs="24" :sm="24" :md="17" :lg="17" :xl="17">
-            <div class="article-container">
-              <h1>{{ articleInfo.articleTitle || '概率抽奖算法工具类'}}</h1>
-              <div class="user-info">
+            <div class="article-container" :class="{ 'skeleton-loading': loading }">
+              <h1 v-if="!loading">{{ articleInfo.articleTitle || '概率抽奖算法工具类'}}</h1>
+              <div v-else class="skeleton-block article-skeleton-title"></div>
+
+              <div v-if="!loading" class="user-info">
                 <img :src="userAvatar" alt="User Avatar" class="avatar">
                 <span>{{ articleInfo.authorName || '伴个白天'}}</span>
                 <el-tag type="warning">学习笔记</el-tag>
@@ -29,10 +31,12 @@
                 <span class="time">{{ articleInfo.createTime || '2023-08-11 16:24:57' }}</span>
                 <el-button type="text" size="small">举报</el-button>
               </div>
-              <div v-if="articleInfo.articleContent" class="article-content"
+              <div v-else class="article-skeleton-meta"></div>
+
+              <div v-if="!loading && articleInfo.articleContent" class="article-content"
                v-html="renderMdText(articleInfo.articleContent)" v-highlight v-viewer>
               </div>
-              <div v-else class="article-content">
+              <div v-else-if="!loading" class="article-content">
                 <div class="errata">
                   <span>勘误</span>
                 </div>
@@ -55,6 +59,7 @@
                         }
                 </pre>
               </div>
+              <div v-else class="article-skeleton-body"></div>
             </div>
 
             <div class="article-comments-container is-always-shadow">
@@ -743,6 +748,32 @@ pre.code-block {
   padding: 10px;
   border-radius: 4px;
   border: 1px solid var(--border-color, #ddd);
+}
+
+.skeleton-block {
+  width: 100%;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.article-skeleton-title {
+  height: 32px;
+  width: 60%;
+}
+
+.article-skeleton-meta {
+  height: 18px;
+  width: 50%;
+  margin-bottom: 24px;
+}
+
+.article-skeleton-body {
+  min-height: 320px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
 }
 
 .article-comments-container {

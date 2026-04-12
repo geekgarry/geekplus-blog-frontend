@@ -421,6 +421,27 @@ export default {
       shareCardImg: ""
     };
   },
+  // metaInfo () {
+  //   return {
+  //     title:this.articleInfo.articleTitle,
+	// 	  meta:[{
+	// 	    charset: "utf-8"
+	//     },
+	//     {
+	// 	    name: "viewport",
+	// 	    content: "width=device-width, initial-scale=1.0,minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
+	//     },
+  //     {
+  //       name: 'keyWords',
+  //       content: this.articleInfo.tags.map(tag => tag.tagName).join(", ") // 将数组转换为逗号分隔的字符串
+  //     },
+  //     {
+  //       name:'description',
+  //       content: this.articleInfo.articleTitle
+  //     }
+  //     ]
+	//   }
+  // },
   async created() {
     // 动态导入 vue-google-adsense
     // try {
