@@ -119,7 +119,7 @@
 
     <!-- 显示所有文件的对话框 -->
     <el-dialog :title="title" :visible.sync="fileManagerVisible" width="600px" append-to-body>
-      <file-manager initial-path="/" @select-file="getSelectedFilePath"></file-manager>
+      <file-manager initial-path="/upload" @select-file="getSelectedFilePath"></file-manager>
       <span slot="footer" class="dialog-footer">
         <el-button @click="fileManagerVisible = false">取 消</el-button>
         <el-button type="primary" @click="confirmFileSelection">确 定</el-button>

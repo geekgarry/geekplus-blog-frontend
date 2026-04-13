@@ -200,7 +200,7 @@
           </div>
         </el-col>
       </el-row> -->
-      <file-manager initial-path="/music" @select-file="getGpMusicUrl"></file-manager>
+      <file-manager initial-path="/upload/music" @select-file="getGpMusicUrl"></file-manager>
       <span slot="footer" class="dialog-footer">
         <el-button @click="displayAllMusic = false">取 消</el-button>
         <el-button type="primary" @click="displayAllMusic = false">确 定</el-button>

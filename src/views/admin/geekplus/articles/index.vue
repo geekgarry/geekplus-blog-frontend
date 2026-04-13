@@ -525,7 +525,7 @@
           </div>
         </el-col>
       </el-row> -->
-      <file-manager></file-manager>
+      <file-manager :initialPath="'/upload'"></file-manager>
       <span slot="footer" class="dialog-footer">
         <el-button @click="displayFileFolder = false;">取 消</el-button>
         <el-button type="primary" @click="displayFileFolder = false;"

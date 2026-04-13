@@ -66,6 +66,7 @@
           :limit="1"
           :on-exceed="handleExceed"
           :before-upload="beforeUpload"
+          :http-request="httpRequestUpload"
         >
           <el-button type="primary" size="small" circle icon="el-icon-upload" :loading="uploading" title="上传"></el-button>
         </el-upload>
@@ -137,7 +138,8 @@
                 <i class="el-icon-folder" style="font-size: 40px; color: #E6A23C"></i>
               </template>
               <template v-else-if="isImageType(row)">
-                <el-image :lazy="true" :src="previewSrc(row)" alt="img" ></el-image>
+                <el-image v-show="previewSrc(row)" :lazy="true" :src="previewSrc(row)" alt="img" ></el-image>
+                <i v-show="previewSrc(row) === ''" class="el-icon-picture-outline" style="font-size: 40px; color: #609EAF"></i>
               </template>
               <template v-else-if="isVideoType(row)">
                 <i class="el-icon-video-camera" style="font-size: 40px; color: #409EFF"></i>
@@ -152,7 +154,7 @@
               <template v-else>
                 <i class="el-icon-document" style="font-size: 40px; color: #909399"></i>
               </template>
-              <div class="media-action" v-if="isVideoType(row) || isAudioType(row)" @click.stop="toggleMediaPlayback(row)">
+              <div class="media-action" v-if="(isVideoType(row) || isAudioType(row)) && previewSrc(row)" @click.stop="toggleMediaPlayback(row)">
                 <i :class="isActiveMedia(row) ? 'el-icon-video-pause' : 'el-icon-video-play'" style="font-size: 18px; color: #fff;"></i>
               </div>
             </div>
@@ -299,13 +301,26 @@
     </el-dialog>
 
     <!-- 预览弹窗 -->
-    <el-dialog :title="previewFileObj ? previewFileObj.name : '预览'" :visible.sync="previewDialogVisible" top="5vh" @close="closePreview" append-to-body>
+    <el-dialog :title="previewFileObj ? previewFileObj.name : '预览'" :visible.sync="previewDialogVisible" top="5vh" @close="closePreview" append-to-body width="900px">
       <div class="preview-content" v-loading="previewLoading">
         <el-image v-if="previewType === 'image'" :lazy="true" :src="previewUrl" fit="contain" style="width: 100%; height: 60vh;" :preview-src-list="[previewUrl]"></el-image>
         <video v-else-if="previewType === 'video'" :src="previewUrl" controls style="width: 100%; max-height: 60vh;"></video>
         <audio v-else-if="previewType === 'audio'" :src="previewUrl" controls style="width: 100%; margin-top: 0px;"></audio>
         <iframe v-else-if="previewType === 'document'" :src="previewUrl" frameborder="0" style="width: 100%; height: 65vh;"></iframe>
+        <div v-else-if="previewType === 'text'" style="width: 100%;">
+          <el-input
+            type="textarea"
+            :rows="20"
+            v-model="previewText"
+            placeholder="正在加载文本内容..."
+            style="width: 100%; min-height: 60vh;"
+          ></el-input>
+        </div>
       </div>
+      <span slot="footer" class="dialog-footer" v-if="previewType === 'text'">
+        <el-button @click="closePreview">取 消</el-button>
+        <el-button type="primary" :loading="previewSaveLoading" @click="savePreviewText">保存</el-button>
+      </span>
     </el-dialog>
 
     <!-- 详情信息弹窗 -->
@@ -355,7 +370,7 @@
 
 <script>
 // import axios from 'axios';
-import { list_file, search_file, delete_batch_file, delete_file, rename_file, upload_file, create_file, copy_file, move_file, compress_file, list_recycle_file, restore_recycle_file, delete_recycle_file } from '@/api/system/file-manager';
+import { list_file, search_file, delete_batch_file, delete_file, rename_file, upload_file, create_file, copy_file, move_file, compress_file, list_recycle_file, restore_recycle_file, delete_recycle_file, read_text_file, save_text_file, downloadRecycleFile, downloadAndPreviewFile } from '@/api/system/file-manager';
 import { copyToClipboard } from '@/utils/clipboard';
 
 export default {
@@ -401,12 +416,14 @@ export default {
       currentRow: null,
       newName: '',
       // 预览相关
-      prefixUrl: '/profile', // 预览地址前缀 (如果有)根据后端的文件访问映射路径调整
       previewDialogVisible: false,
       previewFileObj: null,
       previewUrl: '',
       previewType: '',
+      previewText: '',
+      previewSaveLoading: false,
       previewLoading: false,
+      previewIsBlobUrl: false,
       base_url: process.env.VUE_APP_BASE_API,
 
       // 新建功能相关状态
@@ -576,26 +593,30 @@ export default {
       }
     },
     downloadRecycle(row) {
-      const baseUrl = this.base_url; // 获取当前站点的基础 URL
-      const url = baseUrl + `/sys/file-manager/recycle/download?recycleName=${encodeURIComponent(row.recycleName)}`;
-      const link = document.createElement('a');
-      link.style.display = 'none';
-      link.href = url;
-      link.setAttribute('download', row.originalName);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // const baseUrl = this.base_url; // 获取当前站点的基础 URL
+      // const url = baseUrl + `/sys/file-manager/recycle/download?recycleName=${encodeURIComponent(row.recycleName)}`;
+      // const link = document.createElement('a');
+      // link.style.display = 'none';
+      // link.href = url;
+      // link.setAttribute('download', row.originalName);
+      // document.body.appendChild(link);
+      // link.click();
+      // document.body.removeChild(link);
+      downloadRecycleFile(row.recycleName);
     },
 
     handleCopyPath(row) {
-      const fullPath = this.prefixUrl + row.path;
+      var fullPath = row.url;
+      if(url === null || url === undefined) {
+        fullPath = row.path;
+      }
       copyToClipboard(fullPath);
     },
     // ---------------- 批量操作与剪贴板 ----------------
     handleSelectionChange(val) {
       this.selectedFiles = val;
       // console.log('当前选中：', this.selectedFiles);
-      var selectedWithFullPath = this.selectedFiles.map(f => ({ ...f, fullPath: this.prefixUrl + f.path }));
+      var selectedWithFullPath = this.selectedFiles.map(f => ({ ...f, fullPath: f.url || f.path }));
       if (this.selectedFiles.length === 0) {
         // 如果没有选中任何文件，不触发事件但传递空数组
         selectedWithFullPath = []; // 确保传递一个空数组而不是 undefined
@@ -609,6 +630,10 @@ export default {
       this.clipboardAction = 'copy';
       this.$message.success(`已复制 ${this.clipboard.length} 项，请前往目标文件夹点击粘贴`);
       this.$refs.multipleTable.clearSelection();
+    },
+    isTextEditableType(row) {
+      const type = row.type ? row.type.toLowerCase() : '';
+      return ['txt', 'json', 'md', 'js', 'html', 'java', 'log', 'xml', 'yml', 'yaml', 'csv', 'properties', 'sh'].includes(type);
     },
     handleCut() {
       this.clipboard = this.selectedFiles.map(f => f.path);
@@ -681,21 +706,86 @@ export default {
       if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'jpe', 'jfi', 'jfif', 'bmp', 'svg', 'heif', 'heifs', 'heic', 'heics', 'avci', 'avcs', 'avif', 'avifs'].includes(type)) this.openPreview(row, 'image');
       else if (['mp4', 'webm', 'mov', 'f4v', 'avi', 'mkv', 'flv', 'wmv', 'm4v', '3gp', 'rmvb', 'webb', 'm2p'].includes(type)) this.openPreview(row, 'video');
       else if (['mp3', 'wav', 'flac', 'aac', 'm4a', 'ogg', 'ape', 'weba'].includes(type)) this.openPreview(row, 'audio');
-      else if (['pdf', 'txt', 'json', 'md', 'js', 'html', 'java'].includes(type)) this.openPreview(row, 'document');
+      else if (['pdf'].includes(type)) this.openPreview(row, 'document');
+      else if (this.isTextEditableType(row)) this.openPreview(row, 'text');
       else this.downloadFile(row);
     },
-    openPreview(row, type) {
-      this.previewFileObj = row; this.previewType = type;
-      // this.previewUrl = `/api/file-manager/download?path=${encodeURIComponent(row.path)}&preview=true`;
-      this.previewUrl = `${this.prefixUrl}${row.path}`;
+    async openPreview(row, type) {
+      this.previewFileObj = row;
+      this.previewType = type;
+      this.previewText = '';
+      this.previewSaveLoading = false;
+      this.previewUrl = '';
+      this.previewLoading = false;
       this.previewDialogVisible = true;
+
+      if (type === 'text') {
+        this.previewLoading = true;
+        try {
+          const res = await read_text_file({ path: row.fullPath });
+          this.previewText = res.data || '';
+        } catch (error) {
+          this.$message.error(error.msg || '读取文本内容失败');
+          this.previewText = '无法读取文本内容';
+        } finally {
+          this.previewLoading = false;
+        }
+      } else {
+        this.previewLoading = true;
+        try {
+          if(row.url === "" || row.url === null) {
+            const res = await downloadAndPreviewFile(row.path, true);
+            if (res && res.previewUrl) {
+              this.previewUrl = res.previewUrl;
+              this.previewIsBlobUrl = res.isBlobUrl;
+            } else {
+              this.$message.error('预览失败：文件不支持预览或后端未设置 inline');
+            }
+          } else {
+            this.previewUrl = row.url;
+          }
+        } catch (error) {
+          this.$message.error('预览文件失败: ' + error.message);
+        } finally {
+          this.previewLoading = false;
+        }
+      }
     },
-    closePreview() { this.previewUrl = ''; this.previewFileObj = null; this.previewType = ''; },
+    async savePreviewText() {
+      if (!this.previewFileObj) return;
+      this.previewSaveLoading = true;
+      try {
+        const res = await save_text_file({ path: this.previewFileObj.fullPath, content: this.previewText });
+        if (res.code === 200 || res.success) {
+          this.$message.success('文本保存成功');
+          this.previewDialogVisible = false;
+        } else {
+          this.$message.error(res.msg || '保存失败');
+        }
+      } catch (error) {
+        this.$message.error(error.msg || '保存失败');
+      } finally {
+        this.previewSaveLoading = false;
+      }
+    },
+    closePreview() {
+      if (this.previewIsBlobUrl && this.previewUrl) {
+        URL.revokeObjectURL(this.previewUrl);
+      }
+      this.previewUrl = '';
+      this.previewFileObj = null;
+      this.previewType = '';
+      this.previewText = '';
+      this.previewDialogVisible = false;
+      this.previewIsBlobUrl = false;
+    },
+
     downloadFile(row) {
-      const baseUrl = this.base_url; // 获取当前站点的基础 URL
-      const url = baseUrl + `/sys/file-manager/download?path=${encodeURIComponent(row.path)}&preview=false`;
-      const link = document.createElement('a'); link.style.display = 'none'; link.href = url; link.setAttribute('download', row.name);
-      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      // const baseUrl = this.base_url; // 获取当前站点的基础 URL
+      // const url = baseUrl + `/sys/file-manager/download?path=${encodeURIComponent(row.path)}&preview=false`;
+      // const link = document.createElement('a'); link.style.display = 'none'; link.href = url; link.setAttribute('download', row.name);
+      // document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      downloadAndPreviewFile(row.path, false);
     },
     // 上传成功
     handleSuccess() {
@@ -739,10 +829,16 @@ export default {
         //   resolve(true); // 表示上传成功，可以继续后续操作
         // }, 1000);
         upload_file({ file: file, path: this.currentPath }).then(res => {
-          if (res.code === 200) resolve(true);
-          else reject(new Error(res.msg || '上传失败'));
+          if (res.code === 200){
+            this.fetchFiles(this.currentPath, false);
+            resolve(true);
+          }else {
+            reject(new Error(res.msg || '上传失败'));
+          }
          }).catch(err => reject(err));
       });
+    },
+    httpRequestUpload(e) {
     },
     openRenameDialog(row) { this.currentRow = row; this.newName = row.name; this.renameDialogVisible = true; },
     async submitRename() {
@@ -795,7 +891,7 @@ export default {
       return ['txt', 'md', 'json', 'js', 'html', 'css', 'java', 'py', 'xml', 'csv', 'log', 'yaml', 'yml', 'pdf'].includes(type);
     },
     previewSrc(row) {
-      return `${this.prefixUrl}${row.path}`;
+      return `${row.url}`;
     },
     // 写一个点击音频行的函数，控制同一时间只能有一个音频在播放，再次点击同一行则暂停
     toggleAudioPlayback(row) {
@@ -948,15 +1044,11 @@ export default {
       }
     },
     async loadTextSnippet(row) {
-      if (!this.isDocumentType(row) || this.textSnippetCache[row.path]) return;
+      if (!this.isTextEditableType(row) || this.textSnippetCache[row.path]) return;
       try {
-        const resp = await fetch(`${this.base_url}/sys/file-manager/download?path=${encodeURIComponent(row.path)}&preview=true`);
-        if (resp.ok) {
-          const text = await resp.text();
-          this.$set(this.textSnippetCache, row.path, text.slice(0, 120).replace(/\n/g, ' '));
-        } else {
-          this.$set(this.textSnippetCache, row.path, '获取预览失败');
-        }
+        const res = await read_text_file({ path: row.path });
+        const text = res.data || '';
+        this.$set(this.textSnippetCache, row.path, text.slice(0, 120).replace(/\n/g, ' '));
       } catch (e) {
         this.$set(this.textSnippetCache, row.path, '获取预览失败');
       }

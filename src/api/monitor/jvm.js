@@ -70,9 +70,9 @@ export function generateHeapDump() {
 
 // 文件下载
 export function dlGCLogFile() {
-  downloadFile('/monitor/jvm/gc-log/download');
+  return downloadFile('/monitor/jvm/gc-log/download');
 }
 
 export function dlHeapDumpFile(fileName) {
-  downloadFile(`/monitor/jvm/heap-dump/download/${fileName}`);
+  return downloadFile(`/monitor/jvm/heap-dump/download/${fileName}`);
 }

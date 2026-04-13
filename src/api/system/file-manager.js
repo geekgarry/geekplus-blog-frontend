@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import { downloadFile } from '@/utils/downloadZip'
 
 export function list_file(query) {
   return request({
@@ -97,10 +98,34 @@ export function delete_recycle_file(reqData) {
   })
 }
 
+export function read_text_file(param) {
+  return request({
+    url: '/sys/file-manager/read-text',
+    method: 'post',
+    params: param
+  })
+}
+
+export function save_text_file(data) {
+  return request({
+    url: '/sys/file-manager/save-text',
+    method: 'post',
+    data: data
+  })
+}
+
 export function create_file(param) {
   return request({
     url: '/sys/file-manager/create',
       method: 'post',
       params: param
   })
+}
+
+export function downloadRecycleFile(fileName) {
+  return downloadFile(`/sys/file-manager/recycle/download?recycleName=${encodeURIComponent(fileName)}`);
+}
+
+export function downloadAndPreviewFile(path, preview) {
+  return downloadFile(`/sys/file-manager/download?path=${path}&preview=${preview}`);
 }
