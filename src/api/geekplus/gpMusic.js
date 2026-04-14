@@ -1,14 +1,5 @@
 import request from '@/utils/request'
 
-//查询所有音乐文件列表
-export function readMusicFile(query){
-  return request({
-    url: '/geekplus/music/readMusicFileList',
-    method: 'get',
-    params: query
-  })
-}
-
 // 分页查询数据列表
 export function listGpMusic(query) {
   return request({

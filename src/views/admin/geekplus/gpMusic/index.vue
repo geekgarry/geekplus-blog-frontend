@@ -506,14 +506,6 @@ export default {
     //显示所有音乐文件，然后请求系统的资源
     displayMusicFileList() {
       this.displayAllMusic = true;
-      // let folder = { folder: "/music" };
-      // readMusicFile(folder).then((response) => {
-      //   // console.log(response)
-      //   this.allGpMusic = response.data; //this.localImgToWebImg(response.data);
-      //   //console.log(response);
-      // }).catch((error) => {
-      //   console.log(error);
-      // })
     },
     //系统路径转为网络地址，采取拼接前缀网络地址
     convertMusicUrl(musicList) {
@@ -557,7 +549,7 @@ export default {
         cancelButtonText: "取消",
         type: "warning"
       }).then(function () {
-        deleteCategoryFile(folder).then((response) => {
+        deleteFileByRecursion(folder).then((response) => {
           //console.log(response);
           //this.msgSuccess(response.msg)
         })

@@ -18,7 +18,7 @@ export function deleteSelectedFiles(query){
     })
 }
 
-//删除文件或者文件夹
+//递归删除文件或者文件夹
 export function deleteFileByRecursion(query){
     return request({
       url: '/sysFile/deleteFileByRecursion',
@@ -27,11 +27,11 @@ export function deleteFileByRecursion(query){
     })
 }
 
-//递归删除文件夹下的所有文件
-export function deleteCategoryFile(query){
-    return request({
-      url: '/sysFile/deleteFile',
-      method: 'get',
-      params: query
-    })
-}
+//删除文件夹下的所有文件
+// export function deleteCategoryFile(query){
+//     return request({
+//       url: '/sysFile/deleteFile',
+//       method: 'get',
+//       params: query
+//     })
+// }
