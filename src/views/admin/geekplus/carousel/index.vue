@@ -118,7 +118,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -131,9 +131,9 @@
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="轮播图展示" prop="carouselImg">
-          <el-image 
+          <el-image
               style="width: 100px; height: 100px; "
-              :src="form.carouselImg" 
+              :src="form.carouselImg"
               fit="contain"
               :preview-src-list="[form.carouselImg]"
               lazy >
@@ -145,7 +145,7 @@
         <el-form-item label="轮播图地址" prop="carouselImg">
           <el-input v-model="form.carouselImg" placeholder="请输入跑马轮播图地址" />
           <el-col :span="7">
-            <el-upload 
+            <el-upload
               ref="uploadRef"
               action="#"
               :multiple="true"
@@ -175,7 +175,7 @@
             <el-tooltip content="浏览并选择图片" placement="top">
               <el-button type="primary" @click="displayImageList">浏览图片</el-button>
             </el-tooltip>
-            
+
           </el-col>
         </el-form-item>
         <el-form-item label="轮播图标题" prop="carouselTitle">
@@ -206,13 +206,13 @@
       <el-row :gutter="20" >
         <el-col :span="6" v-for="carouselImg in allCarouselImg" :key="carouselImg">
           <div style="text-align: -webkit-center;">
-            <!-- <el-image 
+            <!-- <el-image
               style="width: 100px; height: 100px"
               :src="carouselImg"
               :fit="fit"></el-image> -->
-            <el-image 
+            <el-image
               style="width: 100px; height: 100px; "
-              :src="carouselImg" 
+              :src="carouselImg"
               fit="contain"
               :preview-src-list="allCarouselImg"
               lazy >
@@ -225,7 +225,7 @@
                 <el-button @click="deleteFileByPath(carouselImg)" type="danger" icon="el-icon-delete" circle></el-button>
               </el-tooltip>
               <el-tooltip content="选择当前文件" placement="top">
-                <el-button @click="getImgUrl(baseApi+carouselImg)" type="success" icon="el-icon-check" circle></el-button>
+                <el-button @click="getImgUrl(carouselImg)" type="success" icon="el-icon-check" circle></el-button>
               </el-tooltip>
             </div>
           </div>
@@ -240,7 +240,7 @@
 </template>
 
 <script>
-import { listCarousel, getCarousel, delCarousel, addCarousel, updateCarousel, 
+import { listCarousel, getCarousel, delCarousel, addCarousel, updateCarousel,
   exportCarousel, listAllImageSrc, uploadFile, deleteFile } from "@/api/geekplus/carousel";
 
 export default {
