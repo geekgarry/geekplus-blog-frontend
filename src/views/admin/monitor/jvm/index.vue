@@ -107,7 +107,7 @@
       <el-alert
         title="提示警告"
         type="error"
-        description="此功能需要你在运行时加上生成GC日志的命令参数(java -Xlog:gc*:file=/xx/xx/logs/gc.log:time,level -jar app_name.jar)，日志存储地址/xx/xx就是后端的配置的severPath"
+        description="此功能需要你在运行时加上生成GC日志的命令参数(java -Xlog:gc*:file=/xx/xx/logs/gc.log:time,level -jar app_name.jar)，日志存储地址/xx/xx就是后端的配置文件profile即项目的服务器路径"
         show-icon
         class="mt-3">
       </el-alert>
