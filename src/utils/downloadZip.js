@@ -30,11 +30,8 @@ export function downloadFile(requestUrl) {
     responseType: 'blob',
     headers: { 'Plus-Token': getToken() }//'Bearer ' +
   }).then(res => {
-    return resolveInlineBlob(res)// 返回以便获取previewUrl
-  }).catch(error => {
-    console.error(`${actionType}失败:`, error);
-    return Promise.reject(error);
-  });
+    resolveBlob(res, res.headers['content-type'])
+  })
 }
 
 /**
@@ -45,11 +42,34 @@ export function downloadFile(requestUrl) {
 export function resolveBlob(res, mimeType) {
   // 兼容 IE 浏览器
   if (window.navigator && window.navigator.msSaveOrOpenBlob) {
-    window.navigator.msSaveOrOpenBlob(blobData, fileName);
+    // 从headers中获取filename
+    var patT = new RegExp('filename=([^;]+\\.[^\\.;]+);*')
+    var contentDisposition = decodeURI(res.headers['content-disposition'] || '')
+    var result = patT.exec(contentDisposition)
+    var fileName = result ? result[1].replace(/\"/g, '') : 'download'
+    var blob = new Blob([res.data], { type: mimeType });
+    window.navigator.msSaveOrOpenBlob(blob, fileName);
     return;
   }
   const aLink = document.createElement('a')
-  var blob = new Blob([res.data], { type: mimeType })
+  var blob = null
+  try {
+    // 现代浏览器
+    blob = new Blob([res.data], { type: mimeType })
+  } catch (e) {
+    // 旧版安卓兼容（如微信浏览器）
+    const BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+    if (BlobBuilder) {
+      const builder = new BlobBuilder();
+      builder.append(res.data);
+      blob = builder.getBlob(mimeType);
+    }
+    // else {
+    //   // 终极降级：Base64 Data URL（适合小图）
+    //   const base64 = btoa(String.fromCharCode(...new Uint8Array(res.data)));
+    //   url = `${res.headers['content-type']};base64,${base64}`;
+    // }
+  }
   // //从response的headers中获取filename, 后端response.setHeader("Content-disposition", "attachment; filename=xxxx.docx") 设置的文件名;
   var patT = new RegExp('filename=([^;]+\\.[^\\.;]+);*')
   var contentDisposition = decodeURI(res.headers['content-disposition'])
