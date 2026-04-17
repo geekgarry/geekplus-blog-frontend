@@ -32,7 +32,7 @@ export function downloadFile(requestUrl) {
   }).then(res => {
     return resolveInlineBlob(res)// 返回以便获取previewUrl
   }).catch(error => {
-    console.error(`${actionType}失败:`, error);
+    console.error(`失败:`, error);
     return Promise.reject(error);
   });
 }
