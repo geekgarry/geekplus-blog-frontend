@@ -420,7 +420,7 @@ export default {
           cancelButtonText: "取消",
           type: "warning"
         }).then(function() {
-          return deleteMenu(row.menuId);
+          return deleteMenu({menuId: row.menuId});
         }).then(() => {
           this.getList();
           this.msgSuccess("删除成功");
