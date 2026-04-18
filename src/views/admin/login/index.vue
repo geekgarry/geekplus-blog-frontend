@@ -230,7 +230,7 @@ $dark_gray: #889aa4;
 $light_gray: #eee;
 
 .login-container {
-  min-height: 100%;
+  height: 100vh;
   width: 100%;
   /*opacity: 0.6;*/
   /* background-color: $bg; */

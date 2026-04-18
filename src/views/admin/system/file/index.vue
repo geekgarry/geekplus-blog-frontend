@@ -62,9 +62,9 @@
           :show-file-list="false"
           :multiple="true"
           :on-success="handleUploadSuccess"
-          :on-error="handleError"
+          :on-error="handleUploadError"
           :limit="1"
-          :on-exceed="handleExceed"
+          :on-exceed="handleUploadExceed"
           :before-upload="beforeUpload"
           :http-request="httpRequestUpload"
         >
@@ -115,7 +115,7 @@
           <template slot-scope="scope">{{ formatDate(scope.row.updateTime) }}</template>
         </el-table-column>
 
-        <el-table-column label="操作" min-width="165">
+        <el-table-column label="操作" min-width="150" fixed="right">
           <template slot-scope="scope">
             <el-button type="text" size="small" icon="el-icon-edit" @click="openRenameDialog(scope.row)">重命名</el-button>
             <el-button type="text" size="small" icon="el-icon-download" v-if="!scope.row.isDirectory" @click="downloadFile(scope.row)">下载</el-button>
@@ -221,6 +221,12 @@
       :page-sizes="[20, 50, 100, 200]"
       @pagination="fetchFiles(currentPath, false)"
     />
+
+    <!-- 进度条提示弹窗 (通用：上传/下载) -->
+    <el-dialog :title="progressTitle" :visible.sync="progressVisible" width="400px" :close-on-click-modal="false" :show-close="true">
+      <div style="text-align: center; font-size: 14px; margin-bottom: 10px;">{{ progressDesc }}</div>
+      <el-progress :text-inside="true" :stroke-width="20" :percentage="progressPercent" :status="progressPercent === 100 ? 'success' : 'exception'"></el-progress>
+    </el-dialog>
 
     <!-- 回收站弹窗 -->
     <el-dialog title="回收站" :visible.sync="recycleDialogVisible" width="600px" top="5vh" append-to-body>
@@ -370,7 +376,7 @@
 
 <script>
 // import axios from 'axios';
-import { list_file, search_file, delete_batch_file, delete_file, rename_file, upload_file, create_file, copy_file, move_file, compress_file, list_recycle_file, restore_recycle_file, delete_recycle_file, read_text_file, save_text_file, downloadRecycleFile, downloadAndPreviewFile } from '@/api/system/file-manager';
+import { list_file, search_file, delete_batch_file, delete_file, rename_file, upload_file, create_file, copy_file, move_file, compress_file, list_recycle_file, restore_recycle_file, delete_recycle_file, check_exist, read_text_file, save_text_file, downloadRecycleFile, downloadCommonFile, getDownloadUrl } from '@/api/system/file-manager';
 import { copyToClipboard } from '@/utils/clipboard';
 
 export default {
@@ -423,8 +429,7 @@ export default {
       previewText: '',
       previewSaveLoading: false,
       previewLoading: false,
-      previewIsBlobUrl: false,
-      base_url: process.env.VUE_APP_BASE_API,
+      baseAPI: process.env.VUE_APP_BASE_API,
 
       // 新建功能相关状态
       createDialogVisible: false,
@@ -455,7 +460,18 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 100
-      }
+      },
+
+      // 进度条控制 (上传与下载复用)
+      progressVisible: false,
+      progressTitle: '',
+      progressDesc: '',
+      progressPercent: 0,
+
+      swRegistered: false, // Service Worker 状态
+
+      //重命名后的上传文件
+      renamedFile: null
     };
   },
   computed: {
@@ -472,6 +488,7 @@ export default {
   created() {
     const initial = this.initialPath.trim() || '/';
     this.fetchFiles(initial, false);
+    this.registerServiceWorker();
   },
   methods: {
     // ---------------- 基础列表与搜索 ----------------
@@ -593,7 +610,7 @@ export default {
       }
     },
     downloadRecycle(row) {
-      // const baseUrl = this.base_url; // 获取当前站点的基础 URL
+      // const baseUrl = this.baseAPI; // 获取当前站点的基础 URL
       // const url = baseUrl + `/sys/file-manager/recycle/download?recycleName=${encodeURIComponent(row.recycleName)}`;
       // const link = document.createElement('a');
       // link.style.display = 'none';
@@ -734,13 +751,7 @@ export default {
         this.previewLoading = true;
         try {
           if(row.url === "" || row.url === null) {
-            const res = await downloadAndPreviewFile(row.path, true);
-            if (res && res.previewUrl) {
-              this.previewUrl = res.previewUrl;
-              this.previewIsBlobUrl = res.isBlobUrl;
-            } else {
-              this.$message.error('预览失败：文件不支持预览或后端未设置 inline');
-            }
+            this.previewUrl = this.baseAPI + getDownloadUrl(row.path, true);
           } else {
             this.previewUrl = row.url;
           }
@@ -769,34 +780,14 @@ export default {
       }
     },
     closePreview() {
-      if (this.previewIsBlobUrl && this.previewUrl) {
-        URL.revokeObjectURL(this.previewUrl);
-      }
       this.previewUrl = '';
       this.previewFileObj = null;
       this.previewType = '';
       this.previewText = '';
       this.previewDialogVisible = false;
-      this.previewIsBlobUrl = false;
-    },
-
-    downloadFile(row) {
-      // const baseUrl = this.base_url; // 获取当前站点的基础 URL
-      // const url = baseUrl + `/sys/file-manager/download?path=${encodeURIComponent(row.path)}&preview=false`;
-      // const link = document.createElement('a'); link.style.display = 'none'; link.href = url; link.setAttribute('download', row.name);
-      // document.body.appendChild(link); link.click(); document.body.removeChild(link);
-      downloadAndPreviewFile(row.path, false);
-    },
-    // 上传成功
-    handleSuccess() {
-      this.$refs.uploadRef.clearFiles()
-      this.$message({
-        message: '上传成功',
-        type: 'success'
-      })
     },
     // 上传失败
-    handleError() {
+    handleUploadError() {
       this.uploading = false;
       this.$message({
         message: '上传失败',
@@ -804,41 +795,242 @@ export default {
       })
     },
     // 上传文件数超过限制
-    handleExceed() {
+    handleUploadExceed() {
       this.$message({
         message: '最大上传文件个数为1',
         type: 'error'
       })
     },
+    // 上传成功
     handleUploadSuccess(res) {
       this.uploading = false;
       this.$message.success('上传成功');
+      this.$refs.uploadRef.clearFiles()
       this.fetchFiles(this.currentPath, false);
     },
+    /**
+     * 1. before-upload: 拦截原始文件，创建新文件对象
+     */
     beforeUpload(file) {
       this.uploading = true;
       // 这里可以自定义上传前的逻辑，例如显示加载动画、校验文件类型等
       // console.log('Uploading', file.name);
       // 返回 false 可以阻止默认的上传行为
       // 返回一个 Promise 可以控制上传的流程
-      return new Promise((resolve, reject) => {
-        // 例如，你可以在这里使用 axios 或其他方法上传文件到你的服务器
-        // 例如：axios.post('/your-upload-url', file).then(response => resolve(response)).catch(error => reject(error));
-        // 为了示例，我们这里模拟一个成功的上传
-        // setTimeout(() => {
-        //   resolve(true); // 表示上传成功，可以继续后续操作
-        // }, 1000);
-        upload_file({ file: file, path: this.currentPath }).then(res => {
-          if (res.code === 200){
-            this.fetchFiles(this.currentPath, false);
-            resolve(true);
-          }else {
-            reject(new Error(res.msg || '上传失败'));
-          }
-         }).catch(err => reject(err));
-      });
+      // return new Promise((resolve, reject) => {
+      //   // 例如，你可以在这里使用 axios 或其他方法上传文件到你的服务器
+      //   // 例如：axios.post('/your-upload-url', file).then(response => resolve(response)).catch(error => reject(error));
+      //   // 为了示例，我们这里模拟一个成功的上传
+      //   // setTimeout(() => {
+      //   //   resolve(true); // 表示上传成功，可以继续后续操作
+      //   // }, 1000);
+      //   upload_file({ file: file, path: this.currentPath }).then(res => {
+      //     if (res.code === 200){
+      //       this.fetchFiles(this.currentPath, false);
+      //       resolve(true);
+      //     }else {
+      //       reject(new Error(res.msg || '上传失败'));
+      //     }
+      //    }).catch(err => reject(err));
+      // });
+      // 1. 检查文件名是否包含空格
+      if (/\s/.test(file.name)) {
+        // 2. 创建新文件名，替换所有空白字符为下划线
+        const newName = file.name.replace(/\s+/g, '_');
+        console.log(newName);
+        // 3. 构造新的 File 对象
+        // new File(bits, name, options)
+        this.renamedFile = new File([file], newName, {
+          type: file.type,
+          lastModified: file.lastModified
+        });
+
+        // 4. 关键步骤：由于 before-upload 返回 Promise 或 false 会阻止默认上传
+        // 我们需要手动触发上传这个新文件，但 el-upload 的默认行为是上传原始 file
+        // 因此，最稳妥的方式是拦截默认行为，手动发送请求，或者利用 http-request
+
+        // 这里采用更通用的方案：返回 false 阻止默认上传，然后手动调用接口
+        // 注意：如果希望完全利用 el-upload 的进度条等特性，建议配合 http-request 使用
+        // 但为了简单实现“自动上传”，我们在此处直接调用上传接口
+        // 返回 false 阻止默认上传流程，转而由 http-request 处理
+        // 注意：这里返回 false 是为了让 el-upload 知道我们接管了逻辑，
+        // 但实际上 http-request 会被触发，我们需要在 http-request 中使用 renamedFile
+        // 或者直接调用上传函数，不使用http-request
+        //return false; // 阻止 el-upload 默认的上传行为,不实用http-request
+      }
+      // 如果没有空格，正常返回 true 允许默认上传（action中设置的地址或者也统一走手动按钮提交逻辑以保持一致）
     },
-    httpRequestUpload(e) {
+    // ---------------- ✨ 核心升级：带有重复检测和进度条的自定义上传 ----------------
+    async httpRequestUpload(options) {
+      const file = this.renamedFile || options.file;
+      const targetPath = this.currentPath;
+
+      // 1. 检查是否存在同名文件
+      try {
+        const checkRes = await check_exist({ path: targetPath, filename: file.name });
+
+        let shouldOverwrite = false;
+        if (checkRes.data === true) {
+          // 文件存在，弹窗让用户选择
+          try {
+            await this.$confirm(`文件 "${file.name}" 已存在，是否覆盖？`, '提醒', {
+              confirmButtonText: '覆盖',
+              cancelButtonText: '跳过',
+              type: 'warning'
+            });
+            shouldOverwrite = true; // 选择覆盖
+          } catch (e) {
+            this.$message.info(`已跳过上传文件: ${file.name}`);
+            options.onError(new Error("用户跳过"));
+            return;
+          }
+        }
+
+        // 2. 准备开始上传并显示进度条
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('path', targetPath);
+        formData.append('overwrite', shouldOverwrite);
+
+        this.progressTitle = "正在上传文件";
+        this.progressDesc = `正在上传: ${file.name}`;
+        this.progressPercent = 0;
+        this.progressVisible = true;
+
+        const onUploadProgress = (progressEvent) => {
+          let percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          this.progressPercent = percentCompleted;
+        };
+        const uploadRes = await upload_file(formData, onUploadProgress);
+
+        if (uploadRes.code === 200) {
+          this.$message.success('文件上传成功');
+          this.fetchFiles(this.currentPath, false); // 更新列表
+        } else {
+          this.$message.error('上传失败：' + uploadRes.data.msg);
+        }
+      } catch (error) {
+        this.$message.error('请求发生异常');
+      } finally {
+        setTimeout(() => { this.progressVisible = false; }, 500);
+      }
+    },
+
+    // ------------------- 下载操作（智能选用三种模式） -------------------
+    registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/worker/downloadServiceWorker.js').then(registration => {
+          this.swRegistered = true;
+          // 监听来自 SW 的下载进度消息
+          navigator.serviceWorker.addEventListener('message', event => {
+            if (event.data.type === 'sw_progress') {
+                if(!this.progressVisible) {
+                    this.progressTitle = "后台下载中 (Service Worker)";
+                    this.progressDesc = "基于浏览器底层流进行极速下载中...";
+                    this.progressVisible = true;
+                }
+                this.progressPercent = event.data.percent;
+            } else if (event.data.type === 'sw_success') {
+                this.$message.success("下载流已完成传递");
+                setTimeout(() => { this.progressVisible = false; }, 500);
+            }
+          });
+        }).catch(err => {
+          console.warn('Service Worker 注册失败, 将回退到 Web Worker 或普通下载:', err);
+        });
+      }
+    },
+
+    downloadFile(row) {
+      // const baseUrl = this.baseAPI; // 获取当前站点的基础 URL
+      //const filePath = this.currentPath === '/' ? `/${row.name}` : `${this.currentPath}/${row.name}`;
+      const url = `${this.baseAPI}${getDownloadUrl(row.path, false)}`;
+      const fileSize = row.size; // 后端需要补充真实的 bytes 长度。假设已存在
+
+      // 【策略判定】
+      const SIZE_50MB = 50 * 1024 * 1024;
+      const SIZE_500MB = 500 * 1024 * 1024;
+
+      if (!fileSize) {
+         // 大小未知，兜底方案
+         downloadCommonFile(row.path, false);
+         return;
+      }
+      if (fileSize < SIZE_50MB) {
+        // [方式A：Web Worker 下载] 小于 50MB 用 Web Worker 纯内存接收，进度条最平滑，体验最好
+        this.downloadByWebWorker(url, row.name);
+      } else if (fileSize >= SIZE_50MB && fileSize < SIZE_500MB && this.swRegistered) {
+        // [方式B：Service Worker 下载] 50MB~500MB，如果支持SW则拦截并抛出流供浏览器原生下载，同时反馈 UI 进度
+        this.downloadByServiceWorker(url, row.name);
+      } else {
+        // [方式C：普通下载] 大于500MB，内存吃不消，交给浏览器接管（不显示系统级内敛UI进度条，靠浏览器自身管理器）
+        downloadCommonFile(row.path, false);
+        this.$message.info("文件较大，已启动浏览器原生后台下载！");
+      }
+    },
+
+    // 方式 A:强大的后台多线程加载 Web Worker 下载 (含实时 UI 进度条)
+    downloadByWebWorker(url, filename) {
+        this.progressTitle = "正在下载文件 (多线程加速)";
+        this.progressDesc = `下载中: ${filename}`;
+        this.progressPercent = 0;
+        this.progressVisible = true;
+
+        if (window.Worker) {
+            const worker = new Worker('/worker/downloadWorker.js');
+            worker.postMessage({ url: url, filename: filename });
+
+            worker.onmessage = (e) => {
+                if (e.data.type === 'progress') {
+                    this.progressPercent = e.data.percent;
+                } else if (e.data.type === 'success') {
+                    // 下载完成，由内存Blob创建链接
+                    const blobUrl = window.URL.createObjectURL(e.data.blob);
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.download = e.data.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    window.URL.revokeObjectURL(blobUrl);
+
+                    this.$message.success('下载完成');
+                    setTimeout(() => { this.progressVisible = false; }, 500);
+                    worker.terminate();
+                } else if (e.data.type === 'error') {
+                    this.$message.error('下载遇到阻碍: ' + e.data.error);
+                    this.progressVisible = false;
+                    worker.terminate();
+                }
+            };
+        } else {
+            // 不支持 Web Worker 时退化为 A 方案主线程 Axios 下载
+            // axios.get(url, {
+            //     responseType: 'blob',
+            //     onDownloadProgress: (evt) => {
+            //         this.progressPercent = Math.round((evt.loaded * 100) / evt.total);
+            //     }
+            // }).then(res => {
+            //     const blobUrl = window.URL.createObjectURL(res.data);
+            //     const link = document.createElement('a');
+            //     link.href = blobUrl;
+            //     link.download = filename;
+            //     link.click();
+            //     link.remove();
+            //     this.progressVisible = false;
+            // });
+        }
+    },
+
+    // 方式 B
+    downloadByServiceWorker(url, filename) {
+        // 让页面新建隐藏 iframe 触发对应的 URL（附带 sw_download 标识欺骗SW拦截）
+        const iframe = document.createElement('iframe');
+        iframe.title = filename;
+        iframe.style.display = 'none';
+        iframe.src = `${url}&sw_download=true`; // 触发 SW fetch 拦截
+        document.body.appendChild(iframe);
+        // iframe 成功响应后 SW 自己会 postMessage 过来唤起主界面的进度条
     },
     openRenameDialog(row) { this.currentRow = row; this.newName = row.name; this.renameDialogVisible = true; },
     async submitRename() {

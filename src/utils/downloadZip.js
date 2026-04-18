@@ -30,11 +30,8 @@ export function downloadFile(requestUrl) {
     responseType: 'blob',
     headers: { 'Plus-Token': getToken() }//'Bearer ' +
   }).then(res => {
-    return resolveInlineBlob(res)// 返回以便获取previewUrl
-  }).catch(error => {
-    console.error(`失败:`, error);
-    return Promise.reject(error);
-  });
+    resolveBlob(res, res.headers['content-type'])
+  })
 }
 
 /**
