@@ -478,9 +478,9 @@ export default {
       this.getArticleAllUserComments();
     },
     $route(to, from) {
-      if (to.path.includes("/article")) {
-        this.getArticleContent();
-      }
+      // if (to.path.includes("/article")) {
+      //   this.getArticleContent();
+      // }
     }
   },
   computed: {
