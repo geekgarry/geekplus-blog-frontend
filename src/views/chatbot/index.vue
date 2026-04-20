@@ -388,7 +388,7 @@ import PlusCropper from "plus-cropper"
 import PlusDrawer from '@/utils/plus-drawer.js'
 //import { marked } from 'marked';//9.1.6
 const marked = require('marked'); //9.1.6
-import { geminiAI, geminiAIChat, getHistoryMessage, getAllHistoryMessage, getOneHistoryMessage, deleteOneHistoryMessage, getGeminiTTS, uploadVoiceBlob } from "@/api/chatbot/chatbot"
+import { geminiAI, geminiAIChat, getHistoryMessage, getAllHistoryMessage, getOneHistoryMessage, deleteOneHistoryMessage, getGeminiTTS, uploadVoiceBlob, geminiStreamChat } from "@/api/chatbot/chatbot"
 import LoginSignup from '@/components/LoginSignup/index'
 
 export default {
@@ -746,13 +746,7 @@ export default {
     },
     //流式sse fetch请求
     async streamChat(prompt) {
-      const res = await fetch('https://127.0.0.1:8443/AIBot/chat/stream', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json', "Accept": "text/event-stream"// 重要：声明前端接受 SSE 数据
-        },
-        body: JSON.stringify(prompt)
-      });
+      const res = await geminiStreamChat(prompt);
       //发送后，按钮不可用
       this.statusDisabled = true;
 

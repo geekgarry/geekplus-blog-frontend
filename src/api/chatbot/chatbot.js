@@ -130,3 +130,14 @@ export function getTTSChinese(query) {
         params: query
     })
 }
+
+export function geminiStreamChat(prompt){
+  return fetch(process.env.VUE_APP_BASE_API+'/AIBot/chat/stream', {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "text/event-stream"// 重要：声明前端接受 SSE 数据
+    },
+    body: JSON.stringify(prompt)
+  });
+}
