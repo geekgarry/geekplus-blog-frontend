@@ -462,7 +462,6 @@ export default {
           }else if(!this.isUrlSimpleValid(item.src)){
             //判断如果没有包含我们固定的网站，又不符合一个文件资源url时，这里就是指item.src为/xxx/xxx/xxx.png
             allMyWebImageArray.push({ filePath: this.getReplaceUrl(item.src) });
-            item.src = this.getServerUrl(item.src);
           }
         });
       }
@@ -498,7 +497,6 @@ export default {
           }else if(!this.isUrlSimpleValid(item.src)){
             //判断如果没有包含我们固定的网站，又不符合一个文件资源url时，这里就是指item.src为/xxx/xxx/xxx.png
             tempImageArray.push({ filePath: this.getReplaceUrl(item.src) });
-            item.src = this.getServerUrl(item.src);
           }
         });
       }
@@ -693,8 +691,7 @@ export default {
       uploadFileForArticle(formData)
         .then((response) => {
           //console.log(response);
-          const serverUrl = response.url;
-          const fileUrl = this.getServerUrl(serverUrl);
+          const fileUrl = response.url;
           var uploadSuccess = {};
           // this.$message({
           //   message: "上传" + response.msg,
@@ -710,14 +707,13 @@ export default {
           // 光标后移一位
           this.Quill.setSelection(length + 2);
           // this.content += url
-          uploadSuccess = { filePath: serverUrl };
+          uploadSuccess = { filePath: fileUrl };
           this.allImageList.push(uploadSuccess);
           this.$refs.uploadImageFileRef.clearFiles();
         })
         .catch((error) => {
-          //console.log(error);
           this.$message({
-            message: error.msg,
+            message: error,
             type: "error",
             showClose: true,
           });
@@ -728,8 +724,8 @@ export default {
       uploadFileForArticle(formData)
         .then((response) => {
           //console.log(response);
-          const serverUrl = response.url;
-          const fileUrl = this.getServerUrl(serverUrl);
+          // const serverUrl = response.url;
+          const fileUrl = response.url;
           // var uploadSuccess = {};
           const originalFileName = response.originalFileName;
           // this.$message({
@@ -754,7 +750,7 @@ export default {
         .catch((error) => {
           //console.log(error);
           this.$message({
-            message: error.msg,
+            message: error,
             type: "error",
             showClose: true,
           });

@@ -572,7 +572,6 @@ export default {
           }else if(!this.isUrlSimpleValid(item.src)){
             //判断如果没有包含我们固定的网站，又不符合一个文件资源url时，这里就是指item.src为/xxx/xxx/xxx.png
             allMyWebImageArray.push({ filePath: this.getReplaceUrl(item.src) });
-            item.src = this.getServerUrl(item.src);
           }
         });
       }
@@ -616,7 +615,6 @@ export default {
           }else if(!this.isUrlSimpleValid(item.src)){
             //判断如果没有包含我们固定的网站，又不符合一个文件资源url时，这里就是指item.src为/xxx/xxx/xxx.png
             tempImageArray.push({ filePath: this.getReplaceUrl(item.src) });
-            item.src = this.getServerUrl(item.src);
           }
         });
       }
@@ -629,20 +627,19 @@ export default {
       uploadFileForArticle(formData)
         .then((response) => {
           //console.log(response);
-          const serverUrl = response.url;
-          const fileUrl = this.getServerUrl(serverUrl);
+          const fileUrl = response.url;
           var uploadSuccess = {};
           // 获取返回的图片路径，固定格式为：{location:url}
           success(fileUrl);//返回最后的完整上传文件的URL包括网站地址
-          uploadSuccess = { filePath: serverUrl };
+          uploadSuccess = { filePath: fileUrl };
           //每次上传一个图片文件
           this.allImageList.push(uploadSuccess);
         })
         .catch((error) => {
           //console.log(error);
-          failure("Invalid JSON: " + error.msg);
+          failure("Invalid JSON: " + error);
           this.$message({
-            message: error.msg,
+            message: error,
             type: "error",
             showClose: true,
           });
@@ -653,8 +650,8 @@ export default {
       return uploadFileForArticle(formData)
         .then((response) => {
           //console.log(response);
-          const serverUrl = response.url;
-          const fileUrl = this.getServerUrl(serverUrl);
+          // const serverUrl = response.url;
+          const fileUrl = response.url;
           // var uploadSuccess = {};
           const originalFileName = response.originalFileName;
           // uploadSuccess = { filePath: serverUrl };
@@ -666,7 +663,7 @@ export default {
         .catch((error) => {
           //console.log(error);
           this.$message({
-            message: error.msg,
+            message: error,
             type: "error",
             showClose: true,
           });

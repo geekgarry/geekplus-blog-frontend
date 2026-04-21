@@ -545,7 +545,7 @@ export default {
           this.$refs.uploadImageFileRef.value = "";
         })
         .catch((error) => {
-          this.$toasted.error(error.msg, {
+          this.$toasted.error(error, {
             duration: 3000,
             theme: "bubble",
             position: "top-center",
@@ -582,7 +582,7 @@ export default {
           this.$refs.uploadImageFileRef.value = "";
         })
         .catch((error) => {
-          this.$toasted.error(error.msg, {
+          this.$toasted.error(error, {
             duration: 3000,
             theme: "bubble",
             position: "top-center",
