@@ -3,9 +3,12 @@
     <!-- 顶部导航与搜索栏 -->
     <div class="nav-bar">
       <div class="nav-buttons hidden-xs-only">
-        <el-button size="small" icon="el-icon-arrow-left" circle :disabled="historyIndex <= 0" @click="goBack" title="后退"></el-button>
-        <el-button size="small" icon="el-icon-arrow-right" circle :disabled="historyIndex >= history.length - 1" @click="goForward" title="前进"></el-button>
-        <el-button size="small" icon="el-icon-top" circle :disabled="currentPath === '/'" @click="goUp" title="返回上一级"></el-button>
+        <el-button size="small" icon="el-icon-arrow-left" circle :disabled="historyIndex <= 0" @click="goBack"
+          title="后退"></el-button>
+        <el-button size="small" icon="el-icon-arrow-right" circle :disabled="historyIndex >= history.length - 1"
+          @click="goForward" title="前进"></el-button>
+        <el-button size="small" icon="el-icon-top" circle :disabled="currentPath === '/'" @click="goUp"
+          title="返回上一级"></el-button>
       </div>
 
       <div class="path-input-container hidden-xs-only">
@@ -15,7 +18,8 @@
       </div>
 
       <div class="search-container">
-        <el-input size="small" v-model="searchKeyword" placeholder="搜索当前目录..." @keyup.enter.native="handleSearch" clearable @clear="fetchFiles(currentPath)">
+        <el-input size="small" v-model="searchKeyword" placeholder="搜索当前目录..." @keyup.enter.native="handleSearch"
+          clearable @clear="fetchFiles(currentPath)">
           <el-button slot="append" icon="el-icon-search" @click="handleSearch"></el-button>
         </el-input>
       </div>
@@ -33,7 +37,8 @@
       </div>
 
       <div class="actions">
-        <el-button v-if="clipboard.length > 0" type="warning" size="small" icon="el-icon-document-checked" @click="handlePaste">
+        <el-button v-if="clipboard.length > 0" type="warning" size="small" icon="el-icon-document-checked"
+          @click="handlePaste">
           粘贴 ({{ clipboard.length }})
         </el-button>
 
@@ -41,7 +46,8 @@
           <el-button size="small" circle icon="el-icon-document-copy" @click="handleCopy" title="复制"></el-button>
           <el-button size="small" circle icon="el-icon-scissors" @click="handleCut" title="剪切"></el-button>
           <el-button size="small" circle icon="el-icon-box" @click="openCompressDialog" title="压缩"></el-button>
-          <el-button type="danger" size="small" circle icon="el-icon-delete" @click="openDeleteDialog" title="删除"></el-button>
+          <el-button type="danger" size="small" circle icon="el-icon-delete" @click="openDeleteDialog"
+            title="删除"></el-button>
         </template>
 
         <!-- 新增：新建下拉菜单 -->
@@ -55,40 +61,93 @@
           </el-dropdown-menu>
         </el-dropdown>
 
-        <el-upload
-          ref="uploadRef"
-          class="upload-btn"
-          action="#"
-          :show-file-list="false"
-          :multiple="true"
-          :on-success="handleUploadSuccess"
-          :on-error="handleUploadError"
-          :limit="1"
-          :on-exceed="handleUploadExceed"
-          :before-upload="beforeUpload"
-          :http-request="httpRequestUpload"
-        >
-          <el-button type="primary" size="small" circle icon="el-icon-upload" :loading="uploading" title="上传"></el-button>
+        <el-button class="hidden-xs-only" type="primary" size="small" icon="el-icon-upload" @click="openUploadDrawer"
+          :loading="uploading" title="上传">
+          上传
+        </el-button>
+
+        <el-upload ref="uploadRef" class="upload-btn hidden-sm-and-up" action="#" :show-file-list="false"
+          :multiple="true" :on-success="handleUploadSuccess" :on-error="handleUploadError" :limit="1"
+          :on-exceed="handleUploadExceed" :before-upload="beforeUpload" :http-request="httpRequestUpload">
+          <el-button type="primary" size="small" circle icon="el-icon-upload" :loading="uploading"
+            title="上传"></el-button>
         </el-upload>
 
         <!-- 新增：回收站按钮 -->
         <el-button type="info" size="small" icon="el-icon-delete-solid" @click="openRecycleBin">回收站</el-button>
-        <el-button class="hidden-xs-only" :type="viewMode === 'table' ? 'primary' : 'default'" size="small" icon="el-icon-tickets" @click="toggleView('table')" title="表格视图"></el-button>
-        <el-button class="hidden-xs-only" :type="viewMode === 'icons' ? 'primary' : 'default'" size="small" icon="el-icon-s-grid" @click="toggleView('icons')" title="图标视图"></el-button>
-        <el-button size="small" circle icon="el-icon-refresh" @click="fetchFiles(currentPath, false)" title="刷新"></el-button>
+        <el-button class="hidden-xs-only" :type="viewMode === 'table' ? 'primary' : 'default'" size="small"
+          icon="el-icon-tickets" @click="toggleView('table')" title="表格视图"></el-button>
+        <el-button class="hidden-xs-only" :type="viewMode === 'icons' ? 'primary' : 'default'" size="small"
+          icon="el-icon-s-grid" @click="toggleView('icons')" title="图标视图"></el-button>
+        <el-button size="small" circle icon="el-icon-refresh" @click="fetchFiles(currentPath, false)"
+          title="刷新"></el-button>
       </div>
     </div>
 
+    <el-drawer title="上传文件 / 文件夹" :visible.sync="uploadDrawerVisible" direction="rtl" size="420px" append-to-body>
+      <div class="upload-drawer">
+        <div class="upload-ops">
+          <el-button type="primary" @click="triggerFileSelect">上传文件</el-button>
+          <el-button type="primary" @click="triggerFolderSelect">上传文件夹</el-button>
+        </div>
+
+        <input ref="fileInput" type="file" multiple style="display:none" @change="onUploadFileInputChange" />
+        <input ref="folderInput" type="file" webkitdirectory directory multiple style="display:none"
+          @change="onUploadFolderInputChange" />
+
+        <div class="upload-dropzone" :class="{ active: dragActive }" @dragover.prevent="dragActive = true"
+          @dragleave.prevent="dragActive = false" @drop.prevent="handleUploadDrop">
+          <div class="upload-drop-content">
+            <i class="el-icon-upload" style="font-size: 28px;"></i>
+            <div class="upload-drop-text">将文件或文件夹拖拽到此处，支持批量上传</div>
+            <div class="upload-drop-hint">如果上传目标路径已存在同名文件，会显示覆盖确认列表</div>
+          </div>
+        </div>
+
+        <div class="upload-queue" v-if="uploadQueue.length > 0">
+          <div class="queue-header">待上传文件（{{ uploadQueue.length }}）</div>
+          <div style="max-height: 280px; overflow: auto;">
+            <el-table :data="uploadQueue" border size="mini" style="width: 100%">
+              <el-table-column prop="relativePath" label="路径" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="size" label="大小" width="110" show-overflow-tooltip>
+                <template slot-scope="scope">{{ formatSize(scope.row.size) || '-' }}</template>
+              </el-table-column>
+              <el-table-column label="操作" width="60">
+                <template slot-scope="scope">
+                  <el-button type="text" icon="el-icon-close" class="text-gray-500"
+                    @click="removeTempFile(scope.$index)"></el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </div>
+
+        <div class="upload-footer">
+          <el-button type="text" @click="clearUploadQueue" :disabled="uploadQueue.length === 0">清空列表</el-button>
+          <el-button type="primary" :loading="uploading" :disabled="uploadQueue.length === 0"
+            @click="startUploadFiles">开始上传</el-button>
+        </div>
+      </div>
+    </el-drawer>
+
+    <el-dialog title="同名文件提示" :visible.sync="overwriteConfirmVisible" width="520px" append-to-body>
+      <div style="margin-bottom: 12px;">以下文件在目标目录已存在，是否覆盖？</div>
+      <el-table :data="uploadDuplicateList" border size="mini" style="width: 100%">
+        <el-table-column prop="" label="文件名" show-overflow-tooltip>
+          <template slot-scope="scope">{{ scope.row }}</template>
+        </el-table-column>
+      </el-table>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="overwriteConfirmVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmOverwrite" :loading="uploading">覆盖上传</el-button>
+      </span>
+    </el-dialog>
+
     <!-- 文件列表表格 -->
     <div v-if="viewMode === 'table'">
-      <el-table
-        v-loading="loading"
-        :data="fileList"
-        style="width: 100%"
-        height="calc(100vh - 260px)"
-        @selection-change="handleSelectionChange"
-        @sort-change="handleSortChange"
-        :default-sort="{prop: 'isDirectory', order: 'descending'}">
+      <el-table v-loading="loading" :data="fileList" style="width: 100%" height="calc(100vh - 260px)"
+        @selection-change="handleSelectionChange" @sort-change="handleSortChange"
+        :default-sort="{ prop: 'isDirectory', order: 'descending' }">
 
         <el-table-column type="selection" width="55" align="center"></el-table-column>
 
@@ -96,15 +155,18 @@
           <template slot-scope="scope">
             <div class="file-name-cell">
               <i :class="getFileIcon(scope.row)" :style="{ color: getIconColor(scope.row) }"></i>
-              <el-button size="mini" v-show="!scope.row.isDirectory" icon="el-icon-document-copy" class="i-btn" circle @click="handleCopyPath(scope.row)" title="复制"></el-button>
+              <el-button size="mini" v-show="!scope.row.isDirectory" icon="el-icon-document-copy" class="i-btn" circle
+                @click="handleCopyPath(scope.row)" title="复制"></el-button>
               <span class="name-text" @click="handleItemClick(scope.row)">{{ scope.row.name }}</span>
-              <el-tag v-if="isSearchMode" size="mini" type="info" style="margin-left: 10px">{{ scope.row.path }}</el-tag>
+              <el-tag v-if="isSearchMode" size="mini" type="info" style="margin-left: 10px">{{ scope.row.path
+                }}</el-tag>
             </div>
           </template>
         </el-table-column>
 
         <el-table-column prop="type" label="类型" sortable="custom" width="125" show-overflow-tooltip>
-          <template slot-scope="scope">{{ scope.row.isDirectory ? '文件夹' : (scope.row.type + ' 文件').toUpperCase() }}</template>
+          <template slot-scope="scope">{{ scope.row.isDirectory ? '文件夹' : (scope.row.type + ' 文件').toUpperCase()
+            }}</template>
         </el-table-column>
 
         <el-table-column prop="size" label="大小" sortable="custom" width="135" show-overflow-tooltip>
@@ -118,7 +180,8 @@
         <el-table-column label="操作" min-width="150" fixed="right">
           <template slot-scope="scope">
             <el-button type="text" size="small" icon="el-icon-edit" @click="openRenameDialog(scope.row)">重命名</el-button>
-            <el-button type="text" size="small" icon="el-icon-download" v-if="!scope.row.isDirectory" @click="downloadFile(scope.row)">下载</el-button>
+            <el-button type="text" size="small" icon="el-icon-download" v-if="!scope.row.isDirectory"
+              @click="downloadFile(scope.row)">下载</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -129,17 +192,22 @@
       <div v-if="fileList.length === 0" class="empty-icon-view">当前目录没有文件</div>
       <div class="icon-layout">
         <div class="icon-grid" @dragover.prevent @drop="onDrop">
-          <div class="icon-card" v-for="(row, index) in fileList" :key="row.path" :class="{ selected: isSelected(row) }" @dblclick="handleItemClick(row)" @click="handleIconSelection(row, index, $event)" @contextmenu.stop="showContextMenu(row, index, $event)" draggable="true" @dragstart="onDragStart(row, $event)">
+          <div class="icon-card" v-for="(row, index) in fileList" :key="row.path" :class="{ selected: isSelected(row) }"
+            @dblclick="handleItemClick(row)" @click="handleIconSelection(row, index, $event)"
+            @contextmenu.stop="showContextMenu(row, index, $event)" draggable="true"
+            @dragstart="onDragStart(row, $event)">
             <div class="icon-checkbox">
-              <el-checkbox :value="isSelected(row)" @change="handleIconSelection(row, index, { shiftKey: false, ctrlKey: true })" @click.stop></el-checkbox>
+              <el-checkbox :value="isSelected(row)"
+                @change="handleIconSelection(row, index, { shiftKey: false, ctrlKey: true })" @click.stop></el-checkbox>
             </div>
             <div class="icon-preview">
               <template v-if="row.isDirectory">
                 <i class="el-icon-folder" style="font-size: 40px; color: #E6A23C"></i>
               </template>
               <template v-else-if="isImageType(row)">
-                <el-image v-show="previewSrc(row)" :lazy="true" :src="previewSrc(row)" alt="img" ></el-image>
-                <i v-show="previewSrc(row) === ''" class="el-icon-picture-outline" style="font-size: 40px; color: #609EAF"></i>
+                <el-image v-show="previewSrc(row)" :lazy="true" :src="previewSrc(row)" alt="img"></el-image>
+                <i v-show="previewSrc(row) === ''" class="el-icon-picture-outline"
+                  style="font-size: 40px; color: #609EAF"></i>
               </template>
               <template v-else-if="isVideoType(row)">
                 <i class="el-icon-video-camera" style="font-size: 40px; color: #409EFF"></i>
@@ -154,32 +222,41 @@
               <template v-else>
                 <i class="el-icon-document" style="font-size: 40px; color: #909399"></i>
               </template>
-              <div class="media-action" v-if="(isVideoType(row) || isAudioType(row)) && previewSrc(row)" @click.stop="toggleMediaPlayback(row)">
-                <i :class="isActiveMedia(row) ? 'el-icon-video-pause' : 'el-icon-video-play'" style="font-size: 18px; color: #fff;"></i>
+              <div class="media-action" v-if="(isVideoType(row) || isAudioType(row)) && previewSrc(row)"
+                @click.stop="toggleMediaPlayback(row)">
+                <i :class="isActiveMedia(row) ? 'el-icon-video-pause' : 'el-icon-video-play'"
+                  style="font-size: 18px; color: #fff;"></i>
               </div>
             </div>
             <div class="icon-meta">
               <span class="icon-name" :title="row.name">{{ row.name }}</span>
               <span class="icon-type">{{ row.isDirectory ? '文件夹' : uppercaseType(row.type) }}</span>
               <span class="icon-size">{{ row.isDirectory ? '-' : formatSize(row.size) }}</span>
-              <div v-if="isDocumentType(row)" class="icon-snippet" @mouseenter="loadTextSnippet(row)">{{ textSnippetCache[row.path] || '悬停载入预览...' }}</div>
+              <div v-if="isDocumentType(row)" class="icon-snippet" @mouseenter="loadTextSnippet(row)">{{
+                textSnippetCache[row.path] || '悬停载入预览...' }}</div>
               <div class="icon-actions">
-                <el-button type="text" icon="el-icon-document-copy" size="mini" @click.stop="handleCopyPath(row)" title="复制路径"></el-button>
-                <el-button type="text" icon="el-icon-edit" size="mini" @click.stop="openRenameDialog(row)" title="重命名"></el-button>
-                <el-button type="text" size="mini" icon="el-icon-download" v-if="!row.isDirectory" @click.stop="downloadFile(row)" title="下载"></el-button>
+                <el-button type="text" icon="el-icon-document-copy" size="mini" @click.stop="handleCopyPath(row)"
+                  title="复制路径"></el-button>
+                <el-button type="text" icon="el-icon-edit" size="mini" @click.stop="openRenameDialog(row)"
+                  title="重命名"></el-button>
+                <el-button type="text" size="mini" icon="el-icon-download" v-if="!row.isDirectory"
+                  @click.stop="downloadFile(row)" title="下载"></el-button>
               </div>
             </div>
-            <video v-if="isActiveMedia(row) && isVideoType(row)" :src="previewSrc(row)" controls :style="{ width: '100%', marginTop: '6px' }"></video>
-            <audio v-if="isActiveMedia(row) && isAudioType(row)" :src="previewSrc(row)" controls :style="{ width: '100%', marginTop: '6px', minHeight: '30px' }"></audio>
+            <video v-if="isActiveMedia(row) && isVideoType(row)" :src="previewSrc(row)" controls
+              :style="{ width: '100%', marginTop: '6px' }"></video>
+            <audio v-if="isActiveMedia(row) && isAudioType(row)" :src="previewSrc(row)" controls
+              :style="{ width: '100%', marginTop: '6px', minHeight: '30px' }"></audio>
           </div>
         </div>
 
         <div class="icon-side-panel" v-if="sideInfoRow">
           <div class="side-panel-header">
-            <i :class="getFileIcon(sideInfoRow)" :style="{ fontSize: '32px', color: getIconColor(sideInfoRow), marginRight: '12px' }"></i>
+            <i :class="getFileIcon(sideInfoRow)"
+              :style="{ fontSize: '32px', color: getIconColor(sideInfoRow), marginRight: '12px' }"></i>
             <div class="side-panel-header-text">
               <div class="side-panel-title">{{ sideInfoRow.name }}</div>
-              <div class="side-panel-subtitle">{{ sideInfoRow.isDirectory ? '文件夹' : (uppercaseType(sideInfoRow.type) + ' 文件') }}</div>
+              <div class="side-panel-subtitle">{{ sideInfoRow.isDirectory ? '文件夹' : (uppercaseType(sideInfoRow.type) + '文件') }}</div>
             </div>
             <i class="el-icon-close side-panel-close" @click.stop="sideInfoRow = null" title="关闭"></i>
           </div>
@@ -187,11 +264,14 @@
             <el-button type="primary" size="mini" @click="handleItemClick(sideInfoRow)">打开</el-button>
             <el-button type="warning" size="mini" @click="openRenameDialog(sideInfoRow)">重命名</el-button>
             <el-button type="info" size="mini" @click="handleCopyPath(sideInfoRow)">复制路径</el-button>
-            <el-button type="success" size="mini" v-if="!sideInfoRow.isDirectory" @click="downloadFile(sideInfoRow)">下载</el-button>
+            <el-button type="success" size="mini" v-if="!sideInfoRow.isDirectory"
+              @click="downloadFile(sideInfoRow)">下载</el-button>
             <el-button type="text" size="mini" @click="openDetailDialog(sideInfoRow)">更多信息</el-button>
           </div>
           <div class="side-panel-row"><span>路径</span><span>{{ sideInfoRow.path }}</span></div>
-          <div class="side-panel-row"><span>大小</span><span>{{ sideInfoRow.isDirectory ? '-' : formatSize(sideInfoRow.size) }}</span></div>
+          <div class="side-panel-row"><span>大小</span><span>{{ sideInfoRow.isDirectory ? '-' :
+            formatSize(sideInfoRow.size)
+              }}</span></div>
           <div class="side-panel-row"><span>修改时间</span><span>{{ formatDate(sideInfoRow.updateTime) }}</span></div>
           <div class="side-panel-row"><span>是否文件夹</span><span>{{ sideInfoRow.isDirectory ? '是' : '否' }}</span></div>
           <div v-if="isDocumentType(sideInfoRow)" class="side-panel-snippet">
@@ -213,34 +293,28 @@
     </div>
 
     <!-- 分页组件 -->
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize"
-      :page-sizes="[20, 50, 100, 200]"
-      @pagination="fetchFiles(currentPath, false)"
-    />
+    <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize"
+      :page-sizes="[20, 50, 100, 200]" @pagination="fetchFiles(currentPath, false)" />
 
     <!-- 进度条提示弹窗 (通用：上传/下载) -->
-    <el-dialog :title="progressTitle" :visible.sync="progressVisible" width="400px" :close-on-click-modal="false" :show-close="true">
+    <el-dialog :title="progressTitle" :visible.sync="progressVisible" width="400px" :close-on-click-modal="false"
+      :show-close="true">
       <div style="text-align: center; font-size: 14px; margin-bottom: 10px;">{{ progressDesc }}</div>
-      <el-progress :text-inside="true" :stroke-width="20" :percentage="progressPercent" :status="progressPercent === 100 ? 'success' : 'exception'"></el-progress>
+      <el-progress :text-inside="true" :stroke-width="20" :percentage="progressPercent"
+        :status="progressPercent === 100 ? 'success' : 'exception'"></el-progress>
     </el-dialog>
 
     <!-- 回收站弹窗 -->
     <el-dialog title="回收站" :visible.sync="recycleDialogVisible" width="600px" top="5vh" append-to-body>
       <div style="margin-bottom: 15px; display: flex; gap: 10px;">
-        <el-button type="success" size="small" icon="el-icon-refresh-left" :disabled="selectedRecycleFiles.length === 0" @click="restoreRecycleBatch">还原选中</el-button>
-        <el-button type="danger" size="small" icon="el-icon-delete" :disabled="selectedRecycleFiles.length === 0" @click="hardDeleteRecycleBatch">彻底删除选中</el-button>
+        <el-button type="success" size="small" icon="el-icon-refresh-left" :disabled="selectedRecycleFiles.length === 0"
+          @click="restoreRecycleBatch">还原选中</el-button>
+        <el-button type="danger" size="small" icon="el-icon-delete" :disabled="selectedRecycleFiles.length === 0"
+          @click="hardDeleteRecycleBatch">彻底删除选中</el-button>
       </div>
 
-      <el-table
-        :data="recycleList"
-        v-loading="recycleLoading"
-        @selection-change="handleRecycleSelectionChange"
-        height="55vh"
-        style="width: 100%">
+      <el-table :data="recycleList" v-loading="recycleLoading" @selection-change="handleRecycleSelectionChange"
+        height="55vh" style="width: 100%">
         <el-table-column type="selection" width="55" align="center"></el-table-column>
         <el-table-column prop="originalName" label="原文件名" min-width="200">
           <template slot-scope="scope">
@@ -258,8 +332,10 @@
         <el-table-column label="操作" min-width="200">
           <template slot-scope="scope">
             <el-button type="text" size="small" @click="restoreRecycle([scope.row.recycleName])">还原</el-button>
-            <el-button type="text" size="small" v-if="!scope.row.isDirectory" @click="downloadRecycle(scope.row)">下载</el-button>
-            <el-button type="text" size="small" class="danger-text" @click="hardDeleteRecycle([scope.row.recycleName])">彻底删除</el-button>
+            <el-button type="text" size="small" v-if="!scope.row.isDirectory"
+              @click="downloadRecycle(scope.row)">下载</el-button>
+            <el-button type="text" size="small" class="danger-text"
+              @click="hardDeleteRecycle([scope.row.recycleName])">彻底删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -268,7 +344,8 @@
     <!-- 删除确认弹窗 -->
     <el-dialog title="确认删除" :visible.sync="deleteDialogVisible" width="400px" append-to-body>
       <div style="margin-bottom: 20px;">
-        <i class="el-icon-warning" style="color: #E6A23C; font-size: 24px; vertical-align: middle; margin-right: 10px;"></i>
+        <i class="el-icon-warning"
+          style="color: #E6A23C; font-size: 24px; vertical-align: middle; margin-right: 10px;"></i>
         <span style="vertical-align: middle;">确定要删除选中的 {{ selectedFiles.length }} 项吗？</span>
       </div>
       <el-checkbox v-model="hardDelete">彻底删除 (不放入回收站)</el-checkbox>
@@ -307,20 +384,20 @@
     </el-dialog>
 
     <!-- 预览弹窗 -->
-    <el-dialog :title="previewFileObj ? previewFileObj.name : '预览'" :visible.sync="previewDialogVisible" top="5vh" @close="closePreview" append-to-body width="900px">
+    <el-dialog :title="previewFileObj ? previewFileObj.name : '预览'" :visible.sync="previewDialogVisible" top="5vh"
+      @close="closePreview" append-to-body width="900px">
       <div class="preview-content" v-loading="previewLoading">
-        <el-image v-if="previewType === 'image'" :lazy="true" :src="previewUrl" fit="contain" style="width: 100%; height: 60vh;" :preview-src-list="[previewUrl]"></el-image>
-        <video v-else-if="previewType === 'video'" :src="previewUrl" controls style="width: 100%; max-height: 60vh;"></video>
-        <audio v-else-if="previewType === 'audio'" :src="previewUrl" controls style="width: 100%; margin-top: 0px;"></audio>
-        <iframe v-else-if="previewType === 'document'" :src="previewUrl" frameborder="0" style="width: 100%; height: 65vh;"></iframe>
+        <el-image v-if="previewType === 'image'" :lazy="true" :src="previewUrl" fit="contain"
+          style="width: 100%; height: 60vh;" :preview-src-list="[previewUrl]"></el-image>
+        <video v-else-if="previewType === 'video'" :src="previewUrl" controls
+          style="width: 100%; max-height: 60vh;"></video>
+        <audio v-else-if="previewType === 'audio'" :src="previewUrl" controls
+          style="width: 100%; margin-top: 0px;"></audio>
+        <iframe v-else-if="previewType === 'document'" :src="previewUrl" frameborder="0"
+          style="width: 100%; height: 65vh;"></iframe>
         <div v-else-if="previewType === 'text'" style="width: 100%;">
-          <el-input
-            type="textarea"
-            :rows="20"
-            v-model="previewText"
-            placeholder="正在加载文本内容..."
-            style="width: 100%; min-height: 60vh;"
-          ></el-input>
+          <el-input type="textarea" :rows="20" v-model="previewText" placeholder="正在加载文本内容..."
+            style="width: 100%; min-height: 60vh;"></el-input>
         </div>
       </div>
       <span slot="footer" class="dialog-footer" v-if="previewType === 'text'">
@@ -333,14 +410,17 @@
     <el-dialog title="文件信息" :visible.sync="detailDialogVisible" width="520px" append-to-body>
       <div class="detail-panel" v-if="contextMenuRow">
         <div class="detail-header">
-          <i :class="getFileIcon(contextMenuRow)" :style="{ fontSize: '32px', color: getIconColor(contextMenuRow), marginRight: '12px' }"></i>
+          <i :class="getFileIcon(contextMenuRow)"
+            :style="{ fontSize: '32px', color: getIconColor(contextMenuRow), marginRight: '12px' }"></i>
           <div>
             <div class="detail-title">{{ contextMenuRow.name }}</div>
-            <div class="detail-subtitle">{{ contextMenuRow.isDirectory ? '文件夹' : (uppercaseType(contextMenuRow.type) + ' 文件') }}</div>
+            <div class="detail-subtitle">{{ contextMenuRow.isDirectory ? '文件夹' : (uppercaseType(contextMenuRow.type) + '文件') }}</div>
           </div>
         </div>
         <div class="detail-row"><span>路径：</span><span>{{ contextMenuRow.path }}</span></div>
-        <div class="detail-row"><span>大小：</span><span>{{ contextMenuRow.isDirectory ? '-' : formatSize(contextMenuRow.size) }}</span></div>
+        <div class="detail-row"><span>大小：</span><span>{{ contextMenuRow.isDirectory ? '-' :
+          formatSize(contextMenuRow.size)
+            }}</span></div>
         <div class="detail-row"><span>修改时间：</span><span>{{ formatDate(contextMenuRow.updateTime) }}</span></div>
         <div class="detail-row"><span>是否文件夹：</span><span>{{ contextMenuRow.isDirectory ? '是' : '否' }}</span></div>
         <div v-if="isDocumentType(contextMenuRow)" class="detail-snippet">
@@ -354,18 +434,10 @@
     </el-dialog>
 
     <!-- 在最底部（其他 dialog 旁边）新增：新建文件/文件夹弹窗 -->
-    <el-dialog
-      :title="createForm.isFolder ? '新建文件夹' : '新建文件'"
-      :visible.sync="createDialogVisible"
-      width="400px"
-      append-to-body
-    >
-      <el-input
-        v-model="createForm.name"
-        :placeholder="createForm.isFolder ? '请输入文件夹名称' : '请输入文件名称 (如: index.html)'"
-        @keyup.enter.native="submitCreate"
-        ref="createInput"
-      ></el-input>
+    <el-dialog :title="createForm.isFolder ? '新建文件夹' : '新建文件'" :visible.sync="createDialogVisible" width="400px"
+      append-to-body>
+      <el-input v-model="createForm.name" :placeholder="createForm.isFolder ? '请输入文件夹名称' : '请输入文件名称 (如: index.html)'"
+        @keyup.enter.native="submitCreate" ref="createInput"></el-input>
       <span slot="footer">
         <el-button @click="createDialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="submitCreate" :loading="actionLoading">确 定</el-button>
@@ -430,6 +502,13 @@ export default {
       previewSaveLoading: false,
       previewLoading: false,
       baseAPI: process.env.VUE_APP_BASE_API,
+
+      // 上传相关状态
+      uploadDrawerVisible: false,
+      uploadQueue: [],
+      overwriteConfirmVisible: false,
+      uploadDuplicateList: [],
+      dragActive: false,
 
       // 新建功能相关状态
       createDialogVisible: false,
@@ -589,13 +668,13 @@ export default {
           this.$message.success('删除成功');
           this.fetchFiles(this.currentPath, false);
         }
-      }).catch(() => {});
+      }).catch(() => { });
     },
     hardDeleteRecycleBatch() {
       this.$confirm('确定要彻底删除选中的文件吗？此操作不可恢复！', '警告', { type: 'warning' }).then(() => {
         const names = this.selectedRecycleFiles.map(f => f.recycleName);
         this.hardDeleteRecycle(names);
-      }).catch(() => {});
+      }).catch(() => { });
     },
     async hardDeleteRecycle(names) {
       try {
@@ -625,11 +704,198 @@ export default {
     },
 
     handleCopyPath(row) {
-      var fullPath = row.url;
-      if(url === null || url === undefined) {
-        fullPath = row.path;
-      }
+      const fullPath = row.url || row.path || '';
       copyToClipboard(fullPath);
+    },
+    //重命名文件名后加入上传队列
+    renameFile(filename) {
+      if (/\s/.test(filename)) {
+        // 2. 创建新文件名，替换所有空白字符为下划线
+        const newName = filename.replace(/\s+/g, '_');
+        // 3. 构造新的 File 对象
+        // new File(bits, name, options)
+        // return new File([file], newName, {
+        //   type: file.type,
+        //   lastModified: file.lastModified
+        // });
+        return newName;
+      }
+    },
+    // 上传文件和文件夹的抽屉
+    openUploadDrawer() {
+      this.uploadDrawerVisible = true;
+    },
+    triggerFileSelect() {
+      this.$refs.fileInput.click();
+    },
+    triggerFolderSelect() {
+      this.$refs.folderInput.click();
+    },
+    onUploadFileInputChange(event) {
+      const files = Array.from(event.target.files || []);
+      const items = files.map(file => ({ file, relativePath: this.renameFile(file.name) }));
+      this.enqueueUploadFiles(items);
+      event.target.value = '';
+    },
+    onUploadFolderInputChange(event) {
+      const files = Array.from(event.target.files || []);
+      const items = files.map(file => ({ file, relativePath: file.webkitRelativePath || file.name }));
+      this.enqueueUploadFiles(items);
+      event.target.value = '';
+    },
+    async handleUploadDrop(event) {
+      this.dragActive = false;
+      const items = event.dataTransfer.items;
+      let files = [];
+      if (items && items.length > 0) {
+        files = await this.readDroppedItems(items);
+      } else {
+        files = Array.from(event.dataTransfer.files || []).map(file => ({ file, relativePath: file.name }));
+      }
+      this.enqueueUploadFiles(files);
+    },
+    async readDroppedItems(items) {
+      const results = [];
+      for (const item of Array.from(items)) {
+        const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
+        if (entry) {
+          const dropped = await this.traverseFileTree(entry);
+          results.push(...dropped);
+        } else {
+          const file = item.getAsFile ? item.getAsFile() : null;
+          if (file) results.push({ file, relativePath: file.name });
+        }
+      }
+      return results;
+    },
+    traverseFileTree(entry, path = '') {
+      return new Promise(resolve => {
+        if (entry.isFile) {
+          entry.file(file => resolve([{ file, relativePath: path + file.name }]));
+        } else if (entry.isDirectory) {
+          const reader = entry.createReader();
+          reader.readEntries(async entries => {
+            const children = [];
+            for (const child of entries) {
+              const childFiles = await this.traverseFileTree(child, path + entry.name + '/');
+              children.push(...childFiles);
+            }
+            resolve(children);
+          });
+        } else {
+          resolve([]);
+        }
+      });
+    },
+    enqueueUploadFiles(items) {
+      if (!items || items.length === 0) {
+        return;
+      }
+      const existMap = new Set(this.uploadQueue.map(item => item.relativePath));
+      let added = 0;
+      items.forEach(item => {
+        if (!item || !item.file) return;
+        const relativePath = item.relativePath || item.file.name;
+        if (!existMap.has(relativePath)) {
+          this.uploadQueue.push({ file: item.file, relativePath, size: item.file.size });
+          existMap.add(relativePath);
+          added += 1;
+        }
+      });
+      if (added > 0) {
+        this.$message.success(`已加入 ${added} 个待上传文件`);
+      }
+    },
+    async startUploadFiles() {
+      if (this.uploadQueue.length === 0) {
+        return this.$message.warning('请先选择要上传的文件或文件夹');
+      }
+      this.uploading = true;
+      try {
+        const duplicates = await this.checkUploadDuplicates();
+        if (duplicates.length > 0) {
+          this.uploadDuplicateList = duplicates;
+          this.overwriteConfirmVisible = true;
+          return;
+        }
+        await this.uploadBatch(false);
+      } finally {
+        this.uploading = false;
+      }
+    },
+    async confirmOverwrite() {
+      this.overwriteConfirmVisible = false;
+      this.uploading = true;
+      try {
+        await this.uploadBatch(true);
+      } finally {
+        this.uploading = false;
+      }
+    },
+    async checkUploadDuplicates() {
+      if (!this.uploadQueue.length) return [];
+      const paths = this.uploadQueue.map(item => item.relativePath);
+      try {
+        const res = await check_exist({ path: this.currentPath, paths });
+        if (res.code === 200) {
+          if (Array.isArray(res.data)) {
+            return res.data;
+          }
+          if (typeof res.data === 'boolean') {
+            return res.data ? paths : [];
+          }
+        }
+      } catch (e) {
+        console.warn('检查重复文件失败', e);
+      }
+      return [];
+    },
+    async uploadBatch(overwrite) {
+      const formData = new FormData();
+      this.uploadQueue.forEach(item => {
+        formData.append('files', item.file);
+        formData.append('relativePaths', item.relativePath);
+      });
+      formData.append('path', this.currentPath);
+      formData.append('overwrite', overwrite);
+
+      this.progressTitle = '正在上传文件';
+      this.progressDesc = `共 ${this.uploadQueue.length} 个文件`;
+      this.progressPercent = 0;
+      this.progressVisible = true;
+
+      const onUploadProgress = event => {
+        if (event.total) {
+          this.progressPercent = Math.min(100, Math.round((event.loaded * 100) / event.total));
+        }
+      };
+
+      try {
+        const uploadRes = await upload_file(formData, onUploadProgress);
+        if (uploadRes.code === 200) {
+          this.$message.success('上传完成');
+          this.uploadQueue = [];
+          this.uploadDrawerVisible = false;
+          this.fetchFiles(this.currentPath, false);
+        } else {
+          if (uploadRes.code === 409 && Array.isArray(uploadRes.data)) {
+            this.uploadDuplicateList = uploadRes.data;
+            this.overwriteConfirmVisible = true;
+          } else {
+            this.$message.error(uploadRes.msg || '上传失败');
+          }
+        }
+      } catch (error) {
+        this.$message.error('上传失败: ' + (error.message || error));
+      } finally {
+        setTimeout(() => { this.progressVisible = false; }, 500);
+      }
+    },
+    removeTempFile(index) {
+      this.uploadQueue.splice(index, 1);
+    },
+    clearUploadQueue() {
+      this.uploadQueue = [];
     },
     // ---------------- 批量操作与剪贴板 ----------------
     handleSelectionChange(val) {
@@ -752,7 +1018,7 @@ export default {
       } else {
         this.previewLoading = true;
         try {
-          if(row.url === "" || row.url === null) {
+          if (row.url === "" || row.url === null) {
             this.previewUrl = this.baseAPI + getDownloadUrl(row.path, true);
           } else {
             this.previewUrl = row.url;
@@ -839,7 +1105,7 @@ export default {
       if (/\s/.test(file.name)) {
         // 2. 创建新文件名，替换所有空白字符为下划线
         const newName = file.name.replace(/\s+/g, '_');
-        console.log(newName);
+        // console.log(newName);
         // 3. 构造新的 File 对象
         // new File(bits, name, options)
         this.renamedFile = new File([file], newName, {
@@ -869,10 +1135,10 @@ export default {
 
       // 1. 检查是否存在同名文件
       try {
-        const checkRes = await check_exist({ path: targetPath, filename: file.name });
+        const checkRes = await check_exist({ path: targetPath, paths: [file.name] });
 
         let shouldOverwrite = false;
-        if (checkRes.data === true) {
+        if (checkRes.data.length > 0) {
           // 文件存在，弹窗让用户选择
           try {
             await this.$confirm(`文件 "${file.name}" 已存在，是否覆盖？`, '提醒', {
@@ -890,7 +1156,7 @@ export default {
 
         // 2. 准备开始上传并显示进度条
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('files', file);
         formData.append('path', targetPath);
         formData.append('overwrite', shouldOverwrite);
 
@@ -930,9 +1196,9 @@ export default {
       const SIZE_500MB = 500 * 1024 * 1024;
 
       if (!fileSize) {
-         // 大小未知，兜底方案
-         downloadCommonFile(row.path, false);
-         return;
+        // 大小未知，兜底方案
+        downloadCommonFile(row.path, false);
+        return;
       }
       if (fileSize < SIZE_50MB) {
         // [方式A：Web Worker 下载] 小于 50MB 用 Web Worker 纯内存接收，进度条最平滑，体验最好
@@ -949,53 +1215,53 @@ export default {
 
     // 方式 A:强大的后台多线程加载 Web Worker 下载 (含实时 UI 进度条)
     downloadByWebWorker(url, filename) {
-        this.progressTitle = "正在下载文件 (多线程加速)";
-        this.progressDesc = `下载中: ${filename}`;
-        this.progressPercent = 0;
-        this.progressVisible = true;
+      this.progressTitle = "正在下载文件 (多线程加速)";
+      this.progressDesc = `下载中: ${filename}`;
+      this.progressPercent = 0;
+      this.progressVisible = true;
 
-        if (window.Worker) {
-            const worker = new Worker('/worker/downloadWorker.js');
-            worker.postMessage({ url: url, filename: filename });
+      if (window.Worker) {
+        const worker = new Worker('/worker/downloadWorker.js');
+        worker.postMessage({ url: url, filename: filename });
 
-            worker.onmessage = (e) => {
-                if (e.data.type === 'progress') {
-                    this.progressPercent = e.data.percent;
-                } else if (e.data.type === 'success') {
-                    // 下载完成，由内存Blob创建链接
-                    const blobUrl = window.URL.createObjectURL(e.data.blob);
-                    const link = document.createElement('a');
-                    link.href = blobUrl;
-                    link.download = e.data.filename;
-                    document.body.appendChild(link);
-                    link.click();
-                    link.remove();
-                    window.URL.revokeObjectURL(blobUrl);
+        worker.onmessage = (e) => {
+          if (e.data.type === 'progress') {
+            this.progressPercent = e.data.percent;
+          } else if (e.data.type === 'success') {
+            // 下载完成，由内存Blob创建链接
+            const blobUrl = window.URL.createObjectURL(e.data.blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = e.data.filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(blobUrl);
 
-                    this.$message.success('下载完成');
-                    setTimeout(() => { this.progressVisible = false; }, 500);
-                    worker.terminate();
-                } else if (e.data.type === 'error') {
-                    this.$message.error('下载遇到阻碍: ' + e.data.error);
-                    this.progressVisible = false;
-                    worker.terminate();
-                }
-            };
-        } else {
-            // 不支持 Web Worker 时退化为 A 方案主线程 Axios 下载
-            downloadFileByProgress(url, this.progressPercent, this.progressVisible);
-        }
+            this.$message.success('下载完成');
+            setTimeout(() => { this.progressVisible = false; }, 500);
+            worker.terminate();
+          } else if (e.data.type === 'error') {
+            this.$message.error('下载遇到阻碍: ' + e.data.error);
+            this.progressVisible = false;
+            worker.terminate();
+          }
+        };
+      } else {
+        // 不支持 Web Worker 时退化为 A 方案主线程 Axios 下载
+        downloadFileByProgress(url, this.progressPercent, this.progressVisible);
+      }
     },
 
     // 方式 B
     downloadByServiceWorker(url, filename) {
-        // 让页面新建隐藏 iframe 触发对应的 URL（附带 sw_download 标识欺骗SW拦截）
-        const iframe = document.createElement('iframe');
-        iframe.title = filename;
-        iframe.style.display = 'none';
-        iframe.src = `${url}&sw_download=true`; // 触发 SW fetch 拦截
-        document.body.appendChild(iframe);
-        // iframe 成功响应后 SW 自己会 postMessage 过来唤起主界面的进度条
+      // 让页面新建隐藏 iframe 触发对应的 URL（附带 sw_download 标识欺骗SW拦截）
+      const iframe = document.createElement('iframe');
+      iframe.title = filename;
+      iframe.style.display = 'none';
+      iframe.src = `${url}&sw_download=true`; // 触发 SW fetch 拦截
+      document.body.appendChild(iframe);
+      // iframe 成功响应后 SW 自己会 postMessage 过来唤起主界面的进度条
     },
     openRenameDialog(row) { this.currentRow = row; this.newName = row.name; this.renameDialogVisible = true; },
     async submitRename() {
@@ -1275,63 +1541,455 @@ export default {
 </script>
 
 <style scoped>
-.file-manager-container { padding: 20px; /* background: #fff; */ border-radius: 4px; }
-.nav-bar { display: flex; flex-wrap: wrap; align-items: center; margin-bottom: 10px; padding: 10px; /* background: #f5f7fa; */ border-radius: 4px; gap: 15px; }
-.nav-buttons { display: flex; gap: 5px; }
-.path-input-container { flex: 1; max-width: 400px; }
-.search-container { width: 250px; }
-.toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 10px; }
-.breadcrumb-container { flex: 1 auto; margin: 5px auto; }
-.actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.upload-btn { display: inline-block; }
-.file-name-cell { display: flex; align-items: center; }
-.file-name-cell:hover .name-text { color: #409EFF; text-decoration: underline; }
-.file-name-cell i { font-size: 20px; margin-right: 5px; }
-.file-name-cell .i-btn { margin-right: 5px; border: none; background: none; padding: 3px; }
-.name-text { font-size: 14px; user-select: none; }
-.danger-text { color: #F56C6C; }
-.preview-content { display: flex; justify-content: center; /* background-color: #f8f9fa; align-items: center; */ min-height: 100px; border-radius: 4px; overflow: hidden; }
+.file-manager-container {
+  padding: 20px;
+  /* background: #fff; */
+  border-radius: 4px;
+}
 
-.icon-view { min-height: 60vh; }
-.icon-layout { display: flex; gap: 16px; }
-.icon-grid { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; flex: 1; }
-.icon-card { width: 160px; min-height: 220px; border: 1px solid #e4e7ed; border-radius: 8px; padding: 8px; background: #fff; display: flex; flex-direction: column; position: relative; transition: box-shadow .2s; cursor: pointer; }
-.icon-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.12); }
-.icon-card.selected { border-color: #409EFF; background: #ecf5ff; }
-.icon-checkbox { position: absolute; top: 4px; left: 4px; z-index: 10; }
-.icon-preview { width: 100%; height: 100px; display: flex; justify-content: center; align-items: center; background: #f9fafb; border-radius: 4px; position: relative; overflow: hidden; }
-.icon-preview img { width: 100%; height: 100%; object-fit: cover; }
-.media-action { position: absolute; right: 6px; bottom: 6px; width: 26px; height: 26px; border-radius: 50%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; cursor: pointer; }
-.icon-meta { margin-top: 6px; display: flex; flex-direction: column; flex: 1; }
-.icon-name { font-size: 13px; line-height: 1.2; color: #303133; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.icon-type, .icon-size { font-size: 11px; color: #909399; margin-top: 2px; }
-.icon-snippet { margin-top: 4px; font-size: 11px; color: #606266; height: 36px; overflow: hidden; text-overflow: ellipsis; }
-.icon-actions { margin-top: auto; display: flex; gap: 4px; }
-.icon-side-panel { width: 280px; min-width: 280px; background: #ffffff; border: 1px solid #e4e7ed; border-radius: 10px; padding: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 16px; }
-.side-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.side-panel-header-text { flex: 1; min-width: 0; }
-.side-panel-title { font-size: 16px; font-weight: 600; color: #303133; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.side-panel-subtitle { font-size: 12px; color: #909399; margin-top: 4px; }
-.side-panel-close { cursor: pointer; color: #909399; font-size: 16px; }
-.side-panel-close:hover { color: #606266; }
-.side-panel-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.side-panel-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #606266; font-size: 13px; }
-.side-panel-row span:first-child { color: #909399; }
-.side-panel-snippet { padding: 12px; background: #f4f6fa; border-radius: 8px; color: #606266; font-size: 12px; line-height: 1.6; }
-.side-panel-snippet-label { margin-bottom: 6px; font-size: 12px; color: #909399; }
-.context-menu { position: fixed; z-index: 999; min-width: 180px; background: #fff; border: 1px solid rgba(0,0,0,.12); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,.12); overflow: hidden; }
-.context-menu ul { margin: 0; padding: 8px 0; list-style: none; }
-.context-menu li { padding: 10px 16px; font-size: 13px; color: #303133; cursor: pointer; transition: background .2s; }
-.context-menu li:hover { background: #f5f7fa; }
-.detail-panel { display: flex; flex-direction: column; gap: 12px; }
-.detail-header { display: flex; align-items: center; margin-bottom: 12px; }
-.detail-title { font-size: 16px; font-weight: 600; color: #303133; }
-.detail-subtitle { font-size: 12px; color: #909399; margin-top: 4px; }
-.detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #ebeef5; color: #606266; font-size: 13px; }
-.detail-row span:first-child { color: #909399; }
-.detail-snippet { padding: 10px; background: #f4f6fa; border-radius: 6px; color: #606266; font-size: 12px; line-height: 1.5; }
-.detail-snippet-label { margin-bottom: 6px; font-size: 12px; color: #909399; }
-.empty-icon-view { color: #909399; text-align: center; padding: 30px; }
+.nav-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 10px;
+  /* background: #f5f7fa; */
+  border-radius: 4px;
+  gap: 15px;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.path-input-container {
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-container {
+  width: 250px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 0 10px;
+}
+
+.breadcrumb-container {
+  flex: 1 auto;
+  margin: 5px auto;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.upload-btn {
+  display: inline-block;
+}
+
+.file-name-cell {
+  display: flex;
+  align-items: center;
+}
+
+.file-name-cell:hover .name-text {
+  color: #409EFF;
+  text-decoration: underline;
+}
+
+.file-name-cell i {
+  font-size: 20px;
+  margin-right: 5px;
+}
+
+.file-name-cell .i-btn {
+  margin-right: 5px;
+  border: none;
+  background: none;
+  padding: 3px;
+}
+
+.name-text {
+  font-size: 14px;
+  user-select: none;
+}
+
+.danger-text {
+  color: #F56C6C;
+}
+
+.preview-content {
+  display: flex;
+  justify-content: center;
+  /* background-color: #f8f9fa; align-items: center; */
+  min-height: 100px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.icon-view {
+  min-height: 60vh;
+}
+
+.icon-layout {
+  display: flex;
+  gap: 16px;
+}
+
+.icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: stretch;
+  flex: 1;
+}
+
+.icon-card {
+  width: 160px;
+  min-height: 220px;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  padding: 8px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: box-shadow .2s;
+  cursor: pointer;
+}
+
+.icon-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .12);
+}
+
+.icon-card.selected {
+  border-color: #409EFF;
+  background: #ecf5ff;
+}
+
+.icon-checkbox {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 10;
+}
+
+.icon-preview {
+  width: 100%;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f9fafb;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.icon-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.media-action {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.icon-meta {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.icon-name {
+  font-size: 13px;
+  line-height: 1.2;
+  color: #303133;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.icon-type,
+.icon-size {
+  font-size: 11px;
+  color: #909399;
+  margin-top: 2px;
+}
+
+.icon-snippet {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #606266;
+  height: 36px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.icon-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.icon-side-panel {
+  width: 280px;
+  min-width: 280px;
+  background: #ffffff;
+  border: 1px solid #e4e7ed;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.side-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.side-panel-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.side-panel-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.side-panel-subtitle {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+.side-panel-close {
+  cursor: pointer;
+  color: #909399;
+  font-size: 16px;
+}
+
+.side-panel-close:hover {
+  color: #606266;
+}
+
+.side-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.side-panel-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  color: #606266;
+  font-size: 13px;
+}
+
+.side-panel-row span:first-child {
+  color: #909399;
+}
+
+.side-panel-snippet {
+  padding: 12px;
+  background: #f4f6fa;
+  border-radius: 8px;
+  color: #606266;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.side-panel-snippet-label {
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #909399;
+}
+
+.context-menu {
+  position: fixed;
+  z-index: 999;
+  min-width: 180px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, .12);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+  overflow: hidden;
+}
+
+.context-menu ul {
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+}
+
+.context-menu li {
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #303133;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.context-menu li:hover {
+  background: #f5f7fa;
+}
+
+.detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.detail-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.detail-subtitle {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px dashed #ebeef5;
+  color: #606266;
+  font-size: 13px;
+}
+
+.detail-row span:first-child {
+  color: #909399;
+}
+
+.detail-snippet {
+  padding: 10px;
+  background: #f4f6fa;
+  border-radius: 6px;
+  color: #606266;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.detail-snippet-label {
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #909399;
+}
+
+.empty-icon-view {
+  color: #909399;
+  text-align: center;
+  padding: 30px;
+}
+
+.upload-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px;
+}
+
+.upload-ops {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.upload-dropzone {
+  border: 2px dashed var(--border-color, #d3dce6);
+  border-radius: 12px;
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background, #fafafa);
+  transition: border-color .2s ease, background .2s ease;
+}
+
+.upload-dropzone.active {
+  border-color: var(--theme-color, #409EFF);
+  background: var(--color-background, #ecf5ff);
+}
+
+.upload-drop-content {
+  text-align: center;
+  color: var(--fontColor, #606266);
+}
+
+.upload-drop-text {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--font-color, #303133);
+}
+
+.upload-drop-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--fontColor, #909399);
+}
+
+.upload-queue {
+  border: 1px solid var(--border-color, #e4e7ed);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--background, #fff);
+}
+
+.queue-header {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: var(--font-color, #303133);
+}
+
+.upload-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
 /*.file-name-cell @media only screen and (max-width: 767px) {
   .hidden-xs-only { display: none !important; }
