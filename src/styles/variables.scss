@@ -47,15 +47,6 @@ $base-border-color: #dcdfe6;
 $base-input-height: 32px;
 //默认paddiing
 $base-padding: 20px;
-// the :export directive is the magic sauce for webpack
-// https://www.bluematador.com/blog/how-to-share-variables-between-js-and-sass
-:export {
-  menuText: $menuText;
-  menuActiveText: $menuActiveText;
-  subMenuActiveText: $subMenuActiveText;
-  menuBg: $menuBg;
-  menuHover: $menuHover;
-  subMenuBg: $subMenuBg;
-  subMenuHover: $subMenuHover;
-  sideBarWidth: $sideBarWidth;
-}
+// the :export 已迁至 variables.module.scss，供 JS import；本文件只保留 Sass 变量给 @import
+// （Vue CLI 5 起普通 .scss 不再自动当 CSS Modules，直接 import 会报 module has no exports）
+

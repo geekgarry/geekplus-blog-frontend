@@ -22,6 +22,7 @@
 import { Navbar, Sidebar, Topbar, AppMain, TagsView, Settings } from './components'
 import ResizeMixin from './mixin/ResizeHandler'
 import RightPanel from '@/components/RightPanel'
+import '@/styles/geekplusadmin.scss'
 
 export default {
   name: 'Layout',

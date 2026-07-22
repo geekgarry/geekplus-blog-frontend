@@ -130,7 +130,20 @@
     </div>
   </div>
   <!-- built files will be auto injected -->
-
+  <script>
+    (function () {
+      var ua = navigator.userAgent || "";
+      var isIE = ua.indexOf("MSIE ") > -1 || ua.indexOf("Trident/") > -1;
+      var chromeMatch = ua.match(/Chrome\/(\d+)/);
+      var isOldChrome = chromeMatch && Number(chromeMatch[1]) < 63;
+      if (!isIE && !isOldChrome) return;
+      var tip = document.createElement("div");
+      tip.setAttribute("style",
+        "position:fixed;left:0;right:0;bottom:0;z-index:2147483647;padding:10px 12px;background:#fff3cd;color:#856404;font-size:13px;line-height:1.5;border-top:1px solid #ffeeba;text-align:center;");
+      tip.innerHTML = "当前浏览器版本过低，页面可能无法正常使用。建议升级到 Chrome / Edge / Firefox / Safari 近两年版本。";
+      document.body.appendChild(tip);
+    })();
+  </script>
 </body>
 <!-- <script>
   new WOW().init();

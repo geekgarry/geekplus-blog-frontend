@@ -99,7 +99,9 @@ export default {
         selector: "#tinymce", //tinymce的id
         // auto_focus: 'element1',
         language: "zh_CN", //语言类型
+        // webpack 打包后 tinymce 会误以 /static/js/ 为 base，必须显式指定皮肤路径，否则 content.css MIME 报错
         skin_url: "/tinymce/skins/ui/oxide",
+        content_css: "/tinymce/skins/content/default/content.css",
         height: 680, //编辑器高度
         min_height: 380,
         // min_width: 700,

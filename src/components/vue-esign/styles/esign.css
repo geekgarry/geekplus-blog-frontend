@@ -1,0 +1,691 @@
+/* vue-esign 自包含样式 — 不依赖 Tailwind，Vue2/Vue3 通用 */
+
+.esign-page {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 12px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  color: #1e293b;
+}
+
+.esign-page__card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  min-height: 70vh;
+  overflow-x: hidden;
+}
+
+.esign-page__header {
+  background: #1e293b;
+  color: #fff;
+  padding: 16px 20px;
+}
+
+.esign-page__header-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.esign-page__logo {
+  font-size: 22px;
+  color: #7dd3fc;
+}
+
+.esign-page__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.esign-page__subtitle {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.esign-page__body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+@media (min-width: 1024px) {
+  .esign-page__body {
+    flex-direction: row;
+  }
+}
+
+.esign-page__pad {
+  flex: 1;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+@media (min-width: 1024px) {
+  .esign-page__pad {
+    border-bottom: none;
+    border-right: 1px solid #e2e8f0;
+  }
+}
+
+/* —— SignaturePad —— */
+.esign-pad-root {
+  display: flex;
+  flex-direction: column;
+}
+
+.esign-pad__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.esign-pad__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.esign-pad__fs-btn {
+  display: inline-flex;
+}
+
+@media (min-width: 768px) {
+  .esign-pad__fs-btn {
+    display: none;
+  }
+  .esign-pad__mobile {
+    display: none;
+  }
+  .esign-pad__desktop {
+    display: flex !important;
+  }
+}
+
+.esign-pad__mobile {
+  margin-bottom: 12px;
+}
+
+.esign-pad__mobile-preview {
+  aspect-ratio: 2.5 / 1;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.esign-pad__preview-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.esign-pad__mobile-hint {
+  border: none;
+  background: transparent;
+  color: #0284c7;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 16px;
+  cursor: pointer;
+}
+
+.esign-pad__mobile-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.esign-pad__desktop {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 12px;
+}
+
+.esign-canvas-box {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 2px dashed #d1d5db;
+  background: #fff;
+}
+
+.esign-canvas-box--desktop {
+  height: 220px;
+}
+
+@media (min-width: 1024px) {
+  .esign-canvas-box--desktop {
+    flex: 1;
+    min-height: 220px;
+    height: auto;
+  }
+}
+
+.esign-canvas-box--fs {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.esign-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+  touch-action: none;
+  -webkit-touch-callout: none;
+}
+
+.esign-canvas-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: #9ca3af;
+  font-size: 14px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.esign-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.esign-toolbar__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.esign-toolbar__left--dark {
+  color: #4b5563;
+}
+
+.esign-toolbar__left--light {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.esign-toolbar__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.esign-toolbar__item input[type='range'] {
+  width: 80px;
+}
+
+.esign-color {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.esign-toolbar__right {
+  display: flex;
+  gap: 8px;
+}
+
+/* 全屏 */
+.esign-fs {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: #0f172a;
+  overflow: hidden;
+}
+
+.esign-fs__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.esign-fs__title {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.esign-fs__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* —— 侧栏 —— */
+.esign-side {
+  width: 100%;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #fff;
+}
+
+@media (min-width: 1024px) {
+  .esign-side {
+    width: 380px;
+    flex-shrink: 0;
+  }
+}
+
+.esign-side__block {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.esign-side__block--border {
+  background: transparent;
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  border-radius: 0;
+  padding: 12px 0 0;
+}
+
+.esign-side__h {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.esign-side__preview {
+  aspect-ratio: 2 / 1;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.esign-side__preview-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.esign-side__url-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.esign-side__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.esign-side__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.esign-side__footer {
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.esign-input {
+  flex: 1;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.esign-input:focus {
+  border-color: #0ea5e9;
+}
+
+.esign-hidden {
+  display: none !important;
+}
+
+.esign-muted {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.esign-status {
+  font-size: 12px;
+  color: #075985;
+  background: #f0f9ff;
+  border: 1px solid #e0f2fe;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.esign-spin {
+  display: inline-block;
+  animation: esign-rotate 1s linear infinite;
+}
+
+@keyframes esign-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.esign-tip {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.esign-place-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 112px;
+  overflow-y: auto;
+}
+
+.esign-place-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #4b5563;
+  margin-bottom: 4px;
+}
+
+.esign-link-danger {
+  border: none;
+  background: transparent;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* 文档预览 */
+.esign-doc {
+  border-top: 1px solid #e2e8f0;
+  background: #f3f4f6;
+  padding: 16px;
+}
+
+.esign-doc__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.esign-doc__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.esign-doc__pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.esign-doc__preview {
+  position: relative;
+  margin: 0 auto;
+  max-width: 48rem;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.esign-doc__preview--manual {
+  cursor: crosshair;
+}
+
+.esign-doc__page-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  display: block;
+}
+
+.esign-place-list__item--on {
+  outline: 1px solid #34d399;
+}
+
+.esign-sig-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.esign-sig-list__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.esign-sig-list__item--on {
+  border-color: #38bdf8;
+  background: #f0f9ff;
+}
+
+.esign-sig-list__thumb {
+  width: 56px;
+  height: 32px;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.esign-doc__sig {
+  position: absolute;
+  border: 2px solid #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  touch-action: none;
+  cursor: move;
+}
+
+.esign-doc__sig--selected {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.35);
+}
+
+.esign-doc__sig-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.9;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.esign-doc__resize {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 14px;
+  height: 14px;
+  background: #0ea5e9;
+  border: 2px solid #fff;
+  border-radius: 2px;
+  cursor: se-resize;
+}
+
+.esign-doc__hint {
+  text-align: center;
+  font-size: 12px;
+  color: #6b7280;
+  margin: 8px 0 0;
+}
+
+/* —— 按钮 —— */
+.esign-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #374151;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.esign-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.esign-btn--block {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.esign-btn--primary {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #fff;
+}
+
+.esign-btn--dark {
+  background: #1e293b;
+  border-color: #1e293b;
+  color: #fff;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.esign-btn--sky {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #fff;
+  padding: 8px 12px;
+}
+
+.esign-btn--danger {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.esign-btn--success {
+  background: #059669;
+  border-color: #059669;
+  color: #fff;
+}
+
+.esign-btn--ghost {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: transparent;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.esign-btn--lg {
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.esign-btn--icon {
+  padding: 6px 10px;
+  background: #fff;
+}
+
+.esign-chip {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #4b5563;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.esign-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.esign-chip--on {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #92400e;
+}

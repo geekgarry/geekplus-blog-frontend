@@ -1,9 +1,14 @@
+/**
+ * 静态路由表（constantRoutes）
+ * 博客栏目（/timeEssay/... 等）不在此表，由 navMenu + permission.js 运行时 addRoute 到 name:'webApp'。
+ * 因此「首次直链」必须等动态路由注册后再 replace 重进，见 src/permission.js。
+ */
 import Vue from "vue";
 import VueRouter from "vue-router";
 import VerticalBlog from '@/layout/blog/vertical/index';
 import HorizontalBlog from '@/layout/blog/horizontal/index'
-/* Layout */
-import Layout from '@/layout'
+/* 管理端 Layout 异步加载，避免整壳打进博客首屏包 */
+const Layout = () => import(/* webpackChunkName: "layout-admin" */ '@/layout')
 
 Vue.use(VueRouter);
 
@@ -31,11 +36,6 @@ export const constantRoutes = [
     hidden: true
   },
   {
-    path: '/resumeGenerate',
-    component: () => import("../views/resumeGenerate.vue"),
-    hidden: true
-  },
-  {
     path: '/admin',
     component: Layout,
     redirect: '/admin/dashboard',
@@ -47,6 +47,33 @@ export const constantRoutes = [
         name: 'Dashboard',
         component: () => import('@/views/admin/dashboard/index'),
         meta: { title: "首页", icon: 'dashboard', noCache: true, affix: true }
+      }
+    ]
+  },
+  {
+    path: '/admin/tool/resume',
+    component: Layout,
+    hidden: true,
+    type: 'admin',
+    meta: { title: '简历工具' },
+    children: [
+      {
+        path: 'template',
+        name: 'ResumeTemplateManager',
+        component: () => import('@/views/admin/tool/resume/ResumeTemplateManager'),
+        meta: { title: '简历模板管理', noCache: true }
+      },
+      {
+        path: 'template-builder',
+        name: 'ResumeTemplateBuilder',
+        component: () => import('@/views/admin/tool/resume/ResumeTemplateBuilder'),
+        meta: { title: '可视化模板编辑', noCache: true }
+      },
+      {
+        path: 'data',
+        name: 'ResumeDataManager',
+        component: () => import('@/views/admin/tool/resume/ResumeDataManager'),
+        meta: { title: '简历数据管理', noCache: true }
       }
     ]
   },
@@ -78,10 +105,17 @@ export const constantRoutes = [
       component: () => import("@/views/IndexView.vue")
     },
     {
-      path: '/home',
-      name: 'home',
+      path: '/ai-search',
+      name: 'AI 聚合搜索',
       meta: { title: '聚合搜索首页', icon: '' },
       component: () => import('@/views/HomeView.vue')
+    },
+    {
+      path: '/resumeGenerator',
+      name: 'ResumeEditor',
+      meta: { title: '简历生成器', icon: '' },
+      // hidden: true,
+      component: () => import('@/views/tool/ResumeEditor.vue'),
     },
     // {
     //   path: '/devTech',
@@ -163,7 +197,7 @@ export const constantRoutes = [
       path: '/e-sign',
       name: 'eSign',
       meta: { title: '电子签名', icon: '' },
-      component: () => import('@/views/admin/e-sign/index.vue'),
+      component: () => import(/* webpackChunkName: "e-sign" */ '@/components/vue-esign'),
     },
     {
       path: '/leave-word',
@@ -189,7 +223,7 @@ export const constantRoutes = [
       meta: { title: '403', icon: '' },
       type: 'error',
       component: () =>
-        import( /* webpackChunkName: */ "../views/error/Error403.vue")
+        import( /* webpackChunkName: "error-403" */ "../views/error/Error403.vue")
     },
     {
       path: '/404',
@@ -197,7 +231,7 @@ export const constantRoutes = [
       meta: { title: '404', icon: '' },
       type: 'error',
       component: () =>
-        import( /* webpackChunkName: */ "../views/error/Error404.vue")
+        import( /* webpackChunkName: "error-404" */ "../views/error/Error404.vue")
     }
     ]
   },

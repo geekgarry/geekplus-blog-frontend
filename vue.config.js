@@ -40,7 +40,8 @@ module.exports = {
   lintOnSave: false, //process.env.NODE_ENV === 'development',//取消语法检测保存
   productionSourceMap: false, // 生产环境是否生成 sourceMap 文件，一般情况不建议打开
   // filenameHashing: true,
-  // transpileDependencies: true,
+  // 1. 强制转译 jspdf 和相关依赖，确保 Babel 处理其中的 require/import 混合代码
+  transpileDependencies: ['jspdf', 'canvg', '@babel/runtime'],
   devServer: {
     port: port,
     open: false,
@@ -102,8 +103,12 @@ module.exports = {
     name: name,
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, 'src')
+        '@': path.resolve(__dirname, 'src'),
+        // 强制使用 umd 版本，避免 esm 转换问题
+        // 'jspdf': 'jspdf/dist/jspdf.umd.min.js',
         // 'static': resolve('static') // 增加这一行代码
+      // Exact match only ($); 用预编译 jodit.min，避免 Babel 转译整包 ES 源码拖慢构建/增大产物
+      jodit$: path.resolve(__dirname, 'node_modules/jodit/es2021/jodit.min.js'),
       },
     },
     // cache: {
@@ -133,73 +138,7 @@ module.exports = {
       }
     },
     plugins: [
-      new webpack.ProvidePlugin({
-        'window.Quill': 'quill/dist/quill.js',
-        'Quill': 'quill/dist/quill.js'
-      }),
-      // new webpack.BannerPlugin({ banner: 'Cache-Control: public,max-age=31536000', raw: true,
-      // entryOnly: true // 仅作用于入口chunk
-      // }),
-      // new VueLoaderPlugin(),
-      // new MiniCssExtractPlugin({
-      //   filename: "static/css/[name].[contenthash].css",
-      //   chunkFilename: "static/css/[name].[contenthash].css",
-      //   // ✅ 忽略样式顺序警告
-      //   // ignoreOrder: true,
-      // }),
-      // new webpack.optimize.MinChunkSizePlugin({
-      //   minChunkSize: 100000, // 通过合并小于 minChunkSize 大小的 chunk，将 chunk 体积保持在指定大小限制以上
-      //   chunkOverhead: 600000,
-      //   entryChunkMultiplicator: 3
-      // }),
-      // new PrerendererWebpackPlugin({
-      //   staticDir: path.join(__dirname, 'dist'),
-      //   // indexPath: 'index.html',
-      //   routes: ["/", "/home", "/leave-word", "/about", "/search", "/chat"],
-      //   // ,"/devTech/java", "/devTech/frontWeb", "/devTech/sql", "/devTech/linuxServer",
-      //   //   "/resourceWelfare/networkResource", "/resourceWelfare/webSoftware"
-      //   server: {
-      //     // Normally a free port is autodetected, but feel free to set this if needed.
-      //     port: 8088,
-      //     proxy: {
-      //       //配置后端的跨域访问，重写API路径
-      //       // detail: https://cli.vuejs.org/config/#devserver-proxy
-      //       [process.env.VUE_APP_BASE_API]: {
-      //         target: `http://127.0.0.1:8443`, //后端URI地址3443
-      //         changeOrigin: true, // 是否改变源地址
-      //         secure: false, //确保使用https，在使用https时可以选择开启
-      //         pathRewrite: {
-      //           ['^' + process.env.VUE_APP_BASE_API]: ''
-      //         } // 重写路径
-      //       },
-      //       //再配置后端静态资源的跨域访问，/profile为后端配置静态资源映射的虚拟路径
-      //       '/profile': {
-      //         target: `http://127.0.0.1:8443`, //后端URI地址3443
-      //         changeOrigin: true,
-      //         pathRewrite: {
-      //           '^/profile': '/profile'
-      //         }
-      //       }
-      //     },
-      //   },
-      //   // 可选配置或直接使用默认renderer
-      //   rendererOptions: {
-      //     inject: {
-      //       foo: 'bar'
-      //     },
-      //     headless: false,
-      //     // 在 main.js 中 document.dispatchEvent(new Event('render-event'))，两者的事件名称要对应上。
-      //     renderAfterDocumentEvent: 'render-event',
-      //     renderAfterTime: 5000,
-      //     timeout: 10000,
-      //     maxConcurrentRoutes: 1,
-      //     // renderAfterElementExists: '.el-container',
-      //     // elementVisible: true,
-      //     navigationOptions: {
-      //       timeout: 0
-      //     },
-      //   },
-      // }),
+      // Quill / resize 由 quill-loader 注册（Quill 2 + quill-resize-module），勿全局 Provide 拖进首包
       new NodePolyfillPlugin(),
       // new BundleAnalyzerPlugin(),
       /* *******************************************
@@ -224,7 +163,9 @@ module.exports = {
       //   threshold: 10240,
       //   minRatio: 0.8
       // })
-    ]
+    ],
+    // 不要在这里对全部 .js 套 babel-loader（会转译 node_modules/jodit/esm 并报错）
+    // Vue CLI 已对 src 配置 babel；需强制转译的包请用 transpileDependencies
   },
   chainWebpack(config) {
     // config.entry.app=["babel-polyfill","./src/main.js"];
@@ -242,6 +183,22 @@ module.exports = {
     config.plugins.delete("preload"); // TODO: need test
     // when there are many pages, it will cause too many meaningless requests
     config.plugins.delete("prefetch");
+
+    // pdfjs-dist 等 .mjs 包
+    config.module
+      .rule("mjs")
+      .test(/\.mjs$/)
+      .type("javascript/auto")
+      .include.add(/node_modules/)
+      .end();
+
+    // 忽略 CSS 引入顺序冲突警告（异步 chunk 交叉引用时常见，不影响功能）
+    if (config.plugins.has("extract-css")) {
+      config.plugin("extract-css").tap((args) => {
+        args[0] = Object.assign({}, args[0] || {}, { ignoreOrder: true });
+        return args;
+      });
+    }
 
     config.plugin("html").tap((args) => {
     args[0].title = name;
@@ -285,49 +242,114 @@ module.exports = {
       //     inline: /runtime\..*\.js$/
       //   }])
       //   .end();
+      // 分包：首屏仅 libs/elementUI；编辑器/PDF/播放器等走 async，减小首包下载
+      // 生产勿设 VUE_CLI_BABEL_TRANSPILE_MODULES，否则 import() 会变成同步 require
       config.optimization.splitChunks(
         {
           chunks: "all",
-          // minSize: 20000, // 生成chunk的最小体积（单位字节）
-          // maxSize: 500000, // 尝试拆分大于此值的chunk
-          // minChunks: 1, // 模块被引用次数阈值
-          // maxInitialRequests: 5,
-          // maxAsyncRequests: 8,
+          maxInitialRequests: 8, // HTTP/2 下多并行首屏 chunk
+          maxAsyncRequests: 12,
           cacheGroups: {
-            // 禁用默认的chunk分组策略，以便自定义分组策略
+            // 首屏 node_modules（排除重型库，避免被打进 chunk-libs）
             libs: {
               name: "chunk-libs",
-              test: /[\\/]node_modules[\\/]/,
+              test(module) {
+                const r = module.resource || "";
+                if (!/[\\/]node_modules[\\/]/.test(r)) return false;
+                return !/[\\/]node_modules[\\/](echarts|jodit|tinymce|@tinymce|html2canvas|html-to-image|jspdf|canvg|pdfjs-dist|pdf-lib|quill|quill-resize-module|v-viewer|viewerjs|aplayer|video\.js|vue-video-player|highlight\.js)[\\/]/.test(r);
+              },
               priority: 10,
-              chunks: "initial", // only package third parties that are initially dependent
+              chunks: "initial",
             },
             elementUI: {
-              name: "chunk-elementUI", // split elementUI into a single package
-              priority: 20, // the weight needs to be larger than libs and app or it will be packaged into libs or app
-              test: /[\\/]node_modules[\\/]_?element-ui(.*)/, // in order to adapt to cnpm
+              name: "chunk-elementUI",
+              priority: 20,
+              test: /[\\/]node_modules[\\/]_?element-ui(.*)/,
             },
             commons: {
               name: "chunk-commons",
-              test: resolve("src/components"), // can customize your rules
-              minChunks: 3, //  minimum common number
+              test: resolve("src/components"),
+              minChunks: 3,
               priority: 5,
               reuseExistingChunk: true,
             },
             echarts: {
               name: "chunk-echarts",
               test: /[\\/]node_modules[\\/]echarts[\\/]/,
-              priority: 5,
-              chunks: "initial",
-              enforce: true,
+              priority: 30,
+              chunks: "async",
+              reuseExistingChunk: true,
             },
-            // 这里是为了把highlight.js单独打包成一个chunk，避免被打包到libs中，导致libs过大
-            // highlightjs: {
-            //   name: "chunk-highlightjs",
-            //   test: /[\\/]node_modules[\\/]_?highlight\.js(.*)[\\/]/, // in order to adapt to cnpm
-            //   priority: 5,
-            //   chunks: "initial",
-            //   enforce: true,
-            // },
+            jodit: {
+              name: "chunk-jodit",
+              test: /[\\/]node_modules[\\/]jodit[\\/]/,
+              priority: 30,
+              chunks: "async",
+              reuseExistingChunk: true,
+            },
+            tinymce: {
+              name: "chunk-tinymce",
+              test: /[\\/]node_modules[\\/](tinymce|@tinymce)[\\/]/,
+              priority: 30,
+              chunks: "async",
+              reuseExistingChunk: true,
+            },
+            html2canvas: {
+              name: "chunk-html2canvas",
+              test: /[\\/]node_modules[\\/](html2canvas|html-to-image)[\\/]/,
+              priority: 30,
+              chunks: "async",
+              reuseExistingChunk: true,
+            },
+            jspdf: {
+              name: "chunk-jspdf",
+              test: /[\\/]node_modules[\\/](jspdf|canvg)[\\/]/,
+              priority: 30,
+              chunks: "async",
+              reuseExistingChunk: true,
+            },
+            pdf: {
+              name: "chunk-pdf",
+              test: /[\\/]node_modules[\\/](pdfjs-dist|pdf-lib)[\\/]/,
+              priority: 30,
+              chunks: "async",
+              reuseExistingChunk: true,
+            },
+            quill: {
+              name: "chunk-quill",
+              test: /[\\/]node_modules[\\/](quill|quill-resize-module)[\\/]/,
+              priority: 30,
+              chunks: "async",
+              reuseExistingChunk: true,
+            },
+            viewer: {
+              name: "chunk-viewer",
+              test: /[\\/]node_modules[\\/](v-viewer|viewerjs)[\\/]/,
+              priority: 30,
+              chunks: "async",
+              reuseExistingChunk: true,
+            },
+            aplayer: {
+              name: "chunk-aplayer",
+              test: /[\\/]node_modules[\\/]aplayer[\\/]/,
+              priority: 30,
+              chunks: "async",
+              reuseExistingChunk: true,
+            },
+            videojs: {
+              name: "chunk-video",
+              test: /[\\/]node_modules[\\/](video\.js|vue-video-player)[\\/]/,
+              priority: 30,
+              chunks: "async",
+              reuseExistingChunk: true,
+            },
+            highlight: {
+              name: "chunk-highlight",
+              test: /[\\/]node_modules[\\/]highlight\.js[\\/]/,
+              priority: 30,
+              chunks: "async",
+              reuseExistingChunk: true,
+            },
           },
         });
       // https:// webpack.js.org/configuration/optimization/#optimizationruntimechunk
@@ -336,6 +358,14 @@ module.exports = {
         from: path.resolve(__dirname, "./public/robots.txt"), //防爬虫文件
         to: "./", //到根目录下
       };
+      config.optimization.minimizer('terser').use(TerserPlugin, [{
+        parallel: true,
+        terserOptions: {
+          compress: {
+            drop_console: true,
+          },
+        },
+      }]);
       //压缩代码配置，和上面的plugins中的配置二选一
       // config.plugin("compression").use();
     });
@@ -402,8 +432,8 @@ module.exports = {
       // // 这里排除了 .html 文件
       // exclude: [/\.html$/],
       swDest: "./service-worker.js",
-      // 添加此项配置，增加需要缓存的最大文件大小
-      maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+      // 添加此项配置，增加需要缓存的最大文件大小（chunk-libs 约 5MB+）
+      maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
     },
   },
 };

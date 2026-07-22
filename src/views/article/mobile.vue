@@ -309,7 +309,12 @@
             </div>
           </div>
           <div class="share-box-container">
-            <div class="share-container" id="share-card" ref="shareCard">
+            <div
+              class="share-container"
+              id="share-card"
+              ref="shareCard"
+              v-show="!shareCardImg"
+            >
               <div class="share-cover"
                 :style="{ backgroundImage: 'url(' + (articleInfo.indexPicture ? articleInfo.indexPicture : articleCover) + ')' }">
               </div>
@@ -324,9 +329,22 @@
               </div>
               <div class="share-link">{{ windowUrl }}</div>
             </div>
+            <div class="share-preview" v-if="shareCardImg">
+              <img
+                class="share-card-img"
+                :src="shareCardImg"
+                alt="文章分享图"
+                title="长按图片可保存到相册"
+              >
+              <p class="share-hint">长按上方图片可保存；也可点击下方按钮下载</p>
+            </div>
+            <div class="share-preview share-preview--loading" v-else-if="shareCardGenerating">
+              <i class="el-icon-loading"></i>
+              <span>正在生成分享图…</span>
+            </div>
           </div>
           <div class="share-box__btn">
-            <button class="share-btn is-save" @click="saveShareCardImg">分享保存图片</button>
+            <button class="share-btn is-save" :disabled="!shareCardImg || shareCardGenerating" @click="saveShareCardImg">下载分享图片</button>
             <button class="share-btn" @click="onLinkButtonTap">复制链接</button>
           </div>
         </div>
@@ -337,7 +355,6 @@
 
 <script>
 import QRCode from 'qrcode'; // 引入二维码生成库
-import html2canvas from 'html2canvas'; // 引入dom转换库
 
 import PostBreadcrumb from '@/layout/components/Breadcrumb/primary'
 import PlusFooter from '@/layout/components/Footer'
@@ -418,7 +435,8 @@ export default {
       commentsCount: 0,
       showShareDialog: false,
       qrCodeImg: "",
-      shareCardImg: ""
+      shareCardImg: "",
+      shareCardGenerating: false
     };
   },
   // metaInfo () {
@@ -630,88 +648,147 @@ export default {
       this.articleInfo.likeCount += 1;
       this.modifyLikeCount();
     },
-    //分享
+    /**
+     * 打开/关闭分享面板：展示二维码分享卡，并异步生成可长按保存的图片
+     * html2canvas 仅在生成时动态 import，避免拖慢文章页首包
+     */
     toggleShareWith() {
       this.showShareDialog = !this.showShareDialog;
-      var canvas = document.createElement('canvas');
-      var ctx = canvas.getContext('2d');
-      // 设置canvas的尺寸与div相同
-      canvas.width = 90;
-      canvas.height = 90;
-      // 生成二维码
-      QRCode.toDataURL(this.windowUrl, { width: 80, height: 80 }, (err, res) => {
-        if (err) throw err;
+      if (!this.showShareDialog) {
+        this.shareCardGenerating = false;
+        return;
+      }
+      this.shareCardImg = "";
+      this.shareCardGenerating = true;
+      QRCode.toDataURL(this.windowUrl, { width: 80, height: 80, margin: 1 }, (err, res) => {
+        if (err) {
+          this.shareCardGenerating = false;
+          this.$message({ message: "二维码生成失败", type: "error", duration: 2500 });
+          return;
+        }
         this.qrCodeImg = res;
-        // let img = new Image();
-        // img.onload = function (){
-        //   document.body.appendChild(img);
-        // }
+        this.$nextTick(() => {
+          this.generateShareCardImg();
+        });
       });
-      // QRCode.toCanvas('hello wrold', (err,res) => {
-      // if(err) throw err;
-      // 返回的结果是canvas元素
-      // document.body.appendChild(res);
-      // });
-      // 在对话框打开后绘制canvas
-      // this.$nextTick(async () => {
-      //   const canvas = this.$refs.shareCanvas;
-      //   const ctx = canvas.getContext('2d');
-
-      //   // 绘制背景
-      //   ctx.fillStyle = '#fff';
-      //   ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      //   // 绘制标题
-      //   ctx.font = '14px sans-serif';
-      //   ctx.fillStyle = '#000';
-      //   ctx.fillText("<div class='share-article-title'>"+this.articleInfo.articleTitle+"</div>", 10, 40);
-
-      //   // 绘制链接
-      //   ctx.font = '12px sans-serif';
-      //   ctx.fillStyle = 'blue';
-      //   ctx.fillText(this.windowUrl, 10, canvas.height);
-
-      //   // 生成二维码
-      //   const qrCode = await QRCode.toDataURL(this.windowUrl, { width: 80, height: 80 });
-      //   const qrCodeImg = new Image();
-      //   qrCodeImg.src = qrCode;
-      //   const articleBg = new Image();
-      //   articleBg.src = require("@/assets/images/cover1.jpeg");
-      //   const articleCover = new Image();
-      //   articleCover.src = this.articleInfo.indexPicture;
-      //   const logo = new Image();
-      //   logo.src = require("@/assets/logo.png");
-      //   qrCodeImg.onload = () => {
-      //     // ctx.drawImage(articleBg, 0, 0, 300, 200);
-      //     // ctx.drawImage(articleCover, 10, 0, 250, 100);
-      //     // ctx.drawImage(qrCodeImg, canvas.width - 100, canvas.height - 100, 80, 80);
-      //   };
-      // });
     },
-    //分享保存图片
-    saveShareCardImg() {
-      const _this = this;
-      const div = this.$refs.shareCard;
-      var shareCanvas = document.createElement('canvas');
-      var shareCtx = shareCanvas.getContext('2d');
-
-      // 设置canvas的尺寸与div相同
-      shareCanvas.width = 300;
-      shareCanvas.height = 600;
-      // 使用html2canvas库来捕获div的内容
-      html2canvas(div).then(function (shareCanvas) {
-        // 将生成的canvas内容添加到页面上的canvas元素中（可选）
-        // document.body.appendChild(shareCanvas);
-
-        // 如果需要下载或处理生成的图片，可以进一步操作canvas对象
-        // 例如，创建一个图片链接并下载
-        var imgData = shareCanvas.toDataURL('image/png');
-        // this.shareCardImg = imgData;
-        var link = document.createElement('a');
-        link.download = 'article'+ _this.articleInfo.id +'.png';
-        link.href = imgData;
-        link.click();
+    /** 等待图片 decode，减少 html2canvas 截到空白封面/二维码 */
+    waitImageReady(src, timeout) {
+      return new Promise((resolve) => {
+        if (!src) {
+          resolve();
+          return;
+        }
+        const img = new Image();
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          resolve();
+        };
+        img.onload = finish;
+        img.onerror = finish;
+        img.src = src;
+        if (img.complete) finish();
+        window.setTimeout(finish, timeout || 2500);
       });
+    },
+    /** 将分享 DOM 渲染为 PNG（动态加载 html2canvas） */
+    async generateShareCardImg() {
+      const div = this.$refs.shareCard;
+      if (!div) {
+        this.shareCardGenerating = false;
+        return;
+      }
+      try {
+        const coverSrc = this.articleInfo.indexPicture || this.articleCover;
+        await Promise.all([
+          this.waitImageReady(this.qrCodeImg, 2000),
+          this.waitImageReady(coverSrc, 2500),
+          this.waitImageReady(require("@/assets/logo.png"), 2000)
+        ]);
+        // 按需加载，与 vue.config splitChunks 中 chunk-html2canvas 对应
+        const html2canvas = (await import("html2canvas")).default;
+        const canvas = await html2canvas(div, {
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: "#ffffff",
+          scale: Math.min(window.devicePixelRatio || 2, 2),
+          logging: false
+        });
+        this.shareCardImg = canvas.toDataURL("image/png");
+      } catch (e) {
+        this.$message({ message: "分享图生成失败，请稍后重试", type: "error", duration: 3000 });
+      } finally {
+        this.shareCardGenerating = false;
+      }
+    },
+    /** 下载分享图；失败时回退为新窗口打开便于长按保存 */
+    saveShareCardImg() {
+      if (!this.shareCardImg) {
+        if (!this.shareCardGenerating) {
+          this.generateShareCardImg();
+        }
+        this.$message({ message: "分享图生成中，请稍候", type: "info", duration: 2000 });
+        return;
+      }
+      const fileName = "article" + (this.articleInfo.id || "") + ".png";
+      try {
+        // 使用base64ToBlob转换为blob
+        // const blob = this.base64ToBlob(this.shareCardImg);
+        // const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.download = fileName;
+        link.href = this.shareCardImg;
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        // window.URL.revokeObjectURL(url);
+      } catch (e) {
+        // 旧浏览器：新开图片页，方便长按保存
+        this.fallbackOpenImage();
+        // const win = window.open();
+        // if (win) {
+        //   // write不再使用，因为write会清空document.body，导致document.body.appendChild(link)失效
+        //   win.document.write('<img src="' + this.shareCardImg + '" style="max-width:100%">');
+        // } else {
+        //   this.$message({ message: "请长按上方图片保存", type: "info", duration: 3000 });
+        // }
+      }
+    },
+    /**
+     * 回退方案：在新窗口中打开图片，供用户长按保存
+     * 避免使用 document.write，改用 DOM 操作
+     */
+    fallbackOpenImage() {
+      const win = window.open('', '_blank');
+      if (win) {
+        // 创建 img 元素
+        const img = win.document.createElement('img');
+        img.src = this.shareCardImg;
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        img.style.display = 'block';
+        img.style.margin = '0 auto';
+
+        // 设置标题
+        win.document.title = "长按保存图片";
+
+        // 将图片添加到新窗口的 body 中
+        // 注意：新窗口初始是 about:blank，可以直接 append
+        win.document.body.appendChild(img);
+
+        // 可选：添加提示文字
+        const tip = win.document.createElement('p');
+        tip.textContent = "请长按图片选择'保存图片'";
+        tip.style.textAlign = 'center';
+        tip.style.color = '#666';
+        win.document.body.appendChild(tip);
+      } else {
+        this.$message({ message: "弹窗被拦截，请允许弹窗后重试", type: "warning", duration: 3000 });
+      }
     },
     //一键复制分享链接
     onLinkButtonTap(e) {
@@ -1195,7 +1272,38 @@ export default {
 }
 
 .share-box-container {
+  position: relative;
+  min-height: 260px;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.share-preview {
+  width: 100%;
+  text-align: center;
+  padding: 4px 0;
+}
+
+.share-preview--loading {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #666;
+  font-size: 14px;
+  z-index: 2;
+}
+
+.share-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #888;
+  line-height: 1.4;
 }
 
 .share-box__btn {
@@ -1213,6 +1321,12 @@ export default {
   color: #409eff;
   outline: none;
   margin: 10px auto 0;
+  background: transparent;
+}
+
+.share-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .is-save {
@@ -1226,11 +1340,17 @@ export default {
   height: 100%;
   background: var(--background-2);
   padding: 10px;
+  box-sizing: border-box;
 }
 
 .share-card-img {
   width: 100%;
-  height: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 6px;
+  -webkit-touch-callout: default;
+  user-select: none;
 }
 
 .share-container .share-cover {

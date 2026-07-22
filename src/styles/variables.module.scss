@@ -1,0 +1,17 @@
+/**
+ * 供 JS import 的样式变量桥接文件（Vue CLI 5 / css-loader 5+）
+ * 仅 *.module.scss 会按 CSS Modules 处理，:export 才会变成 default export。
+ * 纯 variables.scss 仍给 @import 用，避免全局开启 modules 影响其它样式。
+ */
+@import './variables.scss';
+
+:export {
+  menuText: $menuText;
+  menuActiveText: $menuActiveText;
+  subMenuActiveText: $subMenuActiveText;
+  menuBg: $menuBg;
+  menuHover: $menuHover;
+  subMenuBg: $subMenuBg;
+  subMenuHover: $subMenuHover;
+  sideBarWidth: $sideBarWidth;
+}

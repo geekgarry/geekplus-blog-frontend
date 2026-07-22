@@ -205,12 +205,12 @@
 
 <script>
 import { listNotice, getNotice, delNotice, addNotice, updateNotice, exportNotice } from "@/api/system/notice";
-// import QuillEditor from '@/components/QuillEditor';
+import QuillEditor from '@/components/QuillEditor';
 
 export default {
   name: "NoticeManage",
   components: {
-    // QuillEditor
+    QuillEditor
   },
   data() {
     return {

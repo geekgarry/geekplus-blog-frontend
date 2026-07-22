@@ -1,6 +1,7 @@
 import { dynamicRoutes, constantRoutes } from '@/router'
 import { getMenuTree } from '@/api/system/user'
-import Layout from '@/layout/index'
+// 切勿同步 import Layout，否则管理端整壳会打进博客首屏包
+const Layout = () => import(/* webpackChunkName: "layout-admin" */ '@/layout/index')
 import store from '@/store'
 
 const permission = {
@@ -124,31 +125,28 @@ function hasPermission(route) {
 
 /**
  * 后台查询的菜单数据拼装成路由格式的数据
- * @param routes (resolve: any) => require([`@/views/${view}.vue`], resolve)
+ * 注意：必须用 import() + webpackInclude，禁止 require([`@/${x}`]) 扫整个 src
  */
 export function generaMenu(data) {
   const routes=[]
+  if (!Array.isArray(data)) return routes
   data.forEach(item => {
-    //alert(JSON.stringify(item))
-    var hasChildren=item.children.length>0
-    var redirectPath=item.path+'/'
-    //const component = item.route? asnycRouteMeun[`${item.route}`] : Layout;
+    if (!item) return
+    const hasChildren = item.children && item.children.length > 0
     const menu = {
       path: item.path == '#' ? item.menuId + '_key' : (item.parentId == 0?'/'+item.path : item.path),
       // component: item.component === '#' ? Layout : () => import(`@/views${item.component}`),
       component: item.component ? (resolve) => require([`@/views/admin/${item.component}`], resolve) : Layout,
-      //component: item.component ? () => import(`@/views${item.component}`) : Layout,
+      // 动态加载路由，使用es6的import()语法无效，因为import()是异步的，会导致路由加载失败
+      // component: item.component ? () => import(/* webpackChunkName: "admin-view-[request]" */ /* webpackInclude: /\.vue$/ */ `@/views/admin/${item.component}`) : Layout,
       hidden: (item.visible == 0 ? false : true),
-      redirect: (item.parentId == 0?'/'+item.path+'/'+item.children[0].path:''),
-      children: item.children && item.children.length > 0 ? generaMenu(item.children) : [],
+      // 无子菜单时不要读 children[0].path
+      redirect: (item.parentId == 0 && hasChildren ? '/'+item.path+'/'+item.children[0].path : ''),
+      children: hasChildren ? generaMenu(item.children) : [],
       type: 'admin',
-      name: firstUpperCase(item.path.replace('/', '')),//item.menuName,由于要和vue页面的name匹配，所以要首字母转换大写
-      //meta: item.meta
+      name: firstUpperCase(String(item.path || '').replace('/', '')),
       meta: { title: item.menuName, icon: item.icon, noCache: (item.isCache==0?false:true), id: item.menuId }
     }
-    // if (item.children&&item.children.length > 0) {
-    //   generaMenu(menu.children, item.children)
-    // }
     routes.push(menu)
   })
   return routes
@@ -205,16 +203,13 @@ export function makeRoutes(routes) {
       hidden,
       name,
       meta,
-      component(resolve) {
-        let componentPath = ''
-        if (!component || component === '') {
-          require(['@/layout/index.vue'], resolve)
-          return
-        } else {
-          componentPath = component
-        }
-        require([`@/${componentPath}.vue`], resolve)
-      },
+      component: (!component || component === '')
+        ? Layout
+        : () => import(
+            /* webpackChunkName: "admin-view-[request]" */
+            /* webpackInclude: /views\/admin\/.*\.vue$/ */
+            `@/views/admin/${String(component).replace(/^views\/admin\/?/, '').replace(/\.vue$/, '')}`
+          ),
       children: children && children.length > 0 ? makeRoutes(children) : []
     }
     res.push(oRouter)
@@ -222,25 +217,13 @@ export function makeRoutes(routes) {
   return res
 }
 
-// 动态路由遍历，验证是否具备权限
-// export function filterDynamicRoutes(routes) {
-//   const res = []
-//   routes.forEach(route => {
-//     if (route.permissions) {
-//       if (auth.hasPermiOr(route.permissions)) {
-//         res.push(route)
-//       }
-//     } else if (route.roles) {
-//       if (auth.hasRoleOr(route.roles)) {
-//         res.push(route)
-//       }
-//     }
-//   })
-//   return res
-// }
-
-export const loadView = (view) => { // 路由懒加载
-  return (resolve) => require([`@/views/admin/${view}`], resolve)
+/** 后台视图异步加载（限定 admin 目录，与前台 navMenu.loadView 分离） */
+export const loadView = (view) => {
+  return () => import(
+    /* webpackChunkName: "admin-view-[request]" */
+    /* webpackInclude: /\.vue$/ */
+    `@/views/admin/${view}`
+  )
 }
 
 // 字符串首字母大写，其余不变

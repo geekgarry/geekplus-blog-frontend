@@ -1,3 +1,13 @@
+/**
+ * 全局路由守卫：前台博客动态菜单 + 后台权限路由
+ *
+ * 【直链空白页根因】
+ * 博客栏目路由（如 /timeEssay/personalEssay）来自 navMenu/getMenu，不在 constantRoutes 里。
+ * 从首页点菜单时路由已 addRoute，故能进；首次直接打开该 URL 时：
+ *   1) 守卫里 await 拉菜单并 addRoute
+ *   2) 若只 next() 而不重新进入，Vue Router 仍沿用「加路由之前」的匹配结果 → matched 为空 → 白屏
+ * 正确做法：动态路由刚注册完后 next({ ...to, replace: true }) 强制再匹配一次。
+ */
 import router from "./router";
 import store from "./store";
 import Message from "element-ui/lib/message";
@@ -5,11 +15,10 @@ import NProgress from "nprogress"; // progress bar
 import "nprogress/nprogress.css"; // progress bar style
 import { getToken } from "@/utils/auth"; // get token from cookie
 import getPageTitle from "@/utils/get-page-title";
-// import { asyncRouterMap, constantRoutes } from "@/router";
 
 NProgress.configure({
   showSpinner: false,
-  minimum: 0.1, // 开始动画的百分比
+  minimum: 0.1,
   template: `
     <div class="bar" role="bar">
       <div class="peg"></div>
@@ -17,173 +26,166 @@ NProgress.configure({
     <div class="spinner" role="spinner">
       <div class="spinner-icon"></div>
     </div>
-    `, // 自定义进度条和旋钮的HTML结构
-  ease: "ease", // 动画使用的easing方程
-  speed: 200, // 动画的速度（以毫秒为单位）
-}); // NProgress Configuration
+    `,
+  ease: "ease",
+  speed: 200,
+});
 
-// 动态添加路由的函数
-function addRoute(route) {
-  const nameExists = router.getRoutes().some(r => r.name === route.name);
-  const routeExists = router.getRoutes().some(r => r.path === route.path);
-  if (!routeExists) {
-    router.addRoute(route);
-  }
-}
-
+/** 将路由挂到指定父级下（按 path 去重，避免 HMR / 重复守卫注册两次） */
 function addChildRoute(parent, route) {
-  const nameExists = router.getRoutes().some(r => r.name === route.name);
-  const routeExists = router.getRoutes().some(r => r.path === route.path);
+  if (!route || route.path == null) return;
+  const routeExists = router.getRoutes().some((r) => r && r.path === route.path && r.name === route.name);
   if (!routeExists) {
     router.addRoute(parent, route);
   }
 }
 
-const whiteList = ['/article/**', '/user', '/login', '/register', '/redirect', '/home', '/search', '/leave-word', '/about', '/resumeGenerate', '/404', '/403', '/chat']; // no redirect whitelist
-//const adminList = ['/admin', '/admin/dashboard', '/admin/**']; // no redirect whitelist
+const whiteList = [
+  "/article/**",
+  "/user",
+  "/login",
+  "/register",
+  "/redirect",
+  "/home",
+  "/search",
+  "/leave-word",
+  "/about",
+  "/resumeGenerate",
+  "/404",
+  "/403",
+  "/chat",
+];
 
-// 辅助函数，判断是否是后台管理路由
 function isAdminRoute(path) {
-  return path.startsWith('/admin');
+  return path.startsWith("/admin");
 }
 
-// 初始化加载公共菜单（未登录状态下可见的博客主页菜单）
+/**
+ * 模块加载即开始预取前台菜单，与首屏脚本解析并行，缩短直链等待时间。
+ * （失败忽略，真正导航时 initPublicRoutes 会再拉一次）
+ */
+const publicMenuPrefetch = store.dispatch("navMenu/getMenu").catch(() => null);
+
+/**
+ * 注册博客前台动态菜单路由（非后台 admin 菜单）
+ * @returns {{ ok: boolean, needRematch: boolean }}
+ *   needRematch=true 表示本轮刚 addRoute，调用方必须 next({...to, replace:true})
+ */
 async function initPublicRoutes() {
-  if (store.state.navMenu.addMenuRoutes.length === 0) {
-    try {
-      const routes = await store.dispatch("navMenu/getMenu"); // 从API或localStorage获取
-      const accessRoutes = await store.dispatch("navMenu/generateRoutes", { routes });
-      accessRoutes.forEach((item) => {
-        router.addRoute('webApp', item);
-      });
-      // 确保404在所有动态路由添加后添加，避免捕获到预期路由
-      // vue-router v3中不存在router.hasRoute(name)
-      const routeExists = router.resolve('/404').route && router.resolve('/404').route.matched.length > 0;
-      if (!routeExists) {
-        router.addRoute({ path: '*', redirect: '/404', type: 'error', hidden: true, name: '404' });
-      }
-      // next({...to, replace: true }); // hack方法 确保addRoutes已完成
-      // next({ path: to.fullPath, replace: true });  //添加完成后再次进入
-      return true; // 标志已加载
-    } catch (error) {
-      console.error("加载公共菜单失败:", error);
-      // Notification({
-      //   title: '错误',
-      //   message: '加载公共菜单失败，请刷新页面或检查网络！',
-      //   type: 'error',
-      // });
-      // Message.error('加载公共菜单失败，请刷新页面或检查网络！');
-      return false;
-    }
-  } else{
-    return true;
+  // 本会话已注册过：store 有数据且标记已写入 router
+  if (store.state.navMenu.routesRegistered) {
+    return { ok: true, needRematch: false };
   }
-  return true; // 标志已加载
+
+  try {
+    // 优先用预取结果；若预取失败则再请求
+    let routes = store.state.navMenu.addMenuRoutes;
+    if (!routes || routes.length === 0) {
+      routes = (await publicMenuPrefetch) || (await store.dispatch("navMenu/getMenu"));
+    }
+    if (!routes || routes.length === 0) {
+      // 无菜单数据时仍放行静态路由（首页等），避免整站卡死
+      store.commit("navMenu/SET_ROUTES_REGISTERED", true);
+      return { ok: true, needRematch: false };
+    }
+
+    const accessRoutes = await store.dispatch("navMenu/generateRoutes", { routes });
+    accessRoutes.forEach((item) => {
+      addChildRoute("webApp", item);
+    });
+
+    // 404 必须在全部动态路由之后挂载，否则会抢先吞掉栏目路径
+    const has404 = router.getRoutes().some((r) => r.path === "*" || r.name === "404");
+    if (!has404) {
+      router.addRoute({
+        path: "*",
+        redirect: "/404",
+        type: "error",
+        hidden: true,
+        name: "404",
+      });
+    }
+
+    store.commit("navMenu/SET_ROUTES_REGISTERED", true);
+    // 关键：刚 addRoute 后必须让调用方 replace 重进，否则直链白屏
+    return { ok: true, needRematch: true };
+  } catch (error) {
+    console.error("加载公共菜单失败:", error);
+    return { ok: false, needRematch: false };
+  }
 }
 
 router.beforeEach(async (to, from, next) => {
-  // set page title
-  document.title = getPageTitle(to.meta.title) + " - 极客普拉斯,拾光梦集,极客普拉斯&拾光梦集" || "极客普拉斯,拾光梦集,极客普拉斯&拾光梦集 - GeekPlus";
-  // start progress bar
+  document.title =
+    getPageTitle(to.meta.title) + " - 极客普拉斯,拾光梦集,极客普拉斯&拾光梦集" ||
+    "极客普拉斯,拾光梦集,极客普拉斯&拾光梦集 - GeekPlus";
   NProgress.start();
 
-  // determine whether the user has logged in
   const hasToken = getToken();
 
-  // 1. 确保公共（博客主页）菜单已加载
-  // 这里可以进一步优化：如果to是白名单路由，才去加载公共菜单
-  const publicRoutesLoaded = await initPublicRoutes();
-  if (!publicRoutesLoaded) {
-    // 如果公共菜单加载失败，可能需要跳转到错误页或提示
+  // 1. 确保前台博客动态菜单已挂到 webApp 下
+  const { ok, needRematch } = await initPublicRoutes();
+  if (!ok) {
     NProgress.done();
-    return; // 阻止导航
+    Message.error("加载站点菜单失败，请刷新重试");
+    next("/404");
+    return;
+  }
+  // 动态路由刚写入：强制按当前 URL 再匹配一次（修复直链空白）
+  // 注意：不要 next({ ...to })，展开 Route 对象可能带上 name:null / matched 等内部字段，
+  // vue-router 解析时会触发 Cannot read properties of undefined (reading 'path')
+  if (needRematch) {
+    next({ path: to.fullPath, replace: true });
+    return;
   }
 
   if (hasToken) {
-    if (to.path === '/login' || to.path === '/admin/login' || to.fullPath === '/user?method=login' || to.query.method === 'login') {
-      // if is logged in, redirect to the home page
-      next({ path: '/admin' });
+    if (
+      to.path === "/login" ||
+      to.path === "/admin/login" ||
+      to.fullPath === "/user?method=login" ||
+      to.query.method === "login"
+    ) {
+      next({ path: "/admin" });
       NProgress.done();
-    } else {
-      // 2. 已登录状态，处理管理后台菜单
-      // 检查Vuex中是否有管理员菜单数据，或者localStorage中是否有，store.state.user.menus === undefined;
-      if (store.state.user.menus.length === 0) {
-        try {
-          // get user info
-          //await store.dispatch('user/getInfo')
-          store
-            .dispatch("user/getMenu")
-            .then((res) => {
-              // 拉取 菜单信息
-              //从localStorage中获取用户信息,是登陆状态则能够进行webSocket重连
-              const routes = res;
-              //const permission = {}写在这里可以直接方法名引用，const action={}里必须加getter的注册名称在方法前
-              //如果在对象外围加上{},表示去这个对象里面的某个具体的对象的的值适用于JSON对象，JSON数字则不可以
-              store.dispatch("generateRoutes", { routes }).then((addRoutes) => {
-                // 根据 system 权限生成可访问的路由表
-                // router.addRoutes(addRoutes); // 动态添加可访问路由表
-                addRoutes.forEach((item) => {
-                  router.addRoute(item); // 动态添加可访问路由表
-                });
-                next({ ...to, replace: true }); // hack方法 确保addRoutes已完成 ,set the replace: true so the navigation will not leave a history record
-              });
-            })
-            .catch((err) => {
-              store.dispatch("user/logout").then(() => {
-                Message.error(err || "用户认证失败, 请重新登录");
-                if (to.path !== "/login") {
-                  next();//{ path: "/login" }
-                  // store.dispatch('settings/showLogin', true)
-                }
-              });
-            });
-        } catch (error) {
-          // remove token and go to login page to re-login
-          await store.dispatch("user/resetToken");
-          Message.error(error || "系统错误");
+    } else if (store.state.user.menus.length === 0) {
+      // 2. 已登录：拉取后台管理菜单并动态挂载（与前台 navMenu 无关）
+      try {
+        const routes = await store.dispatch("user/getMenu");
+        const addRoutes = await store.dispatch("generateRoutes", { routes });
+        addRoutes.forEach((item) => {
+          router.addRoute(item);
+        });
+        // 后台路由同样需要 replace 重进（只用 fullPath，避免展开 Route 触发 path 读空）
+        next({ path: to.fullPath, replace: true });
+      } catch (err) {
+        await store.dispatch("user/logout");
+        Message.error(err || "用户认证失败, 请重新登录");
+        if (to.path !== "/login") {
+          next();
+        } else {
           next(`/login?redirect=${to.path}`);
-          NProgress.done();
         }
-      } else {
-        next();
+        NProgress.done();
       }
+    } else {
+      next();
     }
   } else {
-    /* has no token */
-    // if (store.state.navMenu.addMenuRoutes.length === 0) {
-    //   //拿到浏览器缓存中动态路由的数据 重新添加
-    //   await store.dispatch("navMenu/getMenu").then((res) => {// 从API或localStorage获取
-    //     // 拉取 菜单信息
-    //     const routes = res;
-    //     store.dispatch("navMenu/generateRoutes", { routes })
-    //       .then((accessRoutes) => {
-    //         // 根据roles权限生成可访问的路由表
-    //         accessRoutes.forEach((item) => {
-    //           router.addRoute('webApp', item); // 动态添加可访问路由表
-    //         });
-    //         router.addRoute({ path: '*', redirect: '/404', type: 'error', hidden: true });
-    //         // next({...to, replace: true }); // hack方法 确保addRoutes已完成
-    //         //next({ path: to.fullPath, replace: true });  //添加完成后再次进入
-    //       });
-    //   });
-    // }
-    // other pages that do not have permission to access are redirected to the login page.
-    // not in the login blacklist, go directly
-    if (whiteList.some(path => to.path.startsWith(path.replace('**', '')))) { // 检查白名单
-      // 不在需要登录的黑名单中，放行
-      next(); //匹配白名单路由，放行
-    } else if (isAdminRoute(to.path)) { // 未登录尝试访问管理后台
+    /* 未登录 */
+    if (whiteList.some((path) => to.path.startsWith(path.replace("**", "")))) {
+      next();
+    } else if (isAdminRoute(to.path)) {
       Message.warning("您尚未登录，请先登录！");
-      next(`/login?redirect=${to.path}`);//如果登录页或首页 或 vuex中有动态路由数据
+      next(`/login?redirect=${to.path}`);
       NProgress.done();
     } else {
-      // 如果是其他未知路由，且不在白名单，可能是需要登录的博客页面，或者404
-      next(); // 暂时放行，由路由匹配处理404
+      // 前台栏目等动态路径：路由已在上方注册，直接放行由匹配结果决定
+      next();
     }
   }
 });
 
 router.afterEach(() => {
-  // finish progress bar
   NProgress.done();
 });

@@ -1476,14 +1476,14 @@ code.hljs {
 }
 
 .el-collapse-item__header {
-  background-color: var(--background-2, #fff);
+  background-color: var(--background-1, #fff);
   color: var(--font-color, #303133);
   border-bottom: 1px solid var(--border-color, #e6ebf5);
 }
 
 .el-collapse-item__wrap {
   will-change: height;
-  background-color: var(--background-2, #fff);
+  background-color: var(--background-1, #fff);
   overflow: hidden;
   box-sizing: border-box;
   border-bottom: 1px solid var(--border-color, #e6ebf5);

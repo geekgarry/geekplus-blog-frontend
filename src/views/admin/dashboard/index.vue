@@ -67,7 +67,7 @@
           <div
             class="chinaMap"
             ref="chinaMap"
-            style="width: 500px; height: 300px"
+            style="min-width: 400px; height: 300px; margin: 0 auto;"
           ></div>
         </el-card>
       </el-col>
@@ -314,8 +314,9 @@
 </template>
 
 <script>
-import '@/assets/echarts/map/js/china';
+import { registerChinaMap } from '@/assets/echarts/map/js/registerChina';
 import * as echarts from 'echarts';
+// import '@/assets/echarts/map/js/china.js';
 
 import { listNotice, getNotice } from "@/api/system/notice";
 import { getViewCount } from "@/api/system/log/operlog";
@@ -345,6 +346,7 @@ export default {
       },
       qrCodeText: '',
       qrCodeImg: '',
+      mapcharts: null,
       webViewData: [
         { name: "北京", value: 17 },
         { name: '天津', value: 12 },
@@ -388,8 +390,19 @@ export default {
     //this.init()
   },
   async mounted() {
+    // 必须先用同一 echarts 实例注册地图，再拉数据绘图（生产环境旧 UMD china.js 会注册失败）
+    registerChinaMap();
     await this.getSysOperLog();
-    //this.initCharts()
+  },
+  beforeDestroy() {
+    if (this._onMapResize) {
+      window.removeEventListener('resize', this._onMapResize);
+      this._onMapResize = null;
+    }
+    if (this.mapcharts) {
+      this.mapcharts.dispose();
+      this.mapcharts = null;
+    }
   },
   methods: {
     getNoticeList() {
@@ -412,11 +425,21 @@ export default {
       });
     },
     initCharts() {
+      if (!this.$refs.chinaMap) return;
+      if (!registerChinaMap()) {
+        console.error('[Dashboard] 中国地图未注册，无法渲染');
+        return;
+      }
+      if (this.mapcharts) {
+        this.mapcharts.dispose();
+      }
       let mapcharts = echarts.init(this.$refs.chinaMap);
+      this.mapcharts = mapcharts;
       //窗口尺寸改变
-      window.addEventListener("resize", function () {
+      this._onMapResize = function () {
         mapcharts.resize();
-      })
+      };
+      window.addEventListener("resize", this._onMapResize);
 
       // 绘制图表
       mapcharts.setOption({

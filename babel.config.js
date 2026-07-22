@@ -1,33 +1,22 @@
 module.exports = {
-  // compact: false,
   presets: [
     ["@vue/cli-plugin-babel/preset", {
       useBuiltIns: 'usage',
-      // corejs: 3,
-      // targets: {
-      //   browsers: ['> 0.2%', 'Android >= 4.4', 'iOS >= 9']
-      // }
       corejs: { version: 3, proposals: true },
+      // 与 package.json browserslist 对齐：放弃 IE，显著减少 polyfill
       targets: {
-        chrome: '49',
-        android: '6',
-        browsers: ['> 0.2%', 'Android >= 4.4', 'iOS >= 9']
+        chrome: '64',
+        firefox: '67',
+        safari: '12',
+        edge: '79',
+        ios: '12',
+        android: '8'
       },
-      // polyfills: ['es.string.replace-all']
     }, "cli-plugin-babel-preset"]
   ],
-  'env': {
-    'development': {
-      // babel-plugin-dynamic-import-node plugin only does one thing by converting all import() to require().
-      // This plugin can significantly increase the speed of hot updates, when you have a large number of pages.
-      // 添加一个插件来转换动态导入语法
-      'plugins': ['dynamic-import-node']
-    }
-  },
+  // 切勿启用 babel-plugin-dynamic-import-node（会把 import() 转成同步 require，毁掉按需分包）
   plugins: [
-    '@babel/plugin-transform-runtime', // 避免污染全局
-    // '@babel/plugin-transform-optional-chaining',
-    // '@babel/plugin-transform-nullish-coalescing-operator',
+    '@babel/plugin-transform-runtime',
     [
       'component',
       {

@@ -1,6 +1,10 @@
 // mixin for lazy loading highlight.js and v-viewer
 export default {
   async mounted() {
+    try {
+      await import('@/assets/css/markdown-highlight.css');
+    } catch (e) { /* ignore */ }
+
     // Check if directives are already registered
     if (!this.$options.directives || !this.$options.directives.highlight) {
       try {

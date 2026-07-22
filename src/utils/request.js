@@ -120,16 +120,20 @@ service.interceptors.response.use(
       pendingRequests.delete(getRequestKey(config))
     }
     let errorMsg = message
-    if (message == "Network Error") {
-      errorMsg = "后端接口连接异常";
-    } else if (message.includes("timeout")) {
+    // ✅ 推荐：使用错误码精确判断
+    if (error.code === 'ECONNABORTED') {
       errorMsg = "系统接口请求超时";
+    } else if (response && response.data && response.data.msg) {
+      errorMsg = response.data.msg
+    }else if (message == "Network Error") {
+      errorMsg = "后端接口连接异常";
     } else if (message.includes("Request failed with status code")) {
       // errorMsg = "系统接口" + errorMsg.substr(errorMsg.length - 3) + "异常";
       errorMsg = `系统接口${(response && response.status) || ''}异常`
-    } else if (response && response.data && response.data.msg) {
-      errorMsg = response.data.msg
     }
+    // if (message.includes("timeout")) {
+    //   errorMsg = "系统接口请求超时";
+    // }
     _Message({
       message: errorMsg,
       type: 'error',

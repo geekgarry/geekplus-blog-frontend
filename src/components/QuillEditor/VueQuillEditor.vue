@@ -46,16 +46,12 @@
 <script>
 import hljs from 'highlight.js';
 import "highlight.js/styles/default.css";
-// import Quill from './quill-loader';
-import Quill from "quill";
+// 经 quill-loader 挂载 window.Quill 后再加载 image-resize（避免 import 提升导致 imports 报错）
+import Quill from './quill-loader';
 import 'quill/dist/quill.core.css'
-import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
 let fontList = ['SimSun', 'SimHei', 'Microsoft-YaHei', 'KaiTi', 'FangSong'].concat(Quill.import('formats/font').whitelist); //将字体加入到白名单
 
-// 调整上传图片大小
-import ImageResize from "quill-image-resize-module";
-Quill.register("modules/imageResize", ImageResize);
 let Link = Quill.import('formats/link')
 class FileBlot extends Link {
   // 继承Link Blot
@@ -81,9 +77,7 @@ Quill.register(FileBlot)
 import {uploadAllFile, deleteFile} from "@/api/geekplus/geekplus";
 export default {
   name: "PlusQuillEditor",
-  components: {
-    Quill,
-  },
+  components: {},
   props: {
     value: {
       type: String, //[Number, Object, Array, String],
@@ -140,14 +134,9 @@ export default {
           clipboard: {
               matchVisual: false
           },
-          // 调整图片大小
-          imageResize: {
-            displayStyles: {
-              backgroundColor: "black",
-              border: "none",
-              color: "white",
-            },
-            modules: ["Resize", "DisplaySize", "Toolbar"],
+          // Quill 2：modules/resize（quill-resize-module）
+          resize: {
+            modules: ['Resize', 'DisplaySize', 'Toolbar'],
           },
           syntax: {
             hljs: (() => {

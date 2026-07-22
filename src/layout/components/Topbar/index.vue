@@ -22,7 +22,8 @@
 import { mapGetters, mapState } from 'vuex'
 import Logo from './Logo'
 import HorizontalItem from './HorizontalItem'
-import variables from '@/styles/variables.scss'
+// Vue CLI 5：须用 .module.scss，:export 才会作为 default 导出给 JS
+import variables from '@/styles/variables.module.scss'
 
 export default {
   components: { HorizontalItem, Logo },

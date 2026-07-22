@@ -1,0 +1,15 @@
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Tailwind preflight is disabled for this app (Element UI).
+ * Border utilities only set border-width; without preflight they need solid style.
+ */
+#resume-print-area *,
+#resume-print-area *::before,
+#resume-print-area *::after,
+.resume-template-builder *,
+.resume-template-builder *::before,
+.resume-template-builder *::after {
+  /* border-style: solid; */
+}

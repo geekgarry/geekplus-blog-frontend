@@ -4,7 +4,7 @@
  */
 
 const baseURL = process.env.VUE_APP_BASE_API;
-import { getOneFamousWords } from "@/api/geekplus/geekplus"
+import { getClickTextWords, getOneFamousWords } from "@/api/geekplus/geekplus"
 // 日期格式化
 export function parseTime(time, pattern) {
   if (arguments.length === 0 || !time) {
@@ -1100,227 +1100,299 @@ export function addLink() {
 // clickEffect();//调用点击器材绽放效果
 
 /****************************-----鼠标点击文字特效-----*******************************/
+/**
+ * 点击飘字：文案优先接口 getClickTextWords（可后台配置），失败则名言接口 / 本地默认词。
+ * 仅绑定一次 click，定时刷新词库；动画优先 Web Animations API。
+ */
 var a_idx = 0;
-// document.ready = function(callback) {
-//     if (document.addEventListener) {
-//         document.addEventListener('DOMContentLoaded', function() {
-//             //document.removeEventListener('DOMContentLoaded', arguments.callee, false);
-//             callback();
-//             document.body.addEventListener("click", function (e) {
-//                 var a = new Array("三民主义", "民族", "民权", "民生");
-//                 var ii = document.createElement("span").text(a[a_idx]);
-//                 a_idx = (a_idx + 1) % a.length;
-//                 var x = e.pageX,
-//                     y = e.pageY;
-//                 ii.css({
-//                     "z-index": 9999999,
-//                     "top": y - 20,
-//                     "left": x,
-//                     "position": "absolute",
-//                     "font-weight": "bold",
-//                     "color": "#ff6651"
-//                 });
-//                 document.body.innerHTML += ii;
-//                 ii.animate({
-//                     "top": y - 180,
-//                     "opacity": 0
-//                 },
-//                     1500,
-//                     function () {
-//                         ii.remove();
-//                     });
-//             });
-//         }, false);
-//     }else if (document.attachEvent) {// 兼容ie
-//         document.attachEvent('onreadytstatechange', function() {
-//             if (document.readyState == "complete") {
-//                 //document.detachEvent("onreadystatechange", arguments.callee);
-//                 callback();
-//                 document.body.addEventListener("click", function (e) {
-//                     var a = new Array("三民主义", "民族", "民权", "民生");
-//                     var ii = document.createElement("span").text(a[a_idx]);
-//                     a_idx = (a_idx + 1) % a.length;
-//                     var x = e.pageX,
-//                         y = e.pageY;
-//                     ii.css({
-//                         "z-index": 9999999,
-//                         "top": y - 20,
-//                         "left": x,
-//                         "position": "absolute",
-//                         "font-weight": "bold",
-//                         "color": "#ff6651"
-//                     });
-//                     document.body.innerHTML += ii;
-//                     ii.animate({
-//                         "top": y - 180,
-//                         "opacity": 0
-//                     },
-//                         1500,
-//                         function () {
-//                             ii.remove();
-//                         });
-//                 });
-//             }
-//         });
-//     }
-// }
-// if (window.attachEvent) {
-//   window.attachEvent("onload", clickTextEffect); //IE
-// }
+var DEFAULT_CLICK_WORDS = [
+  "别说话", "泪水", "你别带走", "镜子里", "的我", "已留下你", "轮廓上的", "笑容",
+  "别回眸", "末班车", "要开了", "你不过先走", "深爱", "是让", "不舍离开", "的人", "好好走"
+];
+var clickWords = DEFAULT_CLICK_WORDS.slice();
+var clickTextBound = false;
+var clickTextRefreshTimer = null;
 
-function randomSplit(str) {
-  const length = str.length;
-  if (length === 0) return []; // 空字符串或长度为0时返回空数组
-  const randomIndex = Math.floor(Math.random() * length); // 随机分割点
-  const firstPart = str.substring(0, randomIndex);
-  const secondPart = str.substring(randomIndex, length);
-  return [firstPart, secondPart];
+function removeDomNode(node) {
+  if (!node) return;
+  if (node.remove) {
+    node.remove();
+  } else if (node.parentNode) {
+    node.parentNode.removeChild(node);
+  }
 }
 
-function randomSplitByNum(str, numSplits) {
-  const splitPoints = [];
-  for (let i = 1; i < numSplits; i++) {
-    const splitPoint = Math.floor(Math.random() * (str.length - 1)) + 1;
-    splitPoints.push(splitPoint);
+function floatClickText(el, startY, duration) {
+  if (el && typeof el.animate === "function") {
+    el.animate(
+      [
+        { top: startY + "px", opacity: 1, transform: "scale(1)" },
+        { top: startY - 100 + "px", opacity: 0.5, transform: "scale(0.8)" },
+        { top: startY - 180 + "px", opacity: 0, transform: "scale(0.65)" }
+      ],
+      {
+        duration: duration,
+        iterations: 1,
+        fill: "forwards",
+        delay: 0,
+        easing: "linear"
+      }
+    );
+    return;
   }
-  splitPoints.sort((a, b) => a - b);
-  const result = [];
-  let start = 0;
-  for (let i = 0; i < splitPoints.length; i++) {
-    var item = str.substring(start, splitPoints[i]);
-    if(item){
-      result.push(str.substring(start, splitPoints[i]));
+  el.style.transition = "top " + duration + "ms linear, opacity " + duration + "ms linear, transform " + duration + "ms linear";
+  void el.offsetHeight;
+  el.style.top = startY - 180 + "px";
+  el.style.opacity = "0";
+  el.style.transform = "scale(0.65)";
+}
+
+function normalizeClickWords(payload) {
+  if (!payload) return [];
+  var data = payload.data !== undefined ? payload.data : payload;
+  if (Array.isArray(data)) {
+    return data
+      .map(function (item) {
+        if (item == null) return "";
+        if (typeof item === "string") return item.trim();
+        if (typeof item === "object") {
+          return String(item.content || item.text || item.word || item.title || "").trim();
+        }
+        return String(item).trim();
+      })
+      .filter(Boolean);
+  }
+  if (typeof data === "object") {
+    var content = data.content || data.text || data.word || "";
+    if (content) return getSimpleNativeWordsArray(String(content));
+  }
+  if (typeof data === "string") {
+    var textVal = data.trim();
+    if (!textVal) return [];
+    if (textVal.charAt(0) === "[") {
+      try {
+        var parsed = JSON.parse(textVal);
+        if (Array.isArray(parsed)) return normalizeClickWords(parsed);
+      } catch (e) { /* ignore */ }
     }
-    start = splitPoints[i];
-  }
-  result.push(str.substring(start));
-  return result;
-}
-
-
-function splitIntoChunks(str, chunkSize) {
-  const chunks = [];
-  let i, j;
-  for (i = 0, j = str.length; i < j; i += chunkSize) {
-    chunks.push(str.substring(i, i + chunkSize));
-  }
-  return chunks;
-}
-
-function splitString(str, chunkSize) {
-  let result = [];
-  let i, j, chunk;
-  for (i = 0, j = str.length; i < j; i += chunkSize) {
-    chunk = str.substring(i, i + chunkSize);
-    if (chunk) {
-      result.push(chunk);
+    if (/[,，\n|;；]/.test(textVal)) {
+      return textVal.split(/[,，\n\r|;；]+/).map(function (s) { return s.trim(); }).filter(Boolean);
     }
+    return getSimpleNativeWordsArray(textVal);
   }
-  return result;
+  return [];
 }
 
-String.prototype.Split = function (s)
-{
-  return this.split(s).filter(item => item != '');
-}
-
-function removePunctuation(str) {
-  return str.replace(/[\u2000-\u2700]+/g, '');
-}
-
-
-function removePunctuationAll(str) {
-  // 匹配中文标点符号的正则表达式
-  const regexChinese = /[\u3002\uff1b\uff0c\uff1a\u201c\u201d\u2018\u2019\uff08\uff09\u3001\uff1f\uff01\u300a\u300b]/g;
-  // 匹配英文标点符号的正则表达式
-  const regexEnglish = /[\.\,\!\?\:\;\"\'\`\~\=\(\)\-\_\*\&\^\$\@\#\%\{\}\<\>\!\/\[\]\|\+\'\"]/g;
-
-  // 去除中文标点
-  str = str.replace(regexChinese, '');
-  // 去除英文标点
-  str = str.replace(regexEnglish, '');
-
-  return str;
-}
-
-function getSimpleNativeWordsArray(str){
-  var wordsArr = new Array();
-  var result = removePunctuationAll(str).replace(/\s''/g, '');
-  if(result.indexOf('——') !== -1 && result.includes('——')){
-    var tempWords = result.split('——');
-    wordsArr = randomSplitByNum(tempWords[0], tempWords[0].length / 2)
-    wordsArr.push(tempWords[1]);
-  }else {
-    wordsArr = randomSplitByNum(result, result.length / 2)
+function applyClickWords(words) {
+  if (words && words.length) {
+    clickWords = words;
+    a_idx = 0;
+    try {
+      localStorage.setItem("gp_click_text_words", JSON.stringify(words));
+      localStorage.setItem("gp_click_text_words_at", String(Date.now()));
+    } catch (e) { /* ignore */ }
   }
-  return wordsArr
+}
+
+function loadCachedClickWords() {
+  try {
+    var cached = localStorage.getItem("gp_click_text_words");
+    var at = Number(localStorage.getItem("gp_click_text_words_at") || 0);
+    if (cached && Date.now() - at < 6 * 60 * 60 * 1000) {
+      var words = JSON.parse(cached);
+      if (Array.isArray(words) && words.length) {
+        clickWords = words;
+        return true;
+      }
+    }
+  } catch (e) { /* ignore */ }
+  return false;
+}
+
+function fetchClickTextWords() {
+  return getClickTextWords()
+    .then(function (res) {
+      var words = normalizeClickWords(res);
+      if (!words.length) {
+        return getOneFamousWords().then(function (famousRes) {
+          return normalizeClickWords(famousRes);
+        });
+      }
+      return words;
+    })
+    .then(function (words) {
+      applyClickWords(words);
+      return words;
+    })
+    .catch(function () {
+      return clickWords;
+    });
+}
+
+function onClickTextEffect(e) {
+  var target = e.target || e.srcElement;
+  var tag = (target && target.tagName ? target.tagName : "").toLowerCase();
+  if (tag === "input" || tag === "textarea" || tag === "select" || (target && target.isContentEditable)) {
+    return;
+  }
+
+  var words = clickWords && clickWords.length ? clickWords : DEFAULT_CLICK_WORDS;
+  if (words.length === 0) {
+    return;
+  }else if(words.length === 1) {
+    words = processText(words[0], 4);
+  }
+  var ii = document.createElement("span");
+  ii.appendChild(document.createTextNode(words[a_idx]));
+  a_idx = (a_idx + 1) % words.length;
+  var x = e.clientX;
+  var y = e.clientY;
+  ii.setAttribute(
+    "style",
+    "top:" + (y - 20) + "px;left:" + x + "px;" +
+    "position:fixed;pointer-events:none;font-weight:bold;color:" + getRandomTulipColor() + ";z-index:999999;"
+  );
+  document.body.appendChild(ii);
+  var duration = 1600;
+  floatClickText(ii, y, duration);
+  window.setTimeout(function () {
+    removeDomNode(ii);
+  }, duration);
 }
 
 function clickTextEffect() {
-  var a = new Array("别说话","泪水","你别带走","镜子里","的我","已留下你","轮廓上的","笑容","别回眸","末班车","要开了","你不过先走","深爱","是让","不舍离开","的人","好好走");
-  //("青衫烟雨深","山色空濛入画屏","流风轻挽入袖底","拂过苍苔","步履轻盈","踏清歌","声声远","穿透林间寂寂鸣","洗尽尘埃","心湖月明","天地入我清宁境");
-  //("三民主义", "民族", "民权", "民生");
-  // getOneFamousWords().then((res) => {
-  //   a = getSimpleNativeWordsArray(res.data);
-  // })
-  window.onload = function () {
-    window.addEventListener("click", function (e) {
-      var ii = document.createElement("span");
-      //console.log(ii)
-      ii.innerHTML = a[a_idx];
-      a_idx = (a_idx + 1) % a.length;
-      var x = e.clientX;
-      var y = e.clientY;
-      //   ii.style.zIndex = 9999999;
-      //   ii.style.top = y - 20 + "px";
-      //   ii.style.left = x;
-      //   ii.style.position = "absolute";
-      //   ii.style.fontWeight = "bold";
-      //   ii.style.color = "#ff6651";
-      ii.setAttribute("style", "top:" + (y - 20) + "px;left:" + x + "px;" +
-        "position:fixed;pointer-events:none;font-weight:bold;color:" + getRandomTulipColor() + ";z-index:999999;"
-      );
-      // {
-      //     "z-index": 9999999,
-      //     "top": y - 20,
-      //     "left": x,
-      //     "position": "absolute",
-      //     "font-weight": "bold",
-      //     "color": "#ff6651"
-      // }
-      document.body.appendChild(ii);
-      const seconds = 1600;
-      ii.animate(
-        [{
-          top: y + "px",
-          opacity: 1,
-          transform: 'scale(1)'
-        },
-        {
-          top: y - 100 + "px",
-          opacity: 0.5,
-          transform: 'scale(0.8)'
-        },
-        {
-          top: y - 180 + "px",
-          opacity: 0,
-          transform: 'scale(0.65)'
-        },
-        ], {
-        duration: seconds, //动画时长(单位毫秒)
-        iterations: 1, //重复次数（无限循环：Infinity）
-        fill: 'forwards', //结束时不复位
-        delay: 0, //设置动画延迟时长 (单位毫秒)
-        easing: 'linear' //设置动画,运动速率(linear: 匀速)
-      },
-      );
-      this.setTimeout(function () {
-        ii.remove();
-      }, seconds)
-    });
+  loadCachedClickWords();
+  fetchClickTextWords();
+  if (!clickTextRefreshTimer) {
+    clickTextRefreshTimer = window.setInterval(fetchClickTextWords, 30 * 60 * 1000);
+  }
+  if (clickTextBound) return;
+  clickTextBound = true;
+  var bind = function () {
+    if (window.addEventListener) {
+      window.addEventListener("click", onClickTextEffect, false);
+    } else if (document.attachEvent) {
+      document.attachEvent("onclick", onClickTextEffect);
+    }
   };
+  if (document.readyState === "complete") {
+    bind();
+  } else if (window.addEventListener) {
+    window.addEventListener("load", bind, false);
+  } else if (window.attachEvent) {
+    window.attachEvent("onload", bind);
+  } else {
+    bind();
+  }
 }
 clickTextEffect();
+
+/********************** 分割文本为句子数组 ************************/
+function splitSentences1(text) {
+  // 使用正则表达式匹配以句号、问号或感叹号结束的句子
+  const sentences = text.match(/[^.!?]+[.!?]+/g);
+  return sentences;
+}
+
+function splitSentences2(text) {
+  // 使用正则表达式匹配以句号、问号或感叹号结束的句子，忽略句子内的换行和多余空格
+  const sentences = text.match(/(?:\r\n|\r|\n|\s)*[^.!?]+[.!?]+(?:\r\n|\r|\n|\s)*/g);
+  return sentences;
+}
+
+function splitByWord(text, word) {
+  // 使用正则表达式找到特定词汇，并根据其分割字符串
+  const parts = text.split(new RegExp(`\\b${word}\\b`, 'i')); // 'i' 用于不区分大小写
+  return parts;
+}
+
+// 正则匹配句子并分割，把分割的句子再次根据需要按长度分割
+function preprocessString(str) {
+  return str.replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function splitSentences(str) {
+  const sentences = [];
+  let currentSentence = '';
+  let inQuotes = false;
+  let i = 0;
+  while (i < str.length) {
+      if (str[i] === '"') {
+          inQuotes = !inQuotes;
+          currentSentence += str[i];
+      } else if (!inQuotes && (str[i] === '.' || str[i] === '?' || str[i] === '!')) {
+          // 确保句子后有空白字符或句子结束
+          if (i + 1 < str.length && /\s/.test(str[i + 1])) {
+              sentences.push(currentSentence + str[i]);
+              currentSentence = '';
+              // 跳过空白字符，避免连续空白字符导致的问题
+              while (i + 1 < str.length && /\s/.test(str[i + 1])) i++;
+              continue;
+          } else {
+              currentSentence += str[i]; // 如果紧跟的不是空白字符，则保留该标点符号
+          }
+      } else {
+          currentSentence += str[i];
+      }
+      i++;
+  }
+  if (currentSentence) sentences.push(currentSentence); // 添加最后一个句子（如果有）
+  return sentences;
+}
+
+function splitLongSentences(sentences, maxLength) {
+  return sentences.map(sentence => {
+      if (sentence.length > maxLength) {
+          return sentence.match(new RegExp('.{1,' + maxLength + '}', 'g')); // 分割成长度不超过maxLength的数组元素
+      }
+      return sentence;
+  }).flat(); // 使用flat()将嵌套数组展平为单一数组
+}
+
+function processText(text, maxLength) {
+  const preprocessedText = preprocessString(text);
+  const sentences = splitSentences(preprocessedText);
+  const result = splitLongSentences(sentences, maxLength); // 例如，maxLength为100个字符长度限制
+  return result;
+}
+
+// function cleanAndSplitText(text) {
+//   const regex = /([^\.\?\!]+[\.\?\!])(?=\s*$)/g;
+//   // 移除文本中的所有换行符和额外的空格
+//   const cleanedText = text.replace(/\n/g, ' ').replace(/\s+/g, ' ');
+
+//   // 使用正则表达式匹配句子
+//   let sentences = cleanedText.match(regex);
+//   if (sentences) {
+//       // 如果有需要，对句子进行进一步的分割处理（例如，按长度分割）
+//       sentences = sentences.map(sentence => {
+//           // 移除句子末尾的标点符号
+//           // sentence = sentence.replace(/[\.\?\!]$/, '');
+//           // 如果需要按长度分割句子，可以再次处理（这里只是一个示例，实际应用中可能需要具体逻辑）
+//           return splitSentenceByLength(sentence, 4); // 例如，按20个字符长度分割
+//       });
+//       // 展平数组，以便所有分割后的句子都在一个数组中
+//       sentences = sentences.flat();
+//   }
+//   return sentences;
+// }
+
+// function splitSentenceByLength(sentence, maxLength) {
+//   const words = sentence.split(' ');
+//   let result = [];
+//   let currentSentence = '';
+
+//   words.forEach(word => {
+//       if ((currentSentence + word).length > maxLength) {
+//           result.push(currentSentence.trim());
+//           currentSentence = word + ' '; // 开始新的一行，加上一个空格以保持单词间的间隔
+//       } else {
+//           currentSentence += word + ' ';
+//       }
+//   });
+//   result.push(currentSentence.trim()); // 添加最后一行
+//   return result;
+// }
 
 /***********************------全局复制携带网站信息-------************************* */
 // document.body.oncopy = function(e) {

@@ -34,9 +34,10 @@
         </li>
         <li v-for="(item, index) in addNavMenuRoutes" :key="index" class="menu-item">
           <div class="menu-title" @click="toggleItem(index)">
-            <template v-if="item.children">
+            <!-- 必须用 length 判断：children:[] 在 JS 里仍为 truthy，会误进分支读 children[0].path -->
+            <template v-if="item.children && item.children.length">
               <!-- 如果有子菜单，显示箭头 -->
-              <router-link :to="item.path + '/' + item.children[0].path">
+              <router-link :to="navChildPath(item, item.children[0])">
                 <span><svg-icon v-if="item.icon" class="menu-icon" :icon-class="item.icon"></svg-icon>{{ item.categoryName }}</span>
               </router-link>
               <span class="arrow">
@@ -49,9 +50,9 @@
             </template>
           </div>
           <!-- 子菜单 -->
-          <ul v-if="item.children && openIndexes.includes(index)" class="submenu">
+          <ul v-if="item.children && item.children.length && openIndexes.includes(index)" class="submenu">
             <li v-for="(subItem, subIndex) in item.children" :key="subIndex">
-              <div class="menu-title" @click="toNavMenu({ path: item.path + '/' + subItem.path })">
+              <div class="menu-title" @click="toNavMenu({ path: navChildPath(item, subItem) })">
                 <span><svg-icon v-if="subItem.icon" class="menu-icon" :icon-class="subItem.icon"></svg-icon>{{ subItem.categoryName }}</span>
               </div>
             </li>
@@ -116,7 +117,7 @@
                 <div class="el-dropdown-link el-dropdown-self" @click="toNavMenu({ path: '/' })"><svg-icon class="menu-icon" icon-class="home"></svg-icon>首页</div>
               </li>
               <li v-for="(item, index) in addNavMenuRoutes" :key="index">
-                <template v-if="item.children">
+                <template v-if="item.children && item.children.length">
                   <!-- 如果有子菜单，显示箭头 -->
                   <el-dropdown :hide-timeout="500" placement="bottom" class="top-nav-dropdown-menu">
                     <div class="el-dropdown-link el-dropdown-self">
@@ -124,7 +125,7 @@
                     </div>
                     <el-dropdown-menu slot="dropdown">
                       <el-dropdown-item class="pl-nav-menu-item" v-for="(subItem, index) in item.children" :key="index">
-                        <div class="pl-menu-item-inner" @click="toNavMenu({ path: item.path + '/' + subItem.path })">
+                        <div class="pl-menu-item-inner" @click="toNavMenu({ path: navChildPath(item, subItem) })">
                           <svg-icon v-if="subItem.icon" class="menu-icon" :icon-class="subItem.icon"></svg-icon>{{ subItem.categoryName }}
                         </div>
                       </el-dropdown-item>
@@ -482,6 +483,15 @@ export default {
     toNavMenu(data) {
       this.$router.push(data, onComplete => { }, onAbort => { });
       this.isDrawerOpen = false;
+    },
+
+    /** 拼接父子栏目 path，子项缺失时回退到父 path，避免读 undefined.path */
+    navChildPath(parent, child) {
+      if (!parent || !parent.path) return "/";
+      if (!child || !child.path) return parent.path;
+      const p = String(parent.path).replace(/\/$/, "");
+      const c = String(child.path).replace(/^\//, "");
+      return p + "/" + c;
     },
 
     navBarLogout() {

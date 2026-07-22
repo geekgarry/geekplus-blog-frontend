@@ -64,10 +64,8 @@ import "highlight.js/styles/default.css";
 // import 'highlight.js/styles/monokai-sublime.css';
 // import 'highlight.js/styles/vs2015.css';
 // import 'highlight.js/styles/stackoverflow-light.css'// 导入高亮主题样式
-import Quill from "quill";
-// import "quill/dist/quill.core.css";
-import "quill/dist/quill.snow.css";
-// import "quill/dist/quill.bubble.css";
+// 必须经 quill-loader：先挂 window.Quill 再加载 image-resize（不可用静态 import ImageResize）
+import Quill from "./quill-loader";
 // import ImageDrop from 'quill-image-drop-module';
 // Quill.register('modules/imageDrop', ImageDrop);
 
@@ -99,9 +97,6 @@ class VideoBlot extends BlockEmbed {
 VideoBlot.blotName = "simpleVideo";
 VideoBlot.tagName = "video";
 Quill.register(VideoBlot);
-// 调整上传图片大小
-import ImageResize from "quill-image-resize-module";
-Quill.register("modules/imageResize", ImageResize);
 let Link = Quill.import('formats/link')
 class FileBlot extends Link {
   // 继承Link Blot
@@ -127,9 +122,8 @@ let fontList = ['songti', 'SimSun', 'SimHei', 'Microsoft-YaHei', 'KaiTi', 'FangS
 import { uploadFileForArticle, deleteFile, deleteFileList } from "@/api/common";
 export default {
   name: "QuillEditor",
-  components: {
-    Quill,
-  },
+  // 勿把 Quill 构造函数放进 components，易引发循环初始化 / TDZ 报错
+  components: {},
   props: {
     /* 编辑器的内容 */
     value: {
@@ -203,14 +197,9 @@ export default {
           clipboard: {
             matchVisual: false
           },
-          // 调整图片大小
-          imageResize: {
-            displayStyles: {
-              backgroundColor: "black",
-              border: "none",
-              color: "white",
-            },
-            modules: ["Resize", "DisplaySize", "Toolbar"],
+          // Quill 2：使用 quill-resize-module（模块名 resize，非旧版 imageResize）
+          resize: {
+            modules: ['Resize', 'DisplaySize', 'Toolbar'],
           },
           syntax: {
             // hljs: hljs是main.js中全局注册的高亮对象，直接使用即可

@@ -45,14 +45,21 @@ export default {
     }
   },
   mounted() {
-    // 延后加载拖拽浮层组件，避免其代码进入首屏主包
-    import("plus-draggable-element").then(({ default: DraggableComponent }) => {
-      new DraggableComponent({
-        initialPosition: "right", // 初始位置为右边
-        buoyContent: '<svg class="bg-music-buoy" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="12854" width="30" height="30"><path d="M682.666667 384 682.666667 298.666667 512 298.666667 512 533.333333C494.08 520.106667 472.32 512 448 512 389.12 512 341.333333 559.786667 341.333333 618.666667 341.333333 677.546667 389.12 725.333333 448 725.333333 506.88 725.333333 554.666667 677.546667 554.666667 618.666667L554.666667 384 682.666667 384M512 85.333333C747.52 85.333333 938.666667 276.48 938.666667 512 938.666667 747.52 747.52 938.666667 512 938.666667 276.48 938.666667 85.333333 747.52 85.333333 512 85.333333 276.48 276.48 85.333333 512 85.333333Z" p-id="12855" fill="currentColor"></path></svg>',
+    // 延后加载拖拽浮层与播放器，避免和首屏抢带宽
+    const bootExtras = () => {
+      import("plus-draggable-element").then(({ default: DraggableComponent }) => {
+        new DraggableComponent({
+          initialPosition: "right",
+          buoyContent: '<svg class="bg-music-buoy" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="12854" width="30" height="30"><path d="M682.666667 384 682.666667 298.666667 512 298.666667 512 533.333333C494.08 520.106667 472.32 512 448 512 389.12 512 341.333333 559.786667 341.333333 618.666667 341.333333 677.546667 389.12 725.333333 448 725.333333 506.88 725.333333 554.666667 677.546667 554.666667 618.666667L554.666667 384 682.666667 384M512 85.333333C747.52 85.333333 938.666667 276.48 938.666667 512 938.666667 747.52 747.52 938.666667 512 938.666667 276.48 938.666667 85.333333 747.52 85.333333 512 85.333333 276.48 276.48 85.333333 512 85.333333Z" p-id="12855" fill="currentColor"></path></svg>',
+        });
       });
-    });
-    this.loadGpPlayer();
+      this.loadGpPlayer();
+    };
+    if (typeof window !== 'undefined' && window.requestIdleCallback) {
+      window.requestIdleCallback(bootExtras, { timeout: 4000 });
+    } else {
+      window.setTimeout(bootExtras, 2500);
+    }
   },
   computed: {
     isDay() {

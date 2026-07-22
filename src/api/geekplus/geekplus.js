@@ -22,6 +22,7 @@ export function getOneFamousWords() {
     return request({
         url: '/geekplusapp/getTodayFamousWords',
         method: 'get',
+        headers: { isToken: false }
     })
 }
 
@@ -30,6 +31,19 @@ export function getDailyFamousWords() {
     return request({
         url: '/geekplusapp/getDailyFamousWords',
         method: 'get',
+        headers: { isToken: false }
+    })
+}
+
+/**
+ * 全站鼠标点击飘字文案（后台配置键 site.click.text，见 GeekPlusAppController#getClickTextWords）
+ * 成功时 data 一般为 string[]；前端 plusTool 内会做多格式兼容归一化
+ */
+export function getClickTextWords() {
+    return request({
+        url: '/geekplusapp/getClickTextWords',
+        method: 'get',
+        headers: { isToken: false }
     })
 }
 
@@ -223,6 +237,7 @@ export function getFourRecommendArticle(param) {
 /***************************************************************/
 
 // 查询父子目录菜单循环递归文章类型目录列表
+/** 前台博客栏目树（含 path/component），供 navMenu 生成动态路由，非后台 admin 菜单 */
 export function listSubParentCategory() {
     return request({
         url: '/geekplusapp/listSubParentCategory',
