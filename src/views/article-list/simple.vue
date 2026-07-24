@@ -58,14 +58,18 @@
                 <h3 class="item-title"><router-link :to="{ path: `/article/${post.id}` }">{{ post.articleTitle
                     }}</router-link></h3>
                 <div class="item-meta">
-                  {{ post.authorName }} 发表于: {{ dateTimeAgo(post.createTime) }} 标签:
+                  <span class="meta-author">{{ post.authorName }}</span>
+                  <span class="meta-dot">·</span>
+                  <span>{{ dateTimeAgo(post.createTime) }}</span>
                   <span class="meta-tag" v-for="(tag, index) in post.tags" :key="index">
-                    <router-link class="butt" :to="{ path: '/search', query: { tagName: tag.tagName } }">{{ tag.tagName
+                    <router-link class="butt" :to="{ path: '/search', query: { tagName: tag.tagName } }">#{{ tag.tagName
                       }}</router-link>
                   </span>
                 </div>
                 <p class="item-summary" v-show="post.abstractText">{{ post.abstractText }}</p>
-                <router-link :to="`/article/${post.id}`" class="read-more" style="float: right">阅读全文 ></router-link>
+                <div class="item-actions">
+                  <router-link :to="`/article/${post.id}`" class="read-more">阅读全文</router-link>
+                </div>
               </div>
             </div>
             <plus-pager @pagination="getArticleListByPathCategory" :total="total" :page.sync="queryParams.pageNum"
@@ -323,21 +327,21 @@ export default {
 .user-info {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .user-avatar {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  margin-right: 20px;
+  margin-right: 16px;
+  object-fit: cover;
+  flex-shrink: 0;
 }
-
-.user-details {}
 
 .user-name {
   margin: 0;
-  font-size: 1.4em;
+  font-size: 1.3em;
 }
 
 .user-description {
@@ -347,86 +351,106 @@ export default {
 
 .user-stats {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
 }
 
 .stat {
-  margin-right: 20px;
   color: #666;
 }
 
 .article-category {
   margin: 0 5px 5px 0;
-  /* Adjust spacing as needed */
   padding: 3px 6px;
 }
 
 .blog-post-container {
-  background-size: cover;
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 
 .post-item {
-  background-color: var(--background-1, rgba(0, 0, 0, 0.7));
+  background-color: var(--background-1, #fff);
   color: var(--fontColor);
-  box-shadow: 0 2px 5px 0 hsla(0, 0%, 57%, .1);
-  /* Semi-transparent black background */
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 5px;
-  /* Add some rounded corners */
+  padding: 16px 18px;
+  margin-bottom: 0;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    transform: translateY(-1px);
+  }
 
   h3.item-title {
-    margin: 0 0 5px 0;
+    margin: 0 0 8px 0;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.35;
     white-space: break-spaces;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    overflow: hidden;
     /*! autoprefixer: off */
     -webkit-box-orient: vertical;
     box-orient: vertical;
   }
 
   p.item-summary {
-    margin: 0 0 5px 0;
-    font-size: 0.9rem;
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted-1-color, #666);
     white-space: break-spaces;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
-    -webkit-line-clamp: 4;
-    line-clamp: 4;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     box-orient: vertical;
-  }
-
-  .read-more {
-    font-size: 0.8rem;
   }
 }
 
 .post-item .item-meta {
-  font-size: 0.8em;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 12px;
   color: #999;
   margin-bottom: 10px;
-  white-space: break-spaces;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  /*! autoprefixer: off */
-  -webkit-box-orient: vertical;
-  box-orient: vertical;
+
+  .meta-author {
+    font-weight: 500;
+    color: #666;
+  }
+
+  .meta-dot {
+    opacity: 0.5;
+  }
 
   .meta-tag a {
     font-size: 11px;
-    margin-right: 5px;
+    margin-right: 2px;
     padding: 2px 5px;
   }
+}
+
+.item-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.read-more {
+  font-size: 13px;
+  color: var(--theme-color, #409eff);
+  float: none;
 }
 
 .item-tag {
@@ -434,6 +458,28 @@ export default {
   padding: 2px 5px;
   margin-left: 5px;
   border-radius: 3px;
-  /* Round the tags */
+}
+
+@media screen and (max-width: 768px) {
+  .post-item {
+    padding: 12px 14px;
+    border-radius: 8px;
+
+    h3.item-title {
+      font-size: 15px;
+    }
+
+    p.item-summary {
+      font-size: 13px;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+    }
+  }
+
+  .user-avatar {
+    width: 60px;
+    height: 60px;
+    margin-right: 12px;
+  }
 }
 </style>

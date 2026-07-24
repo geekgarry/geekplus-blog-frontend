@@ -7,29 +7,34 @@ import DesktopIndexView from "@/views/desktop/IndexView.vue"
 import MobileIndexView from "@/views/mobile/IndexView.vue"
 
 export default {
+  name: "IndexView",
   components: {
     DesktopIndexView,
     MobileIndexView
   },
   data() {
     return {
-
+      // 同时看 UA 与视口宽度，窗口缩放时也能切换布局
+      viewportMobile: typeof window !== "undefined" ? window.innerWidth < 768 : false
     }
-  },
-  created() {
-
-  },
-  mounted() {
-
   },
   computed: {
     isMobile() {
-      //根据用户吧浏览设备的用户信息判断是否是移动设备
-      return this.$common.isMobile();
+      const uaMobile = this.$common && this.$common.isMobile ? this.$common.isMobile() : false
+      return uaMobile
     }
   },
-  methods: {
-
+  mounted() {
+    this._onResize = () => {
+      this.viewportMobile = window.innerWidth < 768
+    }
+    window.addEventListener("resize", this._onResize)
+    this._onResize()
+  },
+  beforeDestroy() {
+    if (this._onResize) {
+      window.removeEventListener("resize", this._onResize)
+    }
   }
 }
 </script>

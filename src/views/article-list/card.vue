@@ -100,15 +100,16 @@
             </div> -->
             <div class="section-header"><i class="el-icon-s-grid"></i><plus-breadcrumb></plus-breadcrumb></div>
 
-            <div class="row-wrapper mt-5"> <!-- Use el-row for grid layout -->
+            <div class="row-wrapper mt-5">
               <div class="col-item" v-for="article in cardList" :key="article.id">
                 <div class="post-item item-grid" :class="{ 'skeleton-loading': loading }">
-                  <div class="item-img">
-                    <a class="thumbnail-b sa" v-if="article.indexPicture" rel="BookMarks" href="javascript:;"
-                      :style="{ backgroundImage: 'url(' + article.indexPicture + ')' }"
-                      @click="navToArticle(article.id)"></a>
-                    <a class="thumbnail-b sa" v-else rel="BookMarks" href="javascript:;"
-                      :style="{ backgroundImage: 'url(' + articleCover + ')' }" @click="navToArticle(article.id)"></a>
+                  <div class="item-img" @click="navToArticle(article.id)">
+                    <img
+                      class="item-cover-img"
+                      :src="article.indexPicture || articleCover"
+                      :alt="article.articleTitle"
+                      loading="lazy"
+                    >
                   </div>
                   <div class="item-entry">
                     <h3 class="item-title"><router-link :to="`/article/${article.id}`">{{
@@ -121,7 +122,6 @@
                       <span v-show="article.likeCount"><i class="el-icon-star-on"></i> {{ article.likeCount || 0
                       }}</span>
                     </div>
-                    <!-- <p class="item-excerpt">{{ article.abstractText }}</p> -->
                     <div class="item-meta">
                       <div class="item-date"><i class="el-icon-date"></i> {{
                         dateTimeAgo(article.createTime) }}</div>
@@ -508,39 +508,55 @@ export default {
 .col-item {
   width: 50%;
   overflow: hidden;
-  padding: 5px;
+  padding: 8px;
+  box-sizing: border-box;
 }
 
 .mt-5 {
-  margin-left: -5px;
-  margin-right: -5px;
+  margin-left: -8px;
+  margin-right: -8px;
+}
+
+/* 手机单列，封面更易阅读 */
+@media screen and (max-width: 575px) {
+  .col-item {
+    width: 100%;
+    padding: 6px 0;
+  }
+
+  .mt-5 {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+@media screen and (min-width: 576px) and (max-width: 767px) {
+  .col-item {
+    width: 50%;
+  }
 }
 
 @media screen and (min-width: 768px) {
   .col-item {
     width: 50%;
-    padding: 5px;
   }
 }
 
 @media screen and (min-width: 992px) {
   .col-item {
-    width: 33.33%;
-    padding: 5px;
+    width: 33.333%;
   }
 }
 
 @media screen and (min-width: 1200px) {
   .col-item {
-    width: 20%;
-    padding: 5px;
+    width: 25%;
   }
 }
 
-@media screen and (min-width: 1920px) {
+@media screen and (min-width: 1600px) {
   .col-item {
     width: 20%;
-    padding: 5px;
   }
 }
 
@@ -594,47 +610,52 @@ export default {
 }
 
 .post-item {
-  border-radius: 4px;
+  border-radius: 10px;
   background: var(--background-1);
   color: var(--fontColor);
-  /* border: 1px solid var(--borderColor); */
-  display: inline-block;
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 
   .item-img {
     width: 100%;
-    min-height: 120px;
-    height: 100%;
-    max-height: 220px;
-    /* Fixed height for image */
-    /* object-fit: cover;
-    display: block; */
-    margin-bottom: 0px;
     position: relative;
-    padding-top: 75%;
+    padding-top: 62%;
     overflow: hidden;
-    border-radius: 4px 4px 0 0;
+    border-radius: 10px 10px 0 0;
+    background: #eef1f5;
+    cursor: pointer;
 
-    a.thumbnail-b {
+    .item-cover-img {
       position: absolute;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100%;
       height: 100%;
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: cover;
-      border-radius: 4px 4px 0 0;
-      -webkit-filter: grayscale(20%);
-      filter: grayscale(20%);
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      transition: transform 0.35s ease;
     }
+  }
 
-    .thumbnail-b.sa {
-      -webkit-transition: all .3s ease-out 0s;
-      -moz-transition: all .3s ease-out 0s;
-      -o-transition: all .3s ease-out 0s;
-      transition: all .3s ease-out 0s;
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    transform: translateY(-2px);
+
+    .item-cover-img {
+      transform: scale(1.05);
     }
+  }
+}
+
+@media screen and (max-width: 575px) {
+  .post-item .item-img {
+    padding-top: 56.25%;
   }
 }
 
@@ -788,23 +809,5 @@ export default {
   margin: 0 auto;
   height: 40px;
   line-height: 20px;
-}
-
-/* Example of adding a subtle hover effect to articles */
-.post-item:hover {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  /* Subtle lift on hover */
-  transform: translateY(-2px);
-  /* Slight vertical shift on hover*/
-  transition: all 0.2s ease;
-  /* Smooth transition */
-}
-
-.post-item .item-img:hover {
-  a.thumbnail-b {
-    scale: 110%;
-    -webkit-filter: grayscale(60%);
-    filter: grayscale(60%);
-  }
 }
 </style>

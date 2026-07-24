@@ -119,6 +119,8 @@ Vue.component('Treeselect', () => import("@riophae/vue-treeselect").then((m) => 
 }))
 Vue.component('Pagination', () => import("@/components/Pagination"))
 Vue.component('RightToolbar', () => import("@/components/RightToolbar"))
+// 可复用 AI 弹出对话（任意页 <ai-chat-popup v-model="visible" /> 或 ref.open()）
+Vue.component('AiChatPopup', () => import("@/views/admin/tool/chatbot/index.vue"))
 
 // 广告 / 图片预览延后到空闲时再装，避免堵住首页首屏
 function loadDeferredPlugins() {

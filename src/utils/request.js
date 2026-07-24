@@ -78,9 +78,10 @@ service.interceptors.response.use(
     //   setToken(plusToken)
     // }
 
+    // HTTP 2xx 时用业务 code 判断；HTTP 401/500 等不会进入本分支
     const status = response.status
     const code = res && res.code !== undefined ? res.code : status
-    const message = (res && (res.msg || res.message)) || errorCode[status] || errorCode['default']
+    const message = (res && (res.msg || res.message)) || errorCode[code] || errorCode[String(code)] || errorCode['default']
 
     // 50008: Illegal token; 50012: Other clients logged in; 50014: Token expired;
     if ([401, 403, 208, 214, 215, 219, 206].includes(code)) {
@@ -97,49 +98,73 @@ service.interceptors.response.use(
           // store.dispatch('settings/showLogin', true)
         })
       })
-      return Promise.reject(message)
-    } else if (res.code === 500) {
-      _Message({ message: message, type: 'error' })
-      return Promise.reject(new Error(message || 'Error'))
-    } else if ([400, 404, 429, 209, 409, 415, 501].includes(code)) {
+      const err = new Error(message)
+      err.isHandled = true
+      return Promise.reject(err)
+    } else if ([400, 404, 429, 209, 409, 415, 500, 501, 502, 503, 504].includes(code)) {
       // if the custom code is not 20000, it is judged as an error.
       _Message({
         message: message,
         type: 'error',
         duration: 3000
       })
-      return Promise.reject(new Error(message || 'Error'))
+      const err = new Error(message || 'Error')
+      err.isHandled = true
+      return Promise.reject(err)
     } else {
       return res
     }
   },
   error => {
-    // for debug
-    const { message = '', response, config = {}, status } = error;
+    // HTTP 非 2xx（含 401/500）会进入这里，而不是上面的成功回调
+    const { message = '', response, config = {} } = error
     if (config && config.deduplicate !== false) {
       pendingRequests.delete(getRequestKey(config))
     }
-    let errorMsg = message
-    // ✅ 推荐：使用错误码精确判断
-    if (error.code === 'ECONNABORTED') {
-      errorMsg = "系统接口请求超时";
-    } else if (response && response.data && response.data.msg) {
-      errorMsg = response.data.msg
-    }else if (message == "Network Error") {
-      errorMsg = "后端接口连接异常";
-    } else if (message.includes("Request failed with status code")) {
-      // errorMsg = "系统接口" + errorMsg.substr(errorMsg.length - 3) + "异常";
-      errorMsg = `系统接口${(response && response.status) || ''}异常`
+    const status = response && response.status
+    const resData = response && response.data
+    // 优先业务 msg，再 errorCode，避免 Spring 英文 message 盖掉中文提示
+    const statusText =
+      status != null ? errorCode[status] || errorCode[String(status)] : ''
+    let errorMsg =
+      (resData && resData.msg) ||
+      statusText ||
+      (resData && resData.message) ||
+      errorCode['default']
+
+    if (error.code === 'ECONNABORTED' || (typeof message === 'string' && message.includes('timeout'))) {
+      errorMsg = '系统接口请求超时'
+    } else if (message === 'Network Error') {
+      errorMsg = '后端接口连接异常'
     }
-    // if (message.includes("timeout")) {
-    //   errorMsg = "系统接口请求超时";
-    // }
+
+    const rejectHandled = msg => {
+      const err = new Error(msg)
+      err.isHandled = true
+      err.response = response
+      return Promise.reject(err)
+    }
+
+    if ([401, 403].includes(status)) {
+      MessageBox.confirm('未登录, 需要重新登录', '退出登录', {
+        confirmButtonText: '重新登录',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        store.dispatch('user/logout').then(() => {
+          location.href = '/user';
+        })
+      })
+      return rejectHandled(errorMsg)
+    }
+
+    // 含 HTTP 500：提示中文并 Promise.reject 返回给调用方
     _Message({
       message: errorMsg,
       type: 'error',
       duration: 4000
     })
-    return Promise.reject(error)
+    return rejectHandled(errorMsg)
   }
 )
 

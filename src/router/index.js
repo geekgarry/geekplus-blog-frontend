@@ -57,23 +57,38 @@ export const constantRoutes = [
     type: 'admin',
     meta: { title: '简历工具' },
     children: [
-      {
-        path: 'template',
-        name: 'ResumeTemplateManager',
-        component: () => import('@/views/admin/tool/resume/ResumeTemplateManager'),
-        meta: { title: '简历模板管理', noCache: true }
-      },
+      // {
+      //   path: 'template',
+      //   name: 'ResumeTemplateManager',
+      //   component: () => import('@/views/admin/tool/resume/ResumeTemplateManager'),
+      //   meta: { title: '简历模板管理', noCache: true }
+      // },
       {
         path: 'template-builder',
         name: 'ResumeTemplateBuilder',
+        hidden: true,
         component: () => import('@/views/admin/tool/resume/ResumeTemplateBuilder'),
         meta: { title: '可视化模板编辑', noCache: true }
       },
+      // {
+      //   path: 'data',
+      //   name: 'ResumeDataManager',
+      //   component: () => import('@/views/admin/tool/resume/ResumeDataManager'),
+      //   meta: { title: '简历数据管理', noCache: true }
+      // }
+    ]
+  },
+  {
+    path: '/admin/system/ai',
+    component: Layout,
+    type: 'admin',
+    meta: { title: 'AI 管理', icon: 'tool' },
+    children: [
       {
-        path: 'data',
-        name: 'ResumeDataManager',
-        component: () => import('@/views/admin/tool/resume/ResumeDataManager'),
-        meta: { title: '简历数据管理', noCache: true }
+        path: 'index',
+        name: 'AiAdmin',
+        component: () => import('@/views/admin/system/ai/index'),
+        meta: { title: 'AI 模型与源', icon: 'component', noCache: true }
       }
     ]
   },
@@ -213,7 +228,7 @@ export const constantRoutes = [
     },
     {
       path: '/write',
-      name: 'WriteArticle',
+      name: 'WriteArticleUnlogin',
       meta: { title: '投稿文章', icon: '' },
       component: () => import('@/views/write/index.vue'),
     },

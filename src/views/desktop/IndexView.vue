@@ -45,16 +45,18 @@
               <span class="welcome-message">欢迎光临! 体验AI助手: <a href="/chat" target="_blank">点击直达</a></span>
             </div>
             <div class="special-recommend-container" v-if="sixSpecialArticles && sixSpecialArticles.length > 0">
-              <el-row :gutter="10">
+              <el-row :gutter="12">
                 <el-col :xs="12" :sm="8" :md="8" :lg="8" :xl="8" v-for="(item, index) in sixSpecialArticles"
                   :key="index">
                   <div class="special-article-wrapper is-always-shadow" :class="{ 'skeleton-loading': otherLoading }">
                     <div class="special-article-content">
-                      <div class="special-article-cover">
-                        <a class="special-thumbnail-b" href="javascript:;" @click="navToArticle(item.id)"
-                          v-if="item.indexPicture" :style="{ backgroundImage: 'url(' + item.indexPicture + ')' }"></a>
-                        <a class="special-thumbnail-b" href="javascript:;" @click="navToArticle(item.id)" v-else
-                          :style="{ backgroundImage: 'url(' + articleCover + ')' }"></a>
+                      <div class="special-article-cover" @click="navToArticle(item.id)">
+                        <img
+                          class="special-cover-img"
+                          :src="item.indexPicture || articleCover"
+                          :alt="item.articleTitle"
+                          loading="lazy"
+                        >
                       </div>
                     </div>
                     <div class="special-article-caption">
@@ -92,10 +94,14 @@
                         <p class="article-summary">{{ article.abstractText }}</p>
                       </div>
                     </div>
-                    <div class="article-cover" v-if="article.indexPicture">
-                      <router-link :to="'/article/' + article.id">
-                        <!-- :style="{ backgroundImage: 'url(' + article.indexPicture + ')' }" -->
-                        <img class="article-image" :src="article.indexPicture" :alt="article.articleTitle">
+                    <div class="article-cover">
+                      <router-link :to="'/article/' + article.id" class="article-cover-link">
+                        <img
+                          class="article-image"
+                          :src="article.indexPicture || articleCover"
+                          :alt="article.articleTitle"
+                          loading="lazy"
+                        >
                       </router-link>
                     </div>
                   </div>
@@ -200,7 +206,7 @@
                         article.articleTitle }}</router-link></span>
                     </div>
                   </div>
-                  <div class="article-card-list" :key="index" v-else>
+                  <div class="article-card-list" :key="article.id" v-else>
                     <div class="article-card-cover">
                       <a class="thumbnail-b" href="javascript:void(0);" v-if="article.indexPicture"
                         @click="navToArticle(article.id)"
@@ -774,8 +780,7 @@ export default {
 .article-list {
   display: flex;
   flex-direction: column;
-  /* gap: 16px;
-    Spacing between cards */
+  gap: 12px;
 }
 
 .article-list a:hover {
@@ -783,88 +788,79 @@ export default {
 }
 
 .article-card {
-  border-radius: 4px;
-  padding: 10px;
-  margin-bottom: 15px;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 0;
   background: var(--background-1);
   color: var(--fontColor);
-  display: inline-block;
+  display: block;
   width: 100%;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    transform: translateY(-1px);
+  }
 }
 
 .article-content {
   display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: space-between;
-  margin-bottom: 5px;
+  gap: 16px;
+  margin-bottom: 8px;
 
   .article-content-wrapper {
     flex: 1 1 auto;
+    min-width: 0;
   }
+}
 
-  .article-cover {
-    max-width: 170px;
-    width: 100%;
-    min-width: 95px;
-    min-height: 80px;
-    height: 100%;
-    max-height: 100px;
-    overflow: hidden;
-    border-radius: 5px;
-    margin-left: 6px;
-    position: relative;
-    display: grid;
+.article-cover {
+  flex: 0 0 168px;
+  width: 168px;
+  max-width: 34%;
+  overflow: hidden;
+  border-radius: 8px;
+}
 
-    a {
-      width: 100%;
-      height: 0;
-      padding-bottom: 70%;
-      text-align: center;
-      overflow: hidden;
-      display: block;
-    }
+.article-cover-link {
+  display: block;
+  width: 100%;
+  height: 0;
+  padding-bottom: 62%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
 
-    a img {
-      min-width: 100%;
-      min-height: 80px;
-      height: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-  }
-
-  .article-cover:hover img {
-    transform: scale(110%);
-  }
+.article-cover:hover .article-image {
+  transform: scale(1.04);
 }
 
 .article-image {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   display: block;
-  /* Prevents image from affecting layout */
-  -moz-border-radius: 4px;
-  -ms-border-radius: 4px;
-  -webkit-border-radius: 4px;
-  -o-border-radius: 4px;
-  border-radius: 4px;
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  transition: all .4s linear;
-  user-select: none;
-  -o-object-fit: cover;
+  border-radius: 8px;
   object-fit: cover;
-  -o-object-position: center;
   object-position: center;
+  transition: transform 0.35s ease;
+  user-select: none;
 }
 
 .article-title {
-  margin: 0 0 5px 0;
+  margin: 0 0 8px 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.35;
   white-space: break-spaces;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -879,15 +875,12 @@ export default {
 
 .article-info {
   display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
 }
 
 .article-summary {
-  margin: 0 0 5px 0;
+  margin: 0;
   flex: 1 1 auto;
+  color: var(--muted-1-color, #777);
   white-space: break-spaces;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -898,14 +891,17 @@ export default {
   /*! autoprefixer: off */
   -webkit-box-orient: vertical;
   box-orient: vertical;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .article-footer {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  gap: 4px 8px;
   font-size: 12px;
-  line-height: 1;
+  line-height: 1.2;
   color: var(--muted-1-color);
 }
 
@@ -914,21 +910,22 @@ export default {
 }
 
 .author-avatar {
-  width: 25px;
-  height: 25px;
-  border-radius: 30px;
-  margin-right: 5px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  margin-right: 4px;
+  object-fit: cover;
 }
 
 .author-name {
-  margin-right: 5px;
-  font-weight: bold;
+  margin-right: 4px;
+  font-weight: 600;
 }
 
 .article-tag a {
   font-size: 11px;
   padding: 2px 5px;
-  margin-right: 5px;
+  margin-right: 2px;
 }
 
 .view-count,
@@ -936,45 +933,124 @@ export default {
 .collect-count,
 .like-count,
 .comment-count {
-  margin-right: 6px;
-  padding: 3px 0;
+  margin-right: 4px;
+  padding: 2px 0;
 }
 
-/* .more-button {
-  text-align: right;
+.special-recommend-container {
+  margin: 8px 0 14px;
+}
+
+.special-article-wrapper {
+  margin-bottom: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--background-1);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    transform: translateY(-2px);
+  }
+}
+
+.special-article-cover {
+  width: 100%;
+  height: 0;
+  padding-bottom: 62%;
+  position: relative;
+  overflow: hidden;
+  background: #eef1f5;
+  cursor: pointer;
+}
+
+.special-cover-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   display: block;
-} */
-
-.wave-decorator {
-  /* Implement the wave SVG or image styling here */
-  height: 100px;
-  background-image: url("../../icons/svg/wave.svg");
-  /* Or use an inline SVG */
-  background-repeat: no-repeat;
-  background-position: center bottom;
-  background-size: cover;
+  transition: transform 0.35s ease;
 }
 
-/* Responsive styles (example) */
-@media (max-width: 768px) {
+.special-article-wrapper:hover .special-cover-img {
+  transform: scale(1.04);
+}
 
-  /* Example breakpoint */
-  .el-menu--horizontal {
-    flex-direction: column;
-    /* Stack menu vertically */
+.special-article-caption {
+  padding: 8px 10px 10px;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-height: 48px;
+}
+
+.index-carousel-wrapper {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.welcome {
+  margin: 10px 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(64, 158, 255, 0.06);
+}
+
+.profile-image-wrapper {
+  width: auto;
+  height: 140px;
+  overflow: hidden;
+  margin: -15px -15px 15px -15px;
+  border-radius: 4px 4px 0 0;
+}
+
+@media screen and (max-width: 992px) {
+  .article-cover {
+    flex-basis: 140px;
+    width: 140px;
   }
 
-  .el-menu-item {
-    display: block;
-    /* Make each item full width */
-    margin-bottom: 5px;
+  .article-title {
+    font-size: 16px;
   }
 }
 
-@media (max-width: 768px) {
+@media screen and (max-width: 768px) {
+  .article-card {
+    padding: 10px;
+    border-radius: 8px;
+  }
 
-  /* ... (media query from last response) ... */
+  .article-content {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
 
-  /* ... other mobile styles ... */
+  .article-cover {
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .article-cover-link {
+    padding-bottom: 52%;
+  }
+
+  .special-article-caption {
+    font-size: 13px;
+    min-height: 40px;
+  }
+
+  .profile-image-wrapper {
+    height: 110px;
+  }
 }
 </style>

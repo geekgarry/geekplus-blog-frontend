@@ -7,18 +7,38 @@
         <div class="toolbar-left">
           <h1 class="page-title">在线简历编辑器</h1>
           <span v-if="isSaving" class="save-hint">保存中...</span>
+          <span v-else-if="isSavingNew" class="save-hint">另存中...</span>
           <span v-else-if="lastSavedHint" class="save-hint muted">{{ lastSavedHint }}</span>
         </div>
         <div class="toolbar-actions">
+          <el-button
+            v-if="isLoggedIn"
+            size="mini"
+            icon="el-icon-folder-opened"
+            @click="openMyResumes"
+          >我的简历</el-button>
           <el-button size="mini" type="primary" icon="el-icon-document" @click="openTemplateDialog">
             模板：{{ currentTemplateMeta.name }}
           </el-button>
           <el-button size="mini" type="success" icon="el-icon-download" :loading="isExporting" @click="downloadModalVisible = true">
             下载
           </el-button>
-          <el-button size="mini" icon="el-icon-folder-checked" @click="saveCurrentResume">保存</el-button>
+          <el-button size="mini" icon="el-icon-folder-checked" :loading="isSaving" @click="saveCurrentResume(false)">保存</el-button>
+          <el-button
+            v-if="isLoggedIn"
+            size="mini"
+            plain
+            icon="el-icon-document-add"
+            :loading="isSavingNew"
+            @click="saveCurrentResume(true)"
+          >另存新档</el-button>
           <el-button size="mini" type="danger" plain icon="el-icon-refresh-left" @click="resetData">重置</el-button>
         </div>
+      </div>
+
+      <div v-if="isLoggedIn && currentResumeTitle" class="current-resume-tip no-print">
+        当前编辑：<strong>{{ currentResumeTitle }}</strong>
+        <span v-if="currentResumeId" class="muted">（ID {{ currentResumeId }}）</span>
       </div>
 
       <div v-if="!isLoggedIn" class="guest-tip no-print">
@@ -73,6 +93,42 @@
         </div>
       </el-dialog>
 
+      <!-- 我的简历列表 -->
+      <el-dialog
+        title="我的简历"
+        :visible.sync="myResumesVisible"
+        width="640px"
+        class="no-print"
+        append-to-body
+      >
+        <div class="my-resumes-toolbar">
+          <el-button size="mini" type="primary" icon="el-icon-plus" @click="createNewResume">新建空白简历</el-button>
+          <el-button size="mini" icon="el-icon-refresh" :loading="myResumesLoading" @click="loadMyResumes">刷新</el-button>
+        </div>
+        <el-table
+          v-loading="myResumesLoading"
+          :data="myResumeList"
+          size="small"
+          border
+          highlight-current-row
+          :row-class-name="resumeRowClass"
+          @row-click="selectResumeRow"
+        >
+          <el-table-column prop="title" label="标题" min-width="160" show-overflow-tooltip />
+          <el-table-column prop="templateKey" label="模板" width="120" show-overflow-tooltip />
+          <el-table-column prop="updatedAt" label="更新时间" width="170">
+            <template slot-scope="scope">{{ formatResumeTime(scope.row.updatedAt) }}</template>
+          </el-table-column>
+          <el-table-column label="操作" width="160" align="center">
+            <template slot-scope="scope">
+              <el-button type="text" size="mini" @click.stop="applyResumeRecord(scope.row)">打开</el-button>
+              <el-button type="text" size="mini" style="color:#f56c6c" @click.stop="removeResumeRecord(scope.row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <p v-if="!myResumesLoading && !myResumeList.length" class="empty-resumes">暂无云端简历，保存后会出现在这里。</p>
+      </el-dialog>
+
       <!-- Download modal: mobile = 分页/不分页 PDF；desktop = 打印PDF / HTML / Word -->
       <el-dialog
         title="选择下载格式"
@@ -122,7 +178,13 @@
 
 <script>
 import { getToken } from '@/utils/auth';
-import { saveResume, getTemplates, getResume } from '@/api/resume';
+import {
+  saveResume,
+  getTemplates,
+  getResume,
+  getMyResumeList,
+  deleteResume,
+} from '@/api/resume';
 import {
   ResumePreview,
   ResumeFormEditor,
@@ -162,9 +224,15 @@ export default {
       downloadModalVisible: false,
       isExporting: false,
       isSaving: false,
+      isSavingNew: false,
       lastSavedHint: '',
       isMobile: false,
       saveTimer: null,
+      currentResumeId: null,
+      currentResumeTitle: '',
+      myResumesVisible: false,
+      myResumesLoading: false,
+      myResumeList: [],
     };
   },
   computed: {
@@ -182,10 +250,12 @@ export default {
     },
   },
   created() {
-    this.getUserLatestResume();
     this.refreshDeviceType();
     this.loadFromCache();
     this.loadRemoteTemplates();
+    if (this.isLoggedIn) {
+      this.getUserLatestResume();
+    }
     window.addEventListener('resize', this.refreshDeviceType);
   },
   beforeDestroy() {
@@ -216,16 +286,112 @@ export default {
       }
     },
     getUserLatestResume() {
-      if (this.isLoggedIn) {
-        getResume(this.userId).then(res => {
+      if (!this.isLoggedIn || !this.userId) return;
+      getResume(this.userId)
+        .then((res) => {
           const data = res && res.data ? res.data : null;
-          if (data) {
-            this.resumeData = JSON.parse(data.dataJson);
-            this.currentTemplateId = this.templates.find(t => t.id === data.templateId)?.id || this.templates[0].id;
-            this.lastSavedHint = '已自动保存到本地';
-            this.persistCache();
+          if (data && data.dataJson) {
+            this.applyResumeRecord(data, true);
           }
+        })
+        .catch(() => {});
+    },
+    openMyResumes() {
+      if (!this.isLoggedIn) {
+        this.$message.warning('请先登录');
+        return;
+      }
+      this.myResumesVisible = true;
+      this.loadMyResumes();
+    },
+    loadMyResumes() {
+      if (!this.userId) return;
+      this.myResumesLoading = true;
+      getMyResumeList(this.userId)
+        .then((res) => {
+          const list = (res && res.data) || [];
+          this.myResumeList = Array.isArray(list) ? list : [];
+        })
+        .catch(() => {
+          this.myResumeList = [];
+        })
+        .finally(() => {
+          this.myResumesLoading = false;
         });
+    },
+    resumeRowClass({ row }) {
+      return row && row.id === this.currentResumeId ? 'is-current-resume' : '';
+    },
+    selectResumeRow(row) {
+      this.applyResumeRecord(row);
+    },
+    applyResumeRecord(record, silent = false) {
+      if (!record) return;
+      try {
+        const parsedRaw =
+          typeof record.dataJson === 'string'
+            ? JSON.parse(record.dataJson)
+            : record.dataJson || createEmptyResumeData();
+        const parsed = { ...parsedRaw };
+        const embeddedTpl = parsed.__templateId;
+        if (embeddedTpl) delete parsed.__templateId;
+        this.resumeData = {
+          ...createEmptyResumeData(),
+          ...parsed,
+          basics: {
+            ...createEmptyResumeData().basics,
+            ...(parsed.basics || {}),
+          },
+          jobIntention: {
+            ...createEmptyResumeData().jobIntention,
+            ...(parsed.jobIntention || {}),
+          },
+        };
+        const tpl = record.templateKey || record.templateId || embeddedTpl;
+        if (tpl) this.currentTemplateId = tpl;
+        this.currentResumeId = record.id || null;
+        this.currentResumeTitle = record.title || '未命名简历';
+        this.persistCache();
+        this.myResumesVisible = false;
+        if (!silent) {
+          this.$message.success(`已切换到：${this.currentResumeTitle}`);
+        }
+      } catch (e) {
+        this.$message.error('简历数据解析失败');
+      }
+    },
+    createNewResume() {
+      this.resumeData = createEmptyResumeData();
+      this.currentTemplateId = 'template1';
+      this.currentResumeId = null;
+      this.currentResumeTitle = '新建简历';
+      this.persistCache();
+      this.myResumesVisible = false;
+      this.$message.success('已新建空白简历，保存后写入云端');
+    },
+    removeResumeRecord(row) {
+      if (!row || !row.id) return;
+      this.$confirm(`确定删除「${row.title || row.id}」吗？`, '提示', { type: 'warning' })
+        .then(() => deleteResume(row.id))
+        .then(() => {
+          this.$message.success('已删除');
+          if (this.currentResumeId === row.id) {
+            this.currentResumeId = null;
+            this.currentResumeTitle = '';
+          }
+          this.loadMyResumes();
+        })
+        .catch(() => {});
+    },
+    formatResumeTime(val) {
+      if (!val) return '-';
+      try {
+        const d = new Date(val);
+        if (Number.isNaN(d.getTime())) return String(val);
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      } catch (e) {
+        return String(val);
       }
     },
     // 从缓存中加载数据
@@ -300,25 +466,45 @@ export default {
       this.templateDialogVisible = false;
       this.persistCache();
     },
-    async saveCurrentResume() {
+    async saveCurrentResume(asNew = false) {
       this.persistCache();
       if (!this.isLoggedIn) {
         this.$message.success('已保存到本地缓存');
         return;
       }
-      this.isSaving = true;
+      if (asNew) {
+        this.isSavingNew = true;
+      } else {
+        this.isSaving = true;
+      }
       try {
-        await saveResume({
-          title: `${this.resumeData.basics.name || '未命名'}的简历`,
-          resumeData: this.resumeData,
+        const payload = {
+          title: `${(this.resumeData.basics && this.resumeData.basics.name) || '未命名'}的简历`,
+          data: this.resumeData,
           templateId: this.currentTemplateId,
-        });
-        this.$message.success('已保存到服务器');
+        };
+        // 有当前 id 且非「另存为」→ 更新；否则新建
+        if (!asNew && this.currentResumeId) {
+          payload.id = this.currentResumeId;
+        }
+        const res = await saveResume(this.userId, payload);
+        const saved = res && res.data ? res.data : null;
+        if (saved && saved.id) {
+          this.currentResumeId = saved.id;
+          this.currentResumeTitle = saved.title || payload.title;
+        }
+        this.$message.success(asNew || !payload.id ? '已新建并保存到云端' : '已更新当前简历');
         this.lastSavedHint = '已同步到云端';
+        // 保存后立刻刷新列表缓存（若弹窗开着）
+        if (this.myResumesVisible) this.loadMyResumes();
       } catch (e) {
         this.$message.error('云端保存失败，数据仍在本地');
       } finally {
-        this.isSaving = false;
+        if (asNew) {
+          this.isSavingNew = false;
+        } else {
+          this.isSaving = false;
+        }
       }
     },
     resetData() {
@@ -328,6 +514,8 @@ export default {
         .then(() => {
           this.resumeData = createEmptyResumeData();
           this.currentTemplateId = 'template1';
+          this.currentResumeId = null;
+          this.currentResumeTitle = '';
           localStorage.removeItem(CACHE_KEY);
           this.lastSavedHint = '';
           this.$message.success('已重置');
@@ -427,6 +615,30 @@ export default {
   padding: 10px 14px;
   margin-bottom: 12px;
   font-size: 13px;
+}
+
+.current-resume-tip {
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #374151;
+}
+.current-resume-tip .muted {
+  color: #9ca3af;
+  margin-left: 6px;
+}
+.my-resumes-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.empty-resumes {
+  margin: 16px 0 0;
+  color: #9ca3af;
+  font-size: 13px;
+  text-align: center;
+}
+::v-deep .is-current-resume > td {
+  background: #ecfdf5 !important;
 }
 
 .resume-split {

@@ -62,10 +62,17 @@
                             <p class="article-summary">{{ article.abstractText }}</p>
                           </div>
                         </div>
-                        <div class="article-cover" v-if="article.indexPicture">
-                          <router-link class="article-image" :to="'/article/' + article.id"
-                            :style="{ backgroundImage: 'url(' + article.indexPicture + ')' }">
-                            <!-- <img :src="article.indexPicture" :alt="article.articleTitle" class="article-image"> -->
+                        <div class="article-cover">
+                          <router-link
+                            class="article-cover-link"
+                            :to="'/article/' + article.id"
+                          >
+                            <img
+                              class="article-image"
+                              :src="article.indexPicture || require('@/assets/images/cover1.jpeg')"
+                              :alt="article.articleTitle"
+                              loading="lazy"
+                            >
                           </router-link>
                         </div>
                       </div>
@@ -653,8 +660,7 @@ export default {
 .article-list {
   display: flex;
   flex-direction: column;
-  /* gap: 16px;
-    Spacing between cards */
+  gap: 10px;
 }
 
 .article-list a:hover {
@@ -662,74 +668,84 @@ export default {
 }
 
 .article-card {
-  border-radius: 4px;
-  padding: 10px;
-  margin-bottom: 10px;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 0;
   background: var(--background-1);
   color: var(--fontColor);
-  display: inline-block;
+  display: block;
   width: 100%;
   font-size: 0.9rem;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  }
 }
 
 .article-content {
   display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: space-between;
-  margin-bottom: 5px;
+  gap: 12px;
+  margin-bottom: 8px;
 
   .article-content-wrapper {
     flex: 1 1 auto;
-  }
-
-  img {
-    max-width: 165px;
-    min-width: 80px;
-    min-height: 80px;
-    max-height: 150px;
+    min-width: 0;
   }
 }
 
 .article-cover {
-  max-width: 165px;
-  width: 100%;
-  min-width: 90px;
+  flex: 0 0 112px;
+  width: 112px;
+  max-width: 34%;
   min-height: 80px;
-  height: 100%;
-  max-height: 100px;
   overflow: hidden;
-  border-radius: 5px;
-  margin-left: 6px;
-  object-position: center;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: stretch; /* 确保子元素垂直方向撑满 */
+  gap: 16px; /* 左右间距 */
+}
+
+.article-cover-link {
+  flex-shrink: 0; /* 防止图片容器被左侧内容挤压缩小 */
+  width: 100%; /* 根据需要设定固定宽度 */
+  height: 100%; /* 继承父容器的高度 */
+  display: flex; /* 让图片作为 flex item 更好控制 */
+  /* padding-bottom: 68%;
+  border-radius: 8px; */
   position: relative;
+  overflow: hidden;
 }
 
 .article-image {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   display: block;
-  /* Prevents image from affecting layout */
-  -moz-border-radius: 4px;
-  -ms-border-radius: 4px;
-  -webkit-border-radius: 4px;
-  -o-border-radius: 4px;
-  border-radius: 4px;
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  -o-object-fit: cover;
+  border-radius: 8px;
   object-fit: cover;
-  transition: all .4s linear;
+  object-position: center;
+  transition: transform 0.35s ease;
   user-select: none;
 }
 
+.article-cover:hover .article-image {
+  transform: scale(1.04);
+}
+
 .article-title {
-  margin: 0 0 5px 0;
+  margin: 0 0 6px 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
   white-space: break-spaces;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -744,15 +760,12 @@ export default {
 
 .article-info {
   display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
 }
 
 .article-summary {
-  margin: 0 0 5px 0;
+  margin: 0;
   flex: 1 1 auto;
+  color: var(--muted-1-color, #777);
   white-space: break-spaces;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -763,14 +776,17 @@ export default {
   /*! autoprefixer: off */
   -webkit-box-orient: vertical;
   box-orient: vertical;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .article-footer {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  gap: 4px 6px;
   font-size: 12px;
-  line-height: 1;
+  line-height: 1.2;
   color: var(--muted-1-color);
 }
 
@@ -779,21 +795,22 @@ export default {
 }
 
 .author-avatar {
-  width: 25px;
-  height: 25px;
-  border-radius: 30px;
-  margin-right: 5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  margin-right: 4px;
+  object-fit: cover;
 }
 
 .author-name {
-  margin-right: 5px;
-  font-weight: bold;
+  margin-right: 4px;
+  font-weight: 600;
 }
 
 .article-tag a {
   font-size: 11px;
   padding: 2px 5px;
-  margin-right: 5px;
+  margin-right: 2px;
 }
 
 .view-count,
@@ -801,30 +818,47 @@ export default {
 .collect-count,
 .like-count,
 .comment-count {
-  margin-right: 6px;
-  padding: 3px 0;
+  margin-right: 2px;
+  padding: 2px 0;
 }
 
-/* Responsive styles (example) */
-@media (max-width: 768px) {
-
-  /* Example breakpoint */
-  .el-menu--horizontal {
-    flex-direction: column;
-    /* Stack menu vertically */
-  }
-
-  .el-menu-item {
-    display: block;
-    /* Make each item full width */
-    margin-bottom: 5px;
-  }
+.index-carousel-wrapper {
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
 }
 
-@media (max-width: 768px) {
+.welcome {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(64, 158, 255, 0.06);
+  font-size: 13px;
+}
 
-  /* ... (media query from last response) ... */
+@media screen and (max-width: 480px) {
+  .article-card {
+    padding: 10px;
+    border-radius: 8px;
+  }
 
-  /* ... other mobile styles ... */
+  .article-content {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .article-cover {
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .article-cover-link {
+    padding-bottom: 52%;
+  }
+
+  .article-title {
+    font-size: 15px;
+  }
 }
 </style>

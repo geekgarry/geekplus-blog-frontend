@@ -667,6 +667,10 @@ export default {
 
       const { text, mode } = this.typingQueue.shift();
 
+      if(this.msgList.length === 0){
+        return;
+      }
+
       if (mode === "instant") {
         // 🚀 整块直接显示
         this.msgList[this.msgList.length - 1].text += text;

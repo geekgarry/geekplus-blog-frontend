@@ -101,11 +101,15 @@
                 <div v-for="(article, index) in articlesList" :key="index" class="article-card is-always-shadow"
                   :class="{ 'skeleton-loading': loading }">
                   <div class="article-header">
-                    <div class="article-cover" v-if="article.indexPicture">
-                      <router-link :to="'/article/' + article.id">
-                        <img :src="article.indexPicture" :alt="article.articleTitle" class="article-image">
+                    <div class="article-cover">
+                      <router-link :to="'/article/' + article.id" class="article-cover-link">
+                        <img
+                          :src="article.indexPicture || articleCover || placeholderImage"
+                          :alt="article.articleTitle"
+                          class="article-image"
+                          loading="lazy"
+                        >
                       </router-link>
-                      <!-- <img v-else :src="placeholderImage" :alt="article.articleTitle" class="article-image"> -->
                     </div>
                     <div class="article-details">
                       <h3 class="article-title"><router-link :to="`/article/${article.id}`">{{ article.articleTitle
@@ -433,114 +437,104 @@ export default {
 }
 
 .article-list-container {
-  font-family: Arial, sans-serif;
-  /* Or your preferred font */
+  width: 100%;
 }
 
-//.articles-entry {}
+.articles-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
 .article-card {
-  margin-bottom: 15px;
-  border-radius: 4px;
+  margin-bottom: 0;
+  border-radius: 10px;
   background: var(--background-1);
   color: var(--fontColor);
-  display: inline-block;
+  display: block;
   width: 100%;
-  padding: 10px;
-  /* overflow: hidden;
-    border: none; */
+  padding: 12px 14px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 
-  /* For image containment */
-  .el-card__body {
-    padding: 10px !important;
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    transform: translateY(-1px);
   }
 }
 
 .article-header {
   display: flex;
-  align-items: flex-start;
-  margin-bottom: 5px;
-  /* Align to the top of the card */
+  align-items: stretch;
+  gap: 14px;
+  margin-bottom: 8px;
 }
 
 .article-cover {
-  max-width: 165px;
-  width: 100%;
-  min-width: 120px;
-  min-height: 80px;
-  height: 100%;
-  max-height: 100px;
+  flex: 0 0 168px;
+  width: 168px;
+  max-width: 38%;
   overflow: hidden;
-  border-radius: 4px;
-  margin-right: 5px;
-  object-position: center;
+  border-radius: 8px;
   position: relative;
-  display: grid;
-
-  a {
-    width: 100%;
-    height: 0;
-    padding-bottom: 60%;
-    text-align: center;
-    overflow: hidden;
-    display: block;
-  }
-
-  a img {
-    min-width: 100%;
-    min-height: 80px;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
 }
 
-.article-cover:hover img {
-  transform: scale(110%);
+.article-cover-link {
+  display: block;
+  width: 100%;
+  height: 0;
+  padding-bottom: 62%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.article-cover:hover .article-image {
+  transform: scale(1.04);
 }
 
 .article-image {
-  /* min-width: 100px;
-  max-width: 165px; */
+  position: absolute;
+  inset: 0;
   width: 100%;
-  /* Fixed width */
   height: 100%;
-  background-size: cover;
-  background-position: 50%;
-  -o-object-fit: cover;
   object-fit: cover;
-  position: relative;
-  transition: all 0.4s linear;
-  /* Maintain aspect ratio */
-  border-radius: 4px;
+  object-position: center;
+  display: block;
+  transition: transform 0.35s ease;
+  border-radius: 8px;
 }
 
 .article-details {
   flex: 1 1 auto;
-  /* Take up remaining space */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .article-title {
-  margin: 0 0 10px 0;
-  font-size: 1.2em;
+  margin: 0 0 8px 0;
   white-space: break-spaces;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   /*! autoprefixer: off */
   -webkit-box-orient: vertical;
   box-orient: vertical;
-  font-size: 16px;
+  font-size: 17px;
+  line-height: 1.35;
+  font-weight: 600;
 }
 
 .article-summary {
-  margin: 0 0 5px 0;
-  color: #777;
+  margin: 0;
+  color: var(--muted-1-color, #777);
   overflow: hidden;
-  /* Prevent long summaries from overflowing */
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -548,26 +542,87 @@ export default {
   -webkit-box-orient: vertical;
   box-orient: vertical;
   font-size: 14px;
+  line-height: 1.55;
 }
 
 .article-footer {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
 }
 
 .article-meta {
   color: var(--muted-1-color);
   font-size: 12px;
-  /* margin-bottom: 5px; */
 }
 
 .meta-item {
   margin-right: 6px;
 }
 
-.meta-tag a{
+.meta-tag a {
   font-size: 11px;
   margin-right: 5px;
   padding: 2px 5px;
+}
+
+/* 平板：封面略收窄，摘要 2 行 */
+@media screen and (max-width: 992px) {
+  .article-cover {
+    flex-basis: 140px;
+    width: 140px;
+  }
+
+  .article-summary {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+}
+
+/* 手机：封面全宽置顶，16:9 适配 */
+@media screen and (max-width: 768px) {
+  .article-card {
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  .article-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .article-cover {
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .article-cover-link {
+    padding-bottom: 56.25%;
+  }
+
+  .article-title {
+    font-size: 16px;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    margin-bottom: 6px;
+  }
+
+  .article-summary {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    font-size: 13px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .article-cover-link {
+    padding-bottom: 52%;
+  }
+
+  .article-title {
+    font-size: 15px;
+  }
 }
 </style>

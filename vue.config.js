@@ -19,7 +19,7 @@ const CompressionPlugin = require("compression-webpack-plugin");
 // const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const productionGzipExtensions = /\.(js|css|txt|html|ico|svg)(\?.*)?$/i;
 // const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-// const TerserPlugin = require('terser-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 // const { EsbuildPlugin } = require('esbuild-loader')
 // const { VueLoaderPlugin } = require('vue-loader');
 

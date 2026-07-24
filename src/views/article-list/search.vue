@@ -123,23 +123,28 @@
               </div>
               <div v-for="article in articlesList" :key="article.id" class="article-card is-always-shadow"
                 :class="{ 'skeleton-loading': loading }">
-                <div class="article-content">
-                  <div class="article-content-wrapper">
-                    <h3 class="article-title">
-                      <router-link :to="'/article/' + article.id">{{
-                        article.articleTitle
-                        }}</router-link>
-                    </h3>
-                    <div class="article-info">
-                      <p class="article-summary">{{ article.abstractText }}</p>
+                  <div class="article-content">
+                    <div class="article-content-wrapper">
+                      <h3 class="article-title">
+                        <router-link :to="'/article/' + article.id">{{
+                          article.articleTitle
+                          }}</router-link>
+                      </h3>
+                      <div class="article-info">
+                        <p class="article-summary">{{ article.abstractText }}</p>
+                      </div>
+                    </div>
+                    <div class="article-cover">
+                      <router-link :to="'/article/' + article.id" class="article-cover-link">
+                        <img
+                          :src="article.indexPicture || articleCover || authorAvatar"
+                          :alt="article.articleTitle"
+                          class="article-image"
+                          loading="lazy"
+                        />
+                      </router-link>
                     </div>
                   </div>
-                  <div class="article-cover" v-if="article.indexPicture">
-                    <router-link :to="'/article/' + article.id">
-                      <img :src="article.indexPicture" :alt="article.articleTitle" class="article-image" />
-                    </router-link>
-                  </div>
-                </div>
                 <div class="article-footer">
                   <a class="article-author-a" href="javascript:void(0);">
                     <img class="author-avatar" :src="authorAvatar" :alt="article.authorName" />
@@ -458,25 +463,28 @@ export default {
 .user-info {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .user-avatar {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  margin-right: 20px;
+  margin-right: 16px;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .user-details {
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .user-name {
   margin: 0;
-  font-size: 1.4em;
+  font-size: 1.3em;
 }
 
 .user-description {
@@ -486,20 +494,19 @@ export default {
 
 .user-stats {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
 }
 
 .stat {
-  margin-right: 20px;
+  margin-right: 0;
   color: #666;
 }
-
-/* .blog-home {} */
 
 .article-list {
   display: flex;
   flex-direction: column;
-  /* gap: 16px;
-    Spacing between cards */
+  gap: 12px;
 }
 
 .article-list a:hover {
@@ -507,82 +514,83 @@ export default {
 }
 
 .article-card {
-  border-radius: 4px;
-  padding: 10px;
-  margin-bottom: 15px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 0;
   background: var(--background-1);
   color: var(--fontColor);
-  display: inline-block;
+  display: block;
   width: 100%;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    transform: translateY(-1px);
+  }
 }
 
 .article-content {
   display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: space-between;
-  margin-bottom: 5px;
+  gap: 14px;
+  margin-bottom: 8px;
 
   .article-content-wrapper {
     flex: 1 1 auto;
-  }
-
-  img {
-    max-width: 170px;
-    width: 100%;
-    min-width: 100px;
-    user-select: none;
+    min-width: 0;
   }
 }
 
 .article-cover {
-  max-width: 165px;
-  width: 100%;
-  min-width: 90px;
-  min-height: 70px;
-  height: 100%;
-  max-height: 90px;
+  flex: 0 0 150px;
+  width: 150px;
+  max-width: 36%;
   overflow: hidden;
-  border-radius: 5px;
-  margin-left: 6px;
-  object-position: center;
-  display: grid;
+  border-radius: 8px;
 }
 
-.article-cover:hover img {
-  transform: scale(110%);
+.article-cover-link {
+  display: block;
+  width: 100%;
+  height: 0;
+  padding-bottom: 66%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.article-cover:hover .article-image {
+  transform: scale(1.04);
 }
 
 .article-image {
-  max-width: 100%;
-  min-height: 70px;
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
-  max-height: 150px;
-  display: block;
-  /* Prevents image from affecting layout */
-  border-radius: 5px;
-  -moz-border-radius: 5px;
-  -ms-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -o-border-radius: 5px;
-  background-size: cover;
-  background-position: 50%;
-  -o-object-fit: cover;
   object-fit: cover;
-  position: relative;
-  transition: all 0.4s linear;
+  object-position: center;
+  display: block;
+  border-radius: 8px;
+  transition: transform 0.35s ease;
 }
 
 .article-title {
-  margin: 0 0 5px 0;
-  font-size: 15px;
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
   white-space: break-spaces;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   /*! autoprefixer: off */
   -webkit-box-orient: vertical;
   box-orient: vertical;
@@ -590,15 +598,12 @@ export default {
 
 .article-info {
   display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
 }
 
 .article-summary {
-  margin: 0 0 5px 0;
+  margin: 0;
   flex: 1 1 auto;
+  color: var(--muted-1-color, #777);
   white-space: break-spaces;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -609,15 +614,16 @@ export default {
   -webkit-box-orient: vertical;
   box-orient: vertical;
   font-size: 14px;
+  line-height: 1.55;
 }
 
 .article-footer {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 3px;
+  gap: 4px 8px;
   font-size: 12px;
-  line-height: 1;
+  line-height: 1.2;
   color: var(--muted-1-color);
 }
 
@@ -626,21 +632,22 @@ export default {
 }
 
 .author-avatar {
-  width: 25px;
-  height: 25px;
-  border-radius: 30px;
-  margin-right: 5px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  margin-right: 4px;
+  object-fit: cover;
 }
 
 .author-name {
-  margin-right: 5px;
-  font-weight: bold;
+  margin-right: 4px;
+  font-weight: 600;
 }
 
 .article-tag a {
   font-size: 11px;
   padding: 2px 5px;
-  margin-right: 5px;
+  margin-right: 4px;
 }
 
 .view-count,
@@ -648,13 +655,49 @@ export default {
 .collect-count,
 .like-count,
 .comment-count {
-  margin-right: 6px;
+  margin-right: 4px;
 }
 
 .recommend-article-container {
   .recommended-article {
     line-height: 20px;
     margin-bottom: 4px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .article-card {
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  .article-content {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .article-cover {
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .article-cover-link {
+    padding-bottom: 52%;
+  }
+
+  .article-title {
+    font-size: 15px;
+  }
+
+  .article-summary {
+    font-size: 13px;
+  }
+
+  .user-avatar {
+    width: 60px;
+    height: 60px;
+    margin-right: 12px;
   }
 }
 </style>

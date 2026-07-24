@@ -695,9 +695,25 @@ export default {
       uploadedFile: null,
       isGenerating: false,
       aiLoadingKey: null,
+      chatDataPrompt: {
+        userId: null,//用户ID
+        username: this.username,//用户名
+        chatMsg: "",//聊天消息内容
+        historyChatData: null,//历史聊天记录
+        mediaData: null,
+        mediaMimeType: null,//文件数据类型
+        mediaFileName: null,//文件名称
+        tts: 0 //是否开启tts语音
+      },
     };
   },
   computed: {
+    userId() {
+      return this.$store.state.user.userId;
+    },
+    username() {
+      return this.$store.state.user.username || "guest";
+    },
     resumeData() {
       const src = this.value != null ? this.value : this.data;
       if (src && typeof src === 'object') {
@@ -1066,12 +1082,46 @@ export default {
       this.$message.success('简历生成成功！');
     },
     buildGeneratePrompt() {
+      // var resumeJson = `{
+      //   "basics": { "name": "", "email": "", "phone": "", "summary": "", "avatar": "" },
+      //   "work": [{ "id": "1", "company": "", "position": "", "duration": "", "description": "", "isHidden": false }],
+      //   "education": [{ "id": "1", "school": "", "degree": "", "year": "" }],
+      //   "jobIntention": { "targetJob": "", "targetCity": "", "expectedSalary": "" },
+      //   "projects": [{ "id": "1", "name": "", "role": "", "duration": "", "description": "", "technologies": "", "isHidden": false }],
+      //   "awards": [{ "id": "1", "name": "", "date": "", "description": "", "isHidden": false }],
+      //   "certifications": [{ "id": "1", "name": "", "date": "", "description": "", "isHidden": false }],
+      //   "portfolio": [{ "id": "1", "name": "", "url": "", "description": "", "isHidden": false }],
+      //   "skills": "",
+      //   "hobbies": ""
+      // }`;
       let prompt = this.aiPrompt.trim();
+      prompt = `你是一个专业的简历生成专家。请根据用户输入的基本信息或上传的简历文件，生成一份结构化 JSON 简历数据。直接返回结构化 JSON 简历数据，不要包含多余的解释或前缀。输入的文字说明为：${this.aiPrompt}
+      必须严格返回 JSON 格式，不要包含任何 Markdown 标记（如 \`\`\`json）。
+      JSON 结构必须严格如下：
+      {basics: {name: string, email: string, phone: string, summary: string, avatar: string}, work: {id: string, company: string, position: string, duration: string, description: string, isHidden: boolean}[], education: {id: string, school: string, degree: string, year: string}[], jobIntention: {targetJob: string, targetCity: string, expectedSalary: string}, projects: {id: string, name: string, role: string, duration: string, description: string, technologies: string, isHidden: boolean}[], awards: {id: string, name: string, date: string, description: string, isHidden: boolean}[], certifications: {id: string, name: string, date: string, description: string, isHidden: boolean}[], portfolio: {id: string, name: string, url: string, description: string, isHidden: boolean}[], skills: string, hobbies: string}`;
       if (this.uploadedFile) {
+        // this.chatDataPrompt.mediaData = this.uploadedFile;
+        // this.chatDataPrompt.mediaMimeType = this.uploadedFile.type;
+        // this.chatDataPrompt.mediaFileName = this.uploadedFile.name;
+        // this.chatDataPrompt.tts = 0;
+        // this.chatDataPrompt.historyChatData = null;
+        // this.chatDataPrompt.userId = this.userId;
+        // this.chatDataPrompt.username = this.username;
+        // this.chatDataPrompt.historyChatData = null;
         const note = `[用户已上传简历文件: ${this.uploadedFile.name}，请结合下方文字说明生成结构化 JSON 简历数据]`;
         prompt = prompt ? `${note}\n${prompt}` : note;
+        this.chatDataPrompt.chatMsg = prompt;
+        return {chatMsg: prompt, mediaData: this.uploadedFile, mediaMimeType: this.uploadedFile.type, mediaFileName: this.uploadedFile.name, tts: 0, historyChatData: null, userId: this.userId, username: this.username};
       }
-      return prompt;
+      // this.chatDataPrompt.chatMsg = prompt;
+      // this.chatDataPrompt.mediaData = null;
+      // this.chatDataPrompt.mediaMimeType = null;
+      // this.chatDataPrompt.mediaFileName = null;
+      // this.chatDataPrompt.tts = 0;
+      // this.chatDataPrompt.historyChatData = null;
+      // this.chatDataPrompt.userId = this.userId;
+      // this.chatDataPrompt.username = this.username;
+      return { chatMsg: prompt, mediaData: null, mediaMimeType: null, mediaFileName: null, tts: 0, historyChatData: null, userId: this.userId, username: this.username };
     },
     async handleGenerateFullResume() {
       if (!this.aiPrompt.trim() && !this.uploadedFile) {
@@ -1083,12 +1133,13 @@ export default {
         const prompt = this.buildGeneratePrompt();
         const templateKey =
           this.template && this.template.id ? this.template.id : undefined;
-        const res = await generateResumeAI({
-          action: 'generate',
-          prompt,
-          resumeData: this.resumeData,
-          templateKey,
-        });
+        // const res = await generateResumeAI({
+        //   action: 'generate',
+        //   prompt,
+        //   resumeData: this.resumeData,
+        //   templateKey,
+        // });
+        const res = await generateResumeAI(prompt);
         this.applyAiGenerateResult(res);
       } catch (err) {
         const msg =
@@ -1107,11 +1158,12 @@ export default {
       this.aiLoadingKey = loadingKey;
       const label = OPTIMIZE_LABELS[type] || '内容';
       try {
-        const res = await generateResumeAI({
-          action: 'optimize',
-          prompt: `请优化以下${label}，保持事实不变、语言更专业简洁：\n${content}`,
-          resumeData: this.resumeData,
-        });
+        // const res = await generateResumeAI({
+        //   action: 'optimize',
+        //   prompt: `你是一个专业的简历优化专家。请帮我润色简历内容，使其更加专业、有吸引力，突出重点成果。直接返回润色后的内容，不要包含多余的解释或前缀。请优化以下${label}，保持事实不变、语言更专业简洁：\n${content}`,
+        //   resumeData: this.resumeData,
+        // });
+        const res = await generateResumeAI({chatMsg: `你是一个专业的简历优化专家。请帮我润色简历内容，使其更加专业、有吸引力，突出重点成果。直接返回润色后的内容，不要包含多余的解释或前缀。请优化以下${label}，保持事实不变、语言更专业简洁：\n${content}`, mediaData: null, mediaMimeType: null, mediaFileName: null, tts: 0, historyChatData: null, userId: this.userId, username: this.username});
         const payload = this.extractAiPayload(res);
         const optimized =
           typeof payload === 'string'

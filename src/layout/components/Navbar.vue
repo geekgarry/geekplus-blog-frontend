@@ -81,18 +81,16 @@
           <el-dropdown-item @click.native="setting = true">
             <span><i class="el-icon-magic-stick"></i>{{ $t('navbar.layoutSettings') || '布局设置'}}</span>
           </el-dropdown-item>
-          <!-- <el-dropdown-item @click.native="onAiChatBot=true">
+          <el-dropdown-item @click.native="onAiChatBot=true">
             <span><i class="el-icon-chat-dot-round"></i>AI</span>
-          </el-dropdown-item> -->
+          </el-dropdown-item>
           <el-dropdown-item divided @click.native="logout">
             <span style="display:block;"><i class="el-icon-switch-button"></i>{{ $t('navbar.logOut') || '退出' }}</span>
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
     </div>
-    <!-- <el-dialog :visible.sync="onAiChatBot" title="AI聊天助手" width="85%" append-to-body>
-      <chat-bot></chat-bot>
-    </el-dialog> -->
+    <ai-chat-popup v-model="onAiChatBot" title="AI 助手" />
   </div>
 </template>
 
