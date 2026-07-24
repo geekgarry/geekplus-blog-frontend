@@ -28,17 +28,20 @@
       <el-main>
         <el-row :gutter="10">
           <el-col :xs="24" :sm="24" :md="17" :lg="17" :xl="17">
+            <!--
+              首页轮播：使用自研 PlusCarousel（桌面支持滚轮 + 鼠标拖拽）
+              若需 Element UI 原版 el-carousel，改用 @/components/ElCarouselBanner
+            -->
             <div class="index-carousel-wrapper" :class="{ 'skeleton-loading': carouselLoading }">
-              <el-carousel :interval="3000" arrow="always" ref="slideCarousel">
-                <el-carousel-item v-for="(item, index) in carouselList" :key="index">
-                  <img class="carousel-item__img" :src="item.carouselImg" :alt="item.carouselTitle" />
-                  <div class="carousel-item__caption">
-                    <span class="caption-text">
-                      <a :href="item.carouselLink">{{ item.carouselTitle }}</a>
-                    </span>
-                  </div>
-                </el-carousel-item>
-              </el-carousel>
+              <plus-carousel
+                mode="desktop"
+                :items="carouselList"
+                :height="280"
+                :interval="3500"
+                :touch="false"
+                :mouse-drag="true"
+                :mouse-wheel="true"
+              />
             </div>
             <div class="welcome">
               <i class="el-icon-s-opportunity"></i>
@@ -264,12 +267,14 @@
 </template>
 
 <script>
-// import { Carousel, CarouselItem } from 'element-ui';
 import PlusBreadcrumb from '@/layout/components/Breadcrumb'
 import PlusFooter from '@/layout/components/Footer'
 import MyCalendar from '@/components/PlusCalendar/primary.vue'
-import PlusPager from '@/components/PlusPager';
-import { Message, Pagination } from 'element-ui';
+import PlusPager from '@/components/PlusPager'
+import PlusCarousel from '@/components/PlusCarousel'
+// 备用：Element UI 原版轮播封装，其它页面可按需 import
+// import ElCarouselBanner from '@/components/ElCarouselBanner'
+import { Message, Pagination } from 'element-ui'
 import {
   getVisitInfo, getCarousel, getArticlesByCategoryLimit, getArticleLatestUserComment, getWebHotUserComment,
   getIndexAllCategoryArticleList, getGpNoticeNewOne
@@ -278,12 +283,11 @@ import {
 export default {
   name: 'DesktopIndexView',
   components: {
-    // [Carousel.name]: Carousel,
-    // [CarouselItem.name]: CarouselItem,
     PlusBreadcrumb,
     PlusFooter,
     MyCalendar,
-    PlusPager
+    PlusPager,
+    PlusCarousel
   },
   data() {
     return {
@@ -464,7 +468,8 @@ export default {
     this.getPageVisitInfo();
   },
   mounted() {
-    this.slideBanner();
+    //TODO: 注释掉轮播图滑动，因为已经没有在用官方element UI的el-carousel了
+    // this.slideBanner();
     this.getWebHotUserComments();
   },
   computed: {
@@ -992,16 +997,33 @@ export default {
   min-height: 48px;
 }
 
+/* 首页轮播容器：与 PlusCarousel 圆角对齐 */
 .index-carousel-wrapper {
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
+  margin-bottom: 12px;
 }
 
+/* 欢迎条：轻渐变提示，不抢轮播视觉 */
 .welcome {
-  margin: 10px 0;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: rgba(64, 158, 255, 0.06);
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(47, 111, 237, 0.08), rgba(47, 111, 237, 0.02));
+  border: 1px solid rgba(47, 111, 237, 0.1);
+}
+
+.welcome-message {
+  display: inline-block;
+  font-style: normal;
+  font-size: 14px;
+  color: #4a5563;
+}
+
+.welcome-message a {
+  color: #2f6fed;
+  text-decoration: none;
+  font-weight: 600;
 }
 
 .profile-image-wrapper {

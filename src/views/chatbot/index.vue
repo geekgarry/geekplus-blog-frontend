@@ -1,6 +1,10 @@
 <template>
-  <div class="chat-app-container">
-    <div class="chat-box-header" :style="{ top: chatBoxHeaderTop + `px` }">
+  <!--
+    /chat 全页对话：移动端与桌面共用一套结构（flex 列 + 居中卡片），
+    避免双分支布局导致桌面高度错乱、输入栏被 overflow 裁切。
+  -->
+  <div class="chat-app-container" :class="{ 'is-desktop': !mobileChatdisplay, 'is-mobile': mobileChatdisplay }">
+    <div class="chat-box-header" :style="{ top: chatBoxHeaderTop + 'px' }">
       <div class="plus-drawer-toggle" data-target="#my-plus-drawer" data-side="left">
         <span class="gplus-icon">
           <svg t="1723616704150" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6277"
@@ -11,7 +15,7 @@
           </svg>
         </span>
       </div>
-      <span>AI智能助手</span>
+      <span class="chat-box-header__title">AI 智能助手</span>
       <div @click="openMsg">
         <span class="gplus-icon">
           <svg t="1723618948778" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="28131"
@@ -23,194 +27,115 @@
         </span>
       </div>
     </div>
-    <div class="chat-main-content" v-if="mobileChatdisplay">
-      <div class="big-chat-box" id="big-chat-box" :style="{ height: chatBoxHeight + 'px' }">
-        <div v-for="(item, index) in msgList" v-bind:key="index" class="list-chat-msg">
-          <div class="chat-data-meta">
-            <span v-show="item.time" class="chat-date-time">{{ getChatDateTime(item.time) }}</span>
-            <span v-show="item.align === 'left' && item.elapsedMs" class="chat-reply-elapsedMs">已思考：{{ item.elapsedMs
-            }}s</span>
+
+    <div class="chat-shell">
+      <div class="chat-main-content">
+        <div
+          ref="chatBox"
+          class="big-chat-box"
+          id="big-chat-box"
+          :style="chatBoxInlineStyle"
+        >
+          <div v-if="!msgList.length" class="chat-empty-hint">
+            <p>有什么可以帮你的？在下方输入问题开始对话。</p>
           </div>
-          <div :class="item && item.align === 'right' ? 'list-chat-item-right' : 'list-chat-item-left'">
-            <span>
-              <img class="chat-user-icon" :src="item.align == 'right' ? userAvatar : aiAvatar"
-                :alt="item.align == 'right' ? '麦壳' : '极客普拉斯'" />
-            </span>
-            <span class="list-chat-item-content">
-              <!-- <div class="chat-msg-media-data" v-if="checkObjectExistsJson(item, 'mediaDiv')">
-                                <span v-html="item.mediaDiv"></span>
-                            </div> -->
-              <div v-if="item.type === 'text'">
-                <!-- <span v-if="item && item.align == 'right'" v-text="item.text"></span> -->
-                <span v-html="item.align === 'right' ? item.text : renderMdHtml(item.text)"></span>
-              </div>
-              <div v-else-if="item.type === 'image'">
-                <span>{{ item.text }}</span>
-                <div class="chat-msg-media-data">
-                  <img :src="item.mediaData" :alt="item.mediaFileName" />
+          <div v-for="(item, index) in msgList" :key="index" class="list-chat-msg">
+            <div class="chat-data-meta">
+              <span v-show="item.time" class="chat-date-time">{{ getChatDateTime(item.time) }}</span>
+              <span v-show="item.align === 'left' && item.elapsedMs" class="chat-reply-elapsedMs">已思考：{{ item.elapsedMs }}s</span>
+            </div>
+            <div :class="item && item.align === 'right' ? 'list-chat-item-right' : 'list-chat-item-left'">
+              <span>
+                <img
+                  class="chat-user-icon"
+                  :src="item.align == 'right' ? userAvatar : aiAvatar"
+                  :alt="item.align == 'right' ? '麦壳' : '极客普拉斯'"
+                >
+              </span>
+              <span class="list-chat-item-content">
+                <div v-if="item.type === 'text'">
+                  <span v-html="item.align === 'right' ? item.text : renderMdHtml(item.text)"></span>
                 </div>
-                <div>{{ item.mediaFileName }}</div>
-              </div>
-              <div v-else>
-                <span>{{ item.text }}</span>
-                <div class="chat-msg-media-data">
-                  <object :data="item.mediaData" style="width: 95%;" height="100%">
-                    <embed :src="item.mediaData" style="width: 100%;">
-                    <audio controls height="50" width="100%" :data="item.mediaData">
-                    </audio>
-                    <video controls height="50" width="100%" :data="item.mediaData">
-                      <source :src="item.mediaData" type="audio/mpeg">
-                      <source :src="item.mediaData" type="audio/ogg">
-                      <source :src="item.mediaData" type="video/mp4">
-                      <source :src="item.mediaData" type="video/ogg">
-                    </video>
-                    <a :href="item.mediaData" target="_blank">查看</a>
-                  </object>
+                <div v-else-if="item.type === 'image'">
+                  <span>{{ item.text }}</span>
+                  <div class="chat-msg-media-data">
+                    <img :src="item.mediaData" :alt="item.mediaFileName">
+                  </div>
+                  <div>{{ item.mediaFileName }}</div>
                 </div>
-                <div>{{ item.mediaFileName }}</div>
-              </div>
-              <div v-show="item.link"><a :href="item.link" target="_blank">链接</a></div>
-            </span>
+                <div v-else>
+                  <span>{{ item.text }}</span>
+                  <div class="chat-msg-media-data">
+                    <object :data="item.mediaData" style="width: 95%;" height="100%">
+                      <embed :src="item.mediaData" style="width: 100%;">
+                      <audio controls height="50" width="100%" :data="item.mediaData"></audio>
+                      <video controls height="50" width="100%" :data="item.mediaData">
+                        <source :src="item.mediaData" type="audio/mpeg">
+                        <source :src="item.mediaData" type="audio/ogg">
+                        <source :src="item.mediaData" type="video/mp4">
+                        <source :src="item.mediaData" type="video/ogg">
+                      </video>
+                      <a :href="item.mediaData" target="_blank">查看</a>
+                    </object>
+                  </div>
+                  <div>{{ item.mediaFileName }}</div>
+                </div>
+                <div v-show="item.link"><a :href="item.link" target="_blank">链接</a></div>
+              </span>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="chat-box-footer">
-        <div class="input-container">
-          <div class="button-container">
-            <button type="button" class="send-button" @click="startAndStopRecording">
-              {{ recordingTxt }}
-            </button>
-          </div>
-          <div class="textarea-container">
-            <textarea placeholder="请输入消息..." class="plus-text-input onlyoneline" id="plus-input-content-text"
-              name="inputChatMsg" autocomplete="off" rows="1" v-model="inputChatMsg" :autofocus="false"
-              @input="textInputEvent" @paste.capture.passive="pastingData"></textarea>
-            <label for="file-upload" class="upload-button">
-              <svg t="1720279770597" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                xmlns="http://www.w3.org/2000/svg" p-id="10853" id="mx_n_1720279770598" width="20" height="20">
-                <path d="M0 0h1024v1024H0z" fill="currentColor" opacity=".01" p-id="10854"></path>
-                <path
-                  d="M533.312 128a21.312 21.312 0 0 1 21.376 21.312v320h320a21.312 21.312 0 0 1 21.312 21.376v42.624a21.312 21.312 0 0 1-21.312 21.376h-320v320a21.312 21.312 0 0 1-21.376 21.312h-42.624a21.312 21.312 0 0 1-21.376-21.312v-320h-320A21.312 21.312 0 0 1 128 533.312v-42.624a21.312 21.312 0 0 1 21.312-21.376h320v-320A21.312 21.312 0 0 1 490.688 128h42.624z"
-                  fill="currentColor" fill-opacity=".7" p-id="10855"></path>
-              </svg>
-              <input type="file" id="file-upload" ref="file-upload-ref" accept="*" @change="uploadDataFileEvent($event)"
-                style="display: none;">
-            </label>
-          </div>
-          <div class="button-container">
-            <button type="button" class="send-button" @click="handleMsg" :disabled="statusDisabled">
-              发送
-            </button>
+
+        <div class="chat-box-footer">
+          <div class="input-container chat-composer">
+            <div v-if="mobileChatdisplay" class="button-container">
+              <button type="button" class="send-button" @click="startAndStopRecording">
+                {{ recordingTxt }}
+              </button>
+            </div>
+            <div class="textarea-container">
+              <textarea
+                ref="chatInput"
+                placeholder="请输入消息…"
+                class="plus-text-input onlyoneline"
+                id="plus-input-content-text"
+                name="inputChatMsg"
+                autocomplete="off"
+                rows="1"
+                v-model="inputChatMsg"
+                :autofocus="false"
+                @keydown="keyDownEvent"
+                @input="textInputEvent"
+                @paste.capture.passive="pastingData"
+              ></textarea>
+              <label for="file-upload" class="upload-button" title="上传文件">
+                <svg t="1720279770597" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                  xmlns="http://www.w3.org/2000/svg" p-id="10853" width="20" height="20">
+                  <path d="M0 0h1024v1024H0z" fill="currentColor" opacity=".01" p-id="10854"></path>
+                  <path
+                    d="M533.312 128a21.312 21.312 0 0 1 21.376 21.312v320h320a21.312 21.312 0 0 1 21.312 21.376v42.624a21.312 21.312 0 0 1-21.312 21.376h-320v320a21.312 21.312 0 0 1-21.376 21.312h-42.624a21.312 21.312 0 0 1-21.376-21.312v-320h-320A21.312 21.312 0 0 1 128 533.312v-42.624a21.312 21.312 0 0 1 21.312-21.376h320v-320A21.312 21.312 0 0 1 490.688 128h42.624z"
+                    fill="currentColor" fill-opacity=".7" p-id="10855"></path>
+                </svg>
+                <input
+                  type="file"
+                  id="file-upload"
+                  ref="file-upload-ref"
+                  accept="*"
+                  @change="uploadDataFileEvent($event)"
+                  style="display: none;"
+                >
+              </label>
+            </div>
+            <div class="button-container">
+              <button
+                type="button"
+                class="send-button is-primary"
+                @click="handleMsg"
+                :disabled="statusDisabled"
+              >发送</button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-    <div v-else>
-      <!-- <div class="chat-box-header">
-                <div @click="toggleMenu">
-                    <span class="gplus-icon">
-                        <svg t="1723616704150" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6277" width="24" height="24" class="icon"><path data-v-00771e96="" d="M844.8 883.2l-256 0c-19.2 0-38.4-19.2-38.4-38.4l0-256c0-19.2 19.2-38.4 38.4-38.4l256 0c19.2 0 38.4 19.2 38.4 38.4l0 256C883.2 864 864 883.2 844.8 883.2zM844.8 480l-256 0c-19.2 0-38.4-19.2-38.4-38.4l0-256c0-19.2 19.2-38.4 38.4-38.4l256 0c19.2 0 38.4 19.2 38.4 38.4l0 256C883.2 460.8 864 480 844.8 480zM435.2 883.2l-256 0c-19.2 0-38.4-19.2-38.4-38.4l0-256c0-19.2 19.2-38.4 38.4-38.4l256 0c19.2 0 38.4 19.2 38.4 38.4l0 256C480 864 460.8 883.2 435.2 883.2zM435.2 480l-256 0c-19.2 0-38.4-19.2-38.4-38.4l0-256c0-19.2 19.2-38.4 38.4-38.4l256 0c19.2 0 38.4 19.2 38.4 38.4l0 256C480 460.8 460.8 480 435.2 480z" fill="currentColor" p-id="6278"></path></svg>
-                    </span>
-                </div>
-                <span>AI聊天助手</span>
-                <div @click="openMsg">
-                    <span class="gplus-icon">
-                        <svg t="1723618948778" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="28131" width="24" height="24" class="icon"><path data-v-00771e96="" d="M512.001 928.997c230.524 0 418.076-187.552 418.075-418.077 0-230.527-187.552-418.077-418.075-418.077s-418.077 187.55-418.077 418.077c0 230.525 187.552 418.077 418.077 418.077zM512 301.88c28.86 0 52.26 23.399 52.26 52.263 0 28.858-23.399 52.257-52.26 52.257s-52.26-23.399-52.26-52.257c0-28.863 23.399-52.263 52.26-52.263zM459.74 510.922c0-28.86 23.399-52.26 52.26-52.26s52.26 23.399 52.26 52.26l0 156.775c0 28.86-23.399 52.26-52.26 52.26s-52.26-23.399-52.26-52.26l0-156.775z" fill="currentColor" p-id="28132"></path></svg>
-                    </span>
-                </div>
-            </div> -->
-      <!--事件的native修饰符只能在UI组件或自定义组件上使用，原生的html标签是不能使用的,入div，input等-->
-      <div class="container">
-        <el-row :gutter="10">
-          <el-col :xs="24" :sm="24" :md="24" :lg="{ span: 14, offset: 5 }" :xl="{ span: 12, offset: 6 }">
-            <div class="big-chat-box" id="big-chat-box-desktop" :style="{ height: chatBoxHeight + 'px' }">
-              <!-- :style="{textAlign: item.align}" -->
-              <div v-for="(item, index) in msgList" :key="index" class="list-chat-msg">
-                <div class="chat-data-meta">
-                  <span v-show="item.time" class="chat-date-time">{{ getChatDateTime(item.time) }}</span>
-                  <span v-show="item.align === 'left' && item.elapsedMs" class="chat-reply-elapsedMs">已思考：{{
-                    item.elapsedMs }}s</span>
-                </div>
-                <div :class="item && item.align === 'right' ? 'list-chat-item-right' : 'list-chat-item-left'">
-                  <span>
-                    <img class="chat-user-icon" :src="item.align == 'right' ? userAvatar : aiAvatar"
-                      :alt="item.align == 'right' ? '麦壳' : '极客普拉斯'" />
-                  </span>
-                  <span class="pc-chat-item-span">
-                    <!-- <div class="chat-msg-media-data" v-if="checkObjectExistsJson(item, 'mediaDiv')">
-                                            <span v-html="item.mediaDiv"></span>
-                                        </div> -->
-                    <div v-if="item.type === 'text'">
-                      <!-- <span v-if="item.align == 'right'" v-text="item.text"></span> -->
-                      <span v-html="item.align === 'right' ? item.text : renderMdHtml(item.text)"></span>
-                    </div>
-                    <div v-else-if="item.type === 'image'">
-                      <span>{{ item.text }}</span>
-                      <div class="chat-msg-media-data">
-                        <img :src="item.mediaData" :alt="item.mediaFileName" />
-                      </div>
-                      <div>{{ item.mediaFileName }}</div>
-                    </div>
-                    <div v-else>
-                      <span>{{ item.text }}</span>
-                      <div class="chat-msg-media-data">
-                        <object :data="item.mediaData" style="width: 95%;" height="100%">
-                          <embed :src="item.mediaData" style="width: 100%;">
-                          <audio controls height="50" width="100%" :data="item.mediaData">
-                          </audio>
-                          <video controls height="50" width="100%" :data="item.mediaData">
-                            <source :src="item.mediaData" type="audio/mpeg">
-                            <source :src="item.mediaData" type="audio/ogg">
-                            <source :src="item.mediaData" type="video/mp4">
-                            <source :src="item.mediaData" type="video/ogg">
-                          </video>
-                          <a :href="item.mediaData" target="_blank">查看</a>
-                        </object>
-                      </div>
-                      <div>{{ item.mediaFileName }}</div>
-                    </div>
-                    <div v-show="item.link"><a :href="item.link" target="_blank">链接</a></div>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="chat-box-footer">
-              <div class="input-container">
-                <div class="textarea-container">
-                  <textarea placeholder="请输入消息..." class="plus-text-input onlyoneline" id="plus-input-content-text"
-                    name="inputChatMsg" autocomplete="off" rows="1" :autofocus="false" v-model="inputChatMsg"
-                    v-on:keydown="keyDownEvent" v-on:input="textInputEvent"
-                    v-on:paste.capture.passive="pastingData"></textarea>
-                  <label for="file-upload" class="upload-button">
-                    <!-- <svg t="1720277146152" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5064" width="20" height="20">
-                                            <path d="M899.437541 570.198493 568.89122 570.198493l0 330.508459c0 32.216749-26.103518 58.397015-58.341756 58.397015-32.216749 0-58.283428-26.180266-58.283428-58.397015L452.266036 570.198493 121.718691 570.198493c-32.217772 0-58.359152-26.121937-58.359152-58.340733s26.14138-58.284451 58.359152-58.284451l330.547345 0L452.266036 122.969683c0-32.17991 26.066679-58.340733 58.283428-58.340733 32.238238 0 58.341756 26.160823 58.341756 58.340733L568.89122 453.573309l330.547345 0c32.218796 0 58.359152 26.065655 58.359152 58.284451S931.656337 570.198493 899.437541 570.198493" p-id="5065" fill="#484747"></path>
-                                        </svg> -->
-                    <svg t="1720279770597" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                      xmlns="http://www.w3.org/2000/svg" p-id="10853" id="mx_n_1720279770598" width="20" height="20">
-                      <path d="M0 0h1024v1024H0z" fill="currentColor" opacity=".01" p-id="10854">
-                      </path>
-                      <path
-                        d="M533.312 128a21.312 21.312 0 0 1 21.376 21.312v320h320a21.312 21.312 0 0 1 21.312 21.376v42.624a21.312 21.312 0 0 1-21.312 21.376h-320v320a21.312 21.312 0 0 1-21.376 21.312h-42.624a21.312 21.312 0 0 1-21.376-21.312v-320h-320A21.312 21.312 0 0 1 128 533.312v-42.624a21.312 21.312 0 0 1 21.312-21.376h320v-320A21.312 21.312 0 0 1 490.688 128h42.624z"
-                        fill="currentColor" fill-opacity=".7" p-id="10855"></path>
-                    </svg>
-                    <input type="file" id="file-upload" ref="file-upload-ref" accept="*"
-                      @change="uploadDataFileEvent($event)" style="display: none;">
-                  </label>
-                </div>
-                <div class="button-container">
-                  <button type="button" class="send-button" @keydown.enter="handleMsg" @click="handleMsg"
-                    :disabled="statusDisabled">
-                    发送
-                  </button>
-                </div>
-              </div>
-            </div>
-          </el-col>
-        </el-row>
-        <!-- <div class="row row-no-gutters">
-          <div class="col-xs-12 col-sm-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
-          </div>
-        </div> -->
       </div>
     </div>
     <div id="my-plus-drawer" class="plus-drawer">
@@ -264,7 +189,8 @@
             <div class="history-msg-list-item" :class="{ selected: selectedHistory(item.historyMsgKey) }"
               v-for="(item, index) in historyChatMsgList" :key="index">
               <a href="javascript:;" class="text-ellipsis" @click="getOneHistoryChatMsg(item.historyMsgKey)">
-                {{ JSON.parse(item.historyMsg).text.substring(0, 45) }}
+                <!-- 历史摘要可能是 HTML/脏数据，禁止在模板里直接 JSON.parse -->
+                {{ historyPreviewText(item) }}
               </a>
               <span class="history-msg-list-item-close" v-if="username && username != 'guest'"
                 @click.stop="deleteOneHistoryChatMsg(item.historyMsgKey)">
@@ -478,43 +404,26 @@ export default {
     //调用滑出抽屉菜单，closeButton: false不使用默认的关闭按钮
     PlusDrawer.init({ closeButton: false });
     const that = this;
-    that.textAreaInput = document.querySelector("#plus-input-content-text");
-    that.textInputHeight = this.textAreaInput.offsetHeight;
-    that.adjustLayout();
-    // this.$nextTick(() => {this.$refs.serachBox.focus();});
+    this.$nextTick(() => {
+      that.textAreaInput = that.$refs.chatInput || document.querySelector("#plus-input-content-text");
+      if (that.textAreaInput) {
+        that.textInputHeight = that.textAreaInput.offsetHeight || 36;
+      }
+      that.adjustLayout();
+      const box = that.$refs.chatBox || document.getElementsByClassName('big-chat-box')[0];
+      if (box) {
+        box.addEventListener('scroll', that.handleAIMessageScroll, { passive: true });
+      }
+    });
     // <!--把window.onresize事件挂在到mounted函数上-->
-    // window.onresize = (e) => {return (() => {})();};
     window.addEventListener('resize', (e) => {
-      //e.target.innerHeight 和 window.innerHeight会随着我拖拽窗口而变化，这里计算文档与窗口的交集，而不是真的世纪文档的高度
-      window.fullHeight = document.documentElement.clientHeight || document.body.clientHeight;// 高
-      window.fullWidth = document.documentElement.clientWidth || document.body.clientWidth;// 宽
+      window.fullHeight = document.documentElement.clientHeight || document.body.clientHeight;
+      window.fullWidth = document.documentElement.clientWidth || document.body.clientWidth;
       that.windowHeight = window.fullHeight;
       that.windowWidth = window.fullWidth;
-      // if (e.target.innerWidth < 992) {
-      //     //that.chatBtnPcDisplay = false;
-      //     this.mobileChatdisplay = true;
-      //     this.scrollEleSmoothTop();
-      // } else {
-      //     //that.chatBtnPcDisplay = true;
-      //     this.mobileChatdisplay = false;
-      //     this.scrollEleSmoothTop();
-      // }
-      // 监听orientationchange事件
-      // if (('onorientationchange' in window)) {
-      // if (window.orientation === 90 || window.orientation === -90) {
-      //     // 横屏模式
-      //     console.log("横评模式")
-      // } else if (window.orientation === 0 || window.orientation === 180) {
-      //     // 竖屏模式
-      //     console.log("书评模式")
-      // }
-      // }
-      // if ((screen.availHeight > screen.availWidth)) {
-      //     console.log("竖屏了1");
-      // }else{
-      //     console.log("横屏了2");
-      // }
-      that.adjustLayout();
+      // 宽度变化时同步移动/桌面模式，避免仅依赖 UA
+      that.mobileChatdisplay = that.isMobile();
+      that.$nextTick(() => that.adjustLayout());
     });
     window.onscroll = () => {
       //在IOS下document.body.scrollTop 一直为0，要用document.documentElement.scrollTop
@@ -532,40 +441,28 @@ export default {
         setTimeout(async () => {
           that.chatBoxHeaderTop = 0;
         }, 0);
-        // this.smoothScrollToTop()
       }
     }
-    document.getElementsByClassName('big-chat-box')[0].addEventListener('scroll', this.handleAIMessageScroll, { passive: true });
     // 设置显示回调函数
     PlusCropper.onShow(() => {
       // console.log("Plus裁剪框已显示");
     });
     // 设置隐藏回调函数
     PlusCropper.onHide(() => {
-      // console.log("Plus裁剪框已隐藏");
       var tempImg = '<img style="width: 100%; height: auto;" src="' + this.tempFileUrl + '" />';
-      // document.getElementById("fileData").innerHTML = tempImg;
       this.filePreview = tempImg;
-      //$('#chatDataModal').modal();
-      // PlusDialog.show({ onlyCloseBtn: true });
       this.fileDialogVisible = true;
     });
-    // textarea.addEventListener("keydown", (e) => {});
-    //shown是在显示之后，show是在显示的同时
-    // PlusDialog.onShow(() => {
-    //   that.dialogInputIsFocus = true;
-    // });
-    //hidden是在隐藏之后，hide是在隐藏的同时
-    // PlusDialog.onHide(() => {
-    //   //URL.revokeObjectURL(that.tempFileUrl); // 释放url
-    //   that.dialogInputIsFocus = false;
-    //   stopAllMedia();
-    // });
   },
   computed: {
     //主题模式，默认为明亮主题
     darkTheme() {
       return this.$store.state.darkMode;
+    },
+    /** 桌面用 flex 撑满，移动端保留 JS 高度以适配键盘 */
+    chatBoxInlineStyle() {
+      if (!this.mobileChatdisplay) return {}
+      return { height: this.chatBoxHeight + 'px' }
     },
     ...mapGetters([
       'avatar',
@@ -603,21 +500,10 @@ export default {
       this.chatDataPrompt.historyId = null;//历史聊天记录
     },
     beforeLoadedDocument() {
-      //this.startTTS("你好！请问现在是什么时间！");
-      this.windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;;
-      this.windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;;
-      // 页面宽度小于768px时，显示移动端,<992px,显示移动和平板
-      // if (this.windowWidth < 992) {
-      //     //this.chatBtnPcDisplay = false;
-      //     this.mobileChatdisplay = true;
-      // } else {
-      //     //this.chatBtnPcDisplay = true;
-      //     this.mobileChatdisplay = false;
-      // }
-      if (!this.isMobile()) {
-        this.mobileChatdisplay = false;
-      }
-      // testProcess().then(res=>{console.log(res);})
+      this.windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+      this.windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+      // 桌面 / 移动统一一套 DOM；mobileChatdisplay 仅影响录音按钮与高度策略
+      this.mobileChatdisplay = this.isMobile();
     },
     userLogin() {
       this.showLoginSignup = true;
@@ -936,7 +822,59 @@ export default {
     },
     //判断选择了哪一个消息记录
     selectedHistory(historyKey) {
-      return historyKey.includes(this.chatDataPrompt.historyId);
+      if (!historyKey || !this.chatDataPrompt.historyId) return false
+      return String(historyKey).includes(this.chatDataPrompt.historyId);
+    },
+    /**
+     * 侧边栏历史标题：historyMsg 有时是合法 JSON，有时被存成 HTML（如 &lt;p&gt;{&amp;quot;...}），
+     * 模板里直接 JSON.parse 会炸渲染，统一走安全解析。
+     */
+    historyPreviewText(item) {
+      const obj = this.safeParseHistoryMsg(item && item.historyMsg)
+      let text = ''
+      if (obj) {
+        text = obj.text != null ? obj.text : (obj.content || obj.chatMsg || '')
+      }
+      // 去掉 HTML 标签，避免侧边栏出现标签碎片
+      text = String(text || '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&amp;/gi, '&')
+        .replace(/\s+/g, ' ')
+        .trim()
+      return text ? text.substring(0, 45) : '（空消息）'
+    },
+    /** 安全解析单条历史消息（对象 / JSON 字符串 / HTML 包裹的 JSON） */
+    safeParseHistoryMsg(raw) {
+      if (raw == null || raw === '') return null
+      if (typeof raw === 'object') return raw
+      let s = String(raw).trim()
+      // HTML 包裹：先剥标签，再还原常见实体
+      if (s.charAt(0) === '<') {
+        s = s.replace(/<[^>]+>/g, '')
+      }
+      if (s.indexOf('&quot;') !== -1 || s.indexOf('&amp;') !== -1) {
+        s = s
+          .replace(/&quot;/gi, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&lt;/gi, '<')
+          .replace(/&gt;/gi, '>')
+          .replace(/&amp;/gi, '&')
+      }
+      try {
+        return JSON.parse(s)
+      } catch (e) {
+        const m = s.match(/\{[\s\S]*\}/)
+        if (m) {
+          try {
+            return JSON.parse(m[0])
+          } catch (e2) { /* ignore */ }
+        }
+        // 解析失败时把原文当标题，保证侧边栏仍可渲染
+        return { text: s }
+      }
     },
     // 根据keyValue删除一条聊天记录
     deleteOneHistoryChatMsg(keyValue) {
@@ -1684,13 +1622,31 @@ export default {
     },
     //重新调整布局，在页面变化时
     adjustLayout() {
-      const inputAddHeight = this.textInputHeightAdd;
-      // const headerHeight = document.querySelector('header').offsetHeight;
-      // const footerHeight = document.querySelector('footer').offsetHeight;
-      // document.querySelector('.content').style.height = `calc(100vh - ${headerHeight}px - ${footerHeight}px)`;
-      //this.windowHeight代表窗体高度，inputAddHeight是输入框增加的高度
-      //(this.textInputHeight+14)是footer输入部分的高度，this.reduceH是固定的header高度(由于设置了顶部headerposition:fixed固定，所以不需要再减了)
-      this.chatBoxHeight = this.windowHeight - inputAddHeight - (this.textInputHeight + 14);
+      const headerH = 48;
+      const footer = this.$el && this.$el.querySelector
+        ? this.$el.querySelector('.chat-box-footer')
+        : document.querySelector('.chat-box-footer');
+      const footerH = (footer && footer.offsetHeight) || (this.textInputHeight + 28);
+      // 预留顶栏 + 真实底栏高度，避免桌面输入区被 overflow 裁切
+      this.chatBoxHeight = Math.max(180, this.windowHeight - headerH - footerH - (this.textInputHeightAdd || 0));
+    },
+    // 处理滚动条一直保持最上方,也就让内容处于最底部contentAtBottom
+    async scrollEleSmoothTop(isSmooth = false) {
+      await this.$nextTick(); // 等 DOM 更新
+      var div = this.$refs.chatBox || document.getElementById("big-chat-box");
+      if (!div) return;
+      if (isSmooth) {
+        this.smoothScrollToBottom(div, 1000);
+      } else {
+        div.scrollTop = div.scrollHeight;
+      }
+    },
+    //判断是否是移动端（UA + 宽度，窄屏也走移动交互）
+    isMobile() {
+      const w = this.windowWidth || (typeof window !== 'undefined' ? window.innerWidth : 1200);
+      if (w < 768) return true;
+      const userAgent = navigator.userAgent || '';
+      return /Android|iPhone|iPad|iPod|BlackBerry|webOS|Windows Phone|SymbianOS|IEMobile|Opera Mini/i.test(userAgent);
     },
     domObserverEvent(targetNode) {
       // 选择目标节点
@@ -1777,34 +1733,6 @@ export default {
       };
 
       window.requestAnimationFrame(animateScroll);
-    },
-    // 处理滚动条一直保持最上方,也就让内容处于最底部contentAtBottom
-    async scrollEleSmoothTop(isSmooth = false) {
-      await this.$nextTick(); // 等 DOM 更新
-      var div = document.getElementById("big-chat-box");
-      if (!div) {
-        div = document.getElementById("big-chat-box-desktop");
-      }
-      if (isSmooth) {
-        this.smoothScrollToBottom(div, 1000);
-      } else {
-        div.scrollTop = div.scrollHeight;
-        // div.scrollTo({ top: div.scrollHeight, behavior: isSmooth ? "smooth" : "auto" });
-      }
-      // let distanceY = window.scrollY;
-      // let i = 0
-      // this.interval = setInterval(() => {
-      //     let next = Math.floor(this.easeInOutQuad(2 * i, distanceY, -distanceY, 100))
-      //     if (next <= 40) {
-      //         //window.scrollTo(0, this.backPosition);
-      //         div.scrollTop = div.scrollHeight;
-      //         clearInterval(this.interval);
-      //     } else {
-      //         // window.scrollTo(0, next);
-      //         div.scrollTop = div.scrollHeight;
-      //     }
-      //     i++
-      // }, 5)
     },
     easeInOutQuad(t, b, c, d) {
       // 判断当前时间是否总在总时间的一半以内，是的话执行缓入函数，否则的话执行缓出函数
@@ -2175,29 +2103,17 @@ export default {
     },
     //遍历数组，把里面的每一条消息记录添加显示在消息页面中的msgList
     historyListToMsgList(msgArr) {
-      const _this = this;
-      const len = msgArr.length;
+      const len = (msgArr && msgArr.length) || 0;
       for (var i = 0; i < len; i++) {
-        var oneMsg = JSON.parse(msgArr[i]);
-        // if (oneMsg.mediaData || _this.checkObjectExistsJson(oneMsg, "mediaData")) {
-        //     const mediaFileUrl = _this.webProtocol + _this.baseHost + oneMsg.mediaData;
-        //     oneMsg.mediaData = mediaFileUrl;
-        //     if (oneMsg.mediaMimeType.indexOf("image") !== -1) {
-        //         oneMsg.mediaDiv = "<img src='" + mediaFileUrl + "' >";
-        //     } else if (oneMsg.mediaMimeType.indexOf("audio") !== -1 || oneMsg.mediaMimeType.indexOf("video") !== -1) {
-        //         oneMsg.mediaDiv = `<video controls height="50" width="100%" data="${mediaFileUrl}">
-        //             <source src="${mediaFileUrl}" type="audio/mpeg">
-        //             <source src="${mediaFileUrl}" type="audio/ogg">
-        //             <source src="${mediaFileUrl}" type="video/mp4">
-        //             <source src="${mediaFileUrl}" type="video/ogg">
-        //         </video>`
-        //     } else {
-        //         oneMsg.mediaDiv = "<a href='" + mediaFileUrl + "'>查看文件</a>"
-        //     }
-        // }
+        // 与侧边栏一致：兼容脏 HTML / 已是对象的历史条目
+        var oneMsg = this.safeParseHistoryMsg(msgArr[i]);
+        if (!oneMsg) continue;
+        if (!oneMsg.type) oneMsg.type = 'text';
+        if (!oneMsg.align) oneMsg.align = 'left';
+        if (oneMsg.text == null) oneMsg.text = '';
         this.msgList.push(oneMsg);
       }
-      if (len == this.msgList.length) {
+      if (this.msgList.length) {
         this.delayFunction(() => {
           this.scrollEleSmoothTop();
         }, 300);
@@ -2275,11 +2191,6 @@ export default {
     isOnlyNewlines(str) { //是否仅包含换行符
       return /^\n*$/.test(str);
     },
-    //判断是否是移动端
-    isMobile() {
-      const userAgent = navigator.userAgent
-      return /Android|iPhone|iPad|iPod|BlackBerry|webOS|Windows Phone|SymbianOS|IEMobile|Opera Mini/i.test(userAgent) || typeof window.orientation !== "undefined";
-    },
     fileDialogOpen() {
       this.dialogInputIsFocus = true;
     },
@@ -2334,8 +2245,143 @@ export default {
 .chat-app-container {
   margin: 0 auto;
   padding: 0;
+  /* 用 flex 占满视口，避免 overflow:hidden 裁掉底栏 */
+  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-  background: var(--color-background);
+  background:
+    radial-gradient(1200px 480px at 10% -10%, rgba(31, 111, 235, 0.08), transparent 55%),
+    radial-gradient(900px 420px at 100% 0%, rgba(102, 206, 170, 0.1), transparent 50%),
+    var(--color-background, #f5f7fa);
+}
+
+.chat-shell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+.chat-main-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  /* 桌面卡片感 */
+  background: var(--background-origin, rgba(255, 255, 255, 0.72));
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.chat-app-container.is-desktop .chat-main-content {
+  margin-top: 12px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(20, 24, 32, 0.06);
+  box-shadow: 0 10px 36px rgba(20, 24, 32, 0.06);
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.chat-box-header {
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
+  width: 100%;
+  height: 48px;
+  line-height: 48px;
+  text-align: center;
+  background-color: var(--navbarBackground, rgba(255, 255, 255, 0.92));
+  color: var(--navbarFont, #1f2329);
+  font-weight: 650;
+  display: flex;
+  flex-flow: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 3;
+  border-bottom: 1px solid rgba(20, 24, 32, 0.06);
+  backdrop-filter: blur(10px);
+}
+
+.chat-box-header__title {
+  letter-spacing: 0.02em;
+}
+
+.chat-empty-hint {
+  text-align: center;
+  color: #8a919f;
+  font-size: 14px;
+  padding: 64px 16px 24px;
+}
+
+.big-chat-box {
+  overflow-y: auto;
+  padding: 12px 10px 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.list-chat-item-left .list-chat-item-content,
+.list-chat-item-right .list-chat-item-content {
+  max-width: min(78%, 640px);
+  border-radius: 12px;
+  padding: 10px 12px;
+  line-height: 1.55;
+  box-shadow: 0 1px 2px rgba(20, 24, 32, 0.04);
+}
+
+.list-chat-item-left .list-chat-item-content {
+  margin-right: 40px;
+  background-color: var(--background-2, #fff);
+  color: var(--fontColor, #1f2329);
+  border: 1px solid rgba(20, 24, 32, 0.06);
+  border-top-left-radius: 4px;
+  overflow-x: auto;
+  font-size: 15px;
+  word-wrap: break-word;
+}
+
+.list-chat-item-right .list-chat-item-content {
+  margin-left: 40px;
+  background: linear-gradient(135deg, #66ceaa, #4db896);
+  color: #131212;
+  border-top-right-radius: 4px;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  font-size: 15px;
+}
+
+.chat-box-footer {
+  width: 100%;
+  margin: 0 auto;
+  flex-shrink: 0;
+  padding: 8px 10px 12px;
+  box-sizing: border-box;
+  /* background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.65)); */
+  border-top: 1px solid rgba(20, 24, 32, 0.05);
+}
+
+.chat-composer {
+  border-radius: 14px !important;
+  background: var(--background-2, #fff) !important;
+  border: 1px solid rgba(20, 24, 32, 0.08);
+  box-shadow: 0 4px 16px rgba(20, 24, 32, 0.04);
+}
+
+.send-button.is-primary {
+  background: #1f6feb !important;
+  color: #fff !important;
+  border-color: #1f6feb !important;
 }
 
 .fade-enter-active,
@@ -2365,50 +2411,9 @@ export default {
   transform: translateX(90vw);
 }
 
-.chat-main-content {
-  display: flex;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  -ms-flex-wrap: nowrap;
-  -moz-flex-wrap: nowrap;
-  -webkit-flex-direction: column;
-  -ms-flex-direction: column;
-  height: 100%;
-  /*align-content: stretch;
-    -webkit-align-content: stretch;
-    height: -webkit-fill-available;
-    min-height: 100%;*/
-}
-
-.chat-box-header {
-  position: fixed;
-  transform: translateY(0);
-  -webkit-transform: translateY(0);
-  width: 100%;
-  height: 40px;
-  line-height: 40px;
-  vertical-align: middle;
-  text-align: center;
-  /* background-color: var(--theme-color, rgb(118, 164, 219));
-  color: #ffffff; */
-  background-color: var(--navbarBackground);
-  color: var(--navbarFont);
-  font-weight: bolder;
-  display: flex;
-  flex-flow: row;
-  flex-wrap: nowrap;
-  justify-content: space-between;
-  z-index: 3;
-  /*color: var(--color-article-container-text-1, #696969)
-    border-bottom: var(--color-border-4, #c5c5c5) 1px solid;*/
-}
-
 .gplus-icon {
-  display: block;
-  line-height: 1;
   display: grid;
+  line-height: 1;
   align-items: center;
   justify-content: center;
   align-content: center;
@@ -2422,28 +2427,15 @@ export default {
 }
 
 .chat-box-header div {
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: auto;
-  /* 上面上个组合起来等于 flex: 0 0 auto;*/
+  flex: 0 0 auto;
   align-self: center;
   padding-left: 8px;
   padding-right: 8px;
 }
 
-.big-chat-box {
-  overflow-y: scroll;
-  padding: 40px 2px 0;
-  flex: 1 1 auto;
-}
-
-/* .big-chat-box::-webkit-scrollbar {
-    display: none;
-} */
-
 .list-chat-msg {
-  font-size: 1.1em;
-  margin: 10px auto;
+  font-size: 1.05em;
+  margin: 12px auto;
 }
 
 .list-chat-msg .chat-data-meta {
@@ -2452,36 +2444,28 @@ export default {
   color: var(--font-color, #000);
 }
 
-.list-chat-msg .chat-date-time {
-  display: inline-block;
-  text-align: center;
-  font-size: 0.7em;
-  margin: 2px auto;
-  color: var(--font-color, #000);
-}
-
+.list-chat-msg .chat-date-time,
 .list-chat-msg .chat-reply-elapsedMs {
   display: inline-block;
   text-align: center;
   font-size: 0.7em;
   margin: 2px auto;
+  color: var(--font-color, #889);
+}
+
+.list-chat-msg .chat-reply-elapsedMs {
   padding-left: 5px;
-  color: var(--font-color, #000);
 }
 
 .chat-msg-media-data {
   width: 100%;
   overflow: hidden;
-  /* 超出容器的图片部分将被裁剪 */
 }
 
-.chat-msg-media-data>* {
+.chat-msg-media-data > * {
   width: 100%;
-  /* 图片宽度自适应容器宽度 */
-  height: 100%;
-  /* 图片高度自适应容器高度 */
+  height: auto;
   object-fit: contain;
-  /* 或者使用cover或scale-down */
 }
 
 .list-chat-item-left {
@@ -2500,112 +2484,36 @@ export default {
   margin-bottom: 2px;
 }
 
-.list-chat-item-left .list-chat-item-content {
-  margin-right: 49px;
-  /*background-color: #66CEAA;
-  color: black; */
-  background-color: var(--background-2);
-  color: var(--fontColor);
-  border-radius: 5px;
-  padding: 5px;
-  /* word-break: normal;
-    white-space: pre-wrap;*/
-  word-wrap: break-word;
-  overflow-x: scroll;
-  font-size: 15px;
-}
-
-.list-chat-item-left .list-chat-item-content::-webkit-scrollbar {
+.list-chat-item-left .list-chat-item-content::-webkit-scrollbar,
+.list-chat-item-right .list-chat-item-content::-webkit-scrollbar {
   display: none;
-}
-
-.list-chat-item-right .list-chat-item-content {
-  margin-left: 49px;
-  /*background-color: #4c65b8;
-  color: #f0efef; */
-  background-color: #66CEAA;
-  color: #131212;
-  border-radius: 5px;
-  padding: 5px;
-  white-space: pre-wrap;
-  overflow-x: scroll;
-  font-size: 15px;
-}
-
-/*.list-chat-item-right .list-chat-item-content::before{
-    position: relative;
-    left:12px;
-    top:10px;
-    content:'';
-    width:0;
-    height: 0;
-    border:7px solid transparent;
-    border-left-color: #4c65b8;
-}*/
-
-//对话框指向箭头,小箭头左右
-.message-right-arrow {
-  width: 0;
-  height: 0;
-  border-left: 7px solid #4c65b8;
-  border-top: 7px solid transparent;
-  border-bottom: 7px solid transparent;
-  margin: 10px 0 0 -0.5px;
-}
-
-.message-left-arrow {
-  width: 0;
-  height: 0;
-  border-right: 7px solid #66CEAA;
-  border-top: 7px solid transparent;
-  border-bottom: 7px solid transparent;
-  margin: 10px -0.5px 0 0;
-}
-
-.list-chat-item-left .pc-chat-item-span {
-  /*background-color: #353434;
-    color: #d3d1d1;*/
-  background-color: var(--background-2);
-  color: var(--fontColor);
-  border-radius: 5px;
-  padding: 5px;
-  /* word-break: normal;
-    white-space: pre-wrap;*/
-  word-wrap: break-word;
-  overflow-x: scroll;
-  font-size: 15px;
-}
-
-.list-chat-item-left .pc-chat-item-span::-webkit-scrollbar {
-  display: none;
-}
-
-.list-chat-item-right .pc-chat-item-span {
-  /*background-color: #8ab3ca;
-  color: #252020;*/
-  background-color: #66CEAA;
-  color: #131212;
-  border-radius: 5px;
-  padding: 5px;
-  white-space: pre-wrap;
-  overflow-X: scroll;
-  font-size: 15px;
 }
 
 .chat-user-icon {
-  width: 35px;
-  height: 35px;
+  width: 36px;
+  height: 36px;
   border-radius: 100%;
-  margin-right: 7px;
-  margin-left: 7px;
+  margin-right: 8px;
+  margin-left: 8px;
+  object-fit: cover;
+  box-shadow: 0 1px 4px rgba(20, 24, 32, 0.08);
 }
 
-.chat-box-footer {
-  /*position: relative;
-    bottom: 0px;
-    left: 0px;*/
-  width: 100%;
-  margin: 0 auto;
+@media screen and (max-width: 767px) {
+  .chat-shell {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .chat-app-container.is-mobile .chat-main-content {
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .chat-box-footer {
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .menu-drawer {

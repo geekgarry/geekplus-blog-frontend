@@ -125,7 +125,7 @@
             </template>
           </el-table-column>
           <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
-          <el-table-column label="操作" width="300" fixed="right" align="center">
+          <el-table-column label="操作" width="190" fixed="right" align="center">
             <template slot-scope="scope">
               <el-button type="text" size="mini" @click="openTestDialog(scope.row)">测试</el-button>
               <el-button type="text" size="mini" @click="openSourceDialog(scope.row)">编辑</el-button>

@@ -957,19 +957,16 @@ export default {
   line-height: 60px;
   color: var(--navbarFont);
   background: var(--navbarBackground);
-  /* 固定位置，不随滚动条滚动 */
   position: fixed;
   z-index: 100;
-  /* 禁止选中文字 */
   user-select: none;
   transition: all 0.3s ease-in-out;
-  padding: 0 10px;
-  backdrop-filter: blur(10.5px);
-  -webkit-backdrop-filter: blur(10.5px);
+  padding: 0 14px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 0 solid rgba(255, 255, 255, .07);
-  box-shadow: rgba(142, 142, 142, .07) 0 6px 15px 0;
-  -webkit-box-shadow: rgba(142, 142, 142, .07) 0 6px 15px 0;
-  /* box-shadow: 0px 3px 4px 0 var(--box-shadow); */
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+  -webkit-box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
 }
 
 .navbar-content.enter {

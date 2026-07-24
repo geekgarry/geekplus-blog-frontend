@@ -18,17 +18,21 @@
       <el-main>
         <el-row :gutter="10">
           <el-col :xs="24" :sm="24" :md="{ span: 16, offset: 4 }" :lg="{ span: 16, offset: 4 }" :xl="{ span: 12, offset: 6 }">
+            <!--
+              移动端首页轮播：PlusCarousel + touch 跟手滑动
+              Element UI 原版保留在 @/components/ElCarouselBanner，勿直接删除历史能力
+            -->
             <div class="index-carousel-wrapper" :class="{ 'skeleton-loading': carouselLoading }">
-              <el-carousel :interval="3000" arrow="always" ref="slideCarousel">
-                <el-carousel-item v-for="(item, index) in carouselList" :key="index">
-                  <img class="carousel-item__img" :src="item.carouselImg" :alt="item.carouselTitle" />
-                  <div class="carousel-item__caption">
-                    <span class="caption-text">
-                      <a :href="item.carouselLink">{{ item.carouselTitle }}</a>
-                    </span>
-                  </div>
-                </el-carousel-item>
-              </el-carousel>
+              <plus-carousel
+                mode="mobile"
+                :items="carouselList"
+                :height="180"
+                :interval="4000"
+                :touch="true"
+                :show-arrows="false"
+                :mouse-drag="false"
+                :mouse-wheel="false"
+              />
             </div>
             <div class="welcome">
               <i class="el-icon-s-opportunity"></i>
@@ -128,12 +132,11 @@
 </template>
 
 <script>
-// import { Carousel, CarouselItem } from 'element-ui';
-// import PlusBreadcrumb from '@/layout/components/Breadcrumb'
 import PlusFooter from '@/layout/components/Footer'
-// import PlusCalendar from '@/components/PlusCalendar'
-// import PlusPager from '@/components/PlusPager';
-import { Message, Pagination } from 'element-ui';
+import PlusCarousel from '@/components/PlusCarousel'
+// 备用：原 el-carousel 封装组件，便于其它页面继续使用官方轮播
+// import ElCarouselBanner from '@/components/ElCarouselBanner'
+import { Message, Pagination } from 'element-ui'
 import {
   getHomeViewData, getCarousel, getArticlesByCategoryLimit, getArticleLatestUserComment, getWebHotUserComment,
   getIndexAllCategoryArticleList, getGpArticlesByCategory, getGpNoticeNewOne
@@ -142,12 +145,8 @@ import {
 export default {
   name: 'MobileIndexView',
   components: {
-    // [Carousel.name]: Carousel,
-    // [CarouselItem.name]: CarouselItem,
-    // PlusBreadcrumb,
     PlusFooter,
-    // PlusCalendar,
-    // PlusPager
+    PlusCarousel
   },
   data() {
     return {
@@ -311,7 +310,8 @@ export default {
     // this.getOneNewestNotice();
   },
   mounted() {
-    this.slideBanner();
+    //TODO: 注释掉轮播图滑动，因为已经没有在用官方element UI的el-carousel了
+    // this.slideBanner();
     // this.loadMore(); // Initial data load
   },
   computed: {
@@ -829,10 +829,11 @@ export default {
 }
 
 .welcome {
-  margin-bottom: 10px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: rgba(64, 158, 255, 0.06);
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(47, 111, 237, 0.08), rgba(47, 111, 237, 0.02));
+  border: 1px solid rgba(47, 111, 237, 0.1);
   font-size: 13px;
 }
 

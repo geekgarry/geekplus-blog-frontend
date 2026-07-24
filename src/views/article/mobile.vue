@@ -308,36 +308,18 @@
               <span class="dialog__close-btn"><i class="el-icon-close"></i></span>
             </div>
           </div>
-          <!-- 固定尺寸离屏截图源，避免窄屏缩放导致封面空白/比例错乱 -->
-          <div
-            class="share-container share-capture-source"
-            id="share-card"
-            ref="shareCard"
-            aria-hidden="true"
-          >
-            <div class="share-cover-wrap">
-              <img
-                class="share-cover-img"
-                :src="shareCoverDataUrl || articleCover"
-                alt=""
-              />
-            </div>
-            <div class="share-title">{{ articleInfo.articleTitle }}</div>
-            <div class="share-summary">{{ articleInfo.abstractText }}</div>
-            <div class="share-footer">
-              <div class="web-share-logo">
-                <img :src="shareLogoDataUrl || require('@/assets/logo.png')" alt="">
-                <div class="web-share-title">极客普拉斯</div>
-              </div>
-              <div class="qr-code-img"><img :src="qrCodeImg" alt="二维码"></div>
-            </div>
-            <div class="share-link">{{ windowUrl }}</div>
-          </div>
+          <!-- Canvas 直绘分享图，无需离屏 DOM -->
           <div class="share-box-container">
+            <!--
+              预览必须可长按呼出系统「存储图像」。
+              触控端用 dataURL（shareCardImg），避免 blob: 在 Web Share / a[download] 后被 WebKit 锁死导致无法长按。
+            -->
             <div class="share-preview" v-if="shareCardImg">
               <img
+                :key="'share-preview-' + sharePreviewKey"
+                ref="sharePreviewImg"
                 class="share-card-img"
-                :src="shareCardBlobUrl || shareCardImg"
+                :src="sharePreviewSrc"
                 alt="文章分享图"
                 title="长按图片可保存到相册"
               >
@@ -444,14 +426,19 @@ export default {
       commentsCount: 0,
       showShareDialog: false,
       qrCodeImg: "",
+      // 分享卡最终 JPEG dataURL（下载/分享用）
       shareCardImg: "",
+      // blob URL 预览，移动端长按存图比超长 dataURL 更稳
       shareCardBlobUrl: "",
       shareCardGenerating: false,
       shareCardCacheKey: "",
       shareCoverDataUrl: "",
       shareLogoDataUrl: "",
+      // 关闭弹层时递增，作废进行中的异步生成，避免竞态
       shareGenToken: 0,
       shareStatusText: "正在生成分享图…",
+      // 强制重挂载预览 img，修复「点保存后无法长按」的 WebKit 问题
+      sharePreviewKey: 0,
       _html2canvasPromise: null
     };
   },
@@ -564,6 +551,16 @@ export default {
       if (typeof window === "undefined") return false;
       return "ontouchstart" in window || (navigator && navigator.maxTouchPoints > 0);
     },
+    /**
+     * 预览图地址策略：
+     * - 触控端始终用 dataURL，保证长按「存储图像」可用
+     * - 桌面可用 blob URL（体积展示略省内存，不影响右键另存）
+     */
+    sharePreviewSrc() {
+      if (!this.shareCardImg) return "";
+      if (this.isTouchDevice) return this.shareCardImg;
+      return this.shareCardBlobUrl || this.shareCardImg;
+    },
     userId() {
       return this.$store.getters.userId;
     },
@@ -574,15 +571,7 @@ export default {
       return this.$store.getters.nickname;
     }
   },
-  mounted() {
-    // 空闲时预加载 html2canvas，避免首次点分享再下大包
-    const preload = () => this.loadHtml2Canvas().catch(() => {});
-    if (typeof window !== "undefined" && window.requestIdleCallback) {
-      window.requestIdleCallback(preload, { timeout: 2500 });
-    } else {
-      setTimeout(preload, 1800);
-    }
-  },
+  mounted() {},
   beforeDestroy() {
     this.revokeShareBlobUrl();
   },
@@ -680,8 +669,8 @@ export default {
       this.modifyLikeCount();
     },
     /**
-     * 打开/关闭分享面板：展示二维码分享卡，并异步生成可长按保存的图片
-     * html2canvas 仅在生成时动态 import，避免拖慢文章页首包
+     * 打开/关闭分享面板：Canvas 直绘分享图（无需 html2canvas，移动端更快）
+     * 关闭时递增 shareGenToken，丢弃未完成任务
      */
     toggleShareWith() {
       this.showShareDialog = !this.showShareDialog;
@@ -711,34 +700,29 @@ export default {
         this.shareCardBlobUrl = "";
       }
     },
-    loadHtml2Canvas() {
-      if (!this._html2canvasPromise) {
-        this._html2canvasPromise = import("html2canvas").then((m) => m.default);
-      }
-      return this._html2canvasPromise;
-    },
-    /** 统一封面绝对地址（相对路径补全当前源） */
     resolveShareCoverSrc(src) {
       if (!src) return "";
+      if (typeof src !== "string") return src;
       if (/^(data:|blob:|https?:)/i.test(src)) return src;
       if (src.charAt(0) === "/") return window.location.origin + src;
       return src;
     },
     /**
-     * 将封面/Logo 转为 dataURL。
-     * 线上实测：部分 /profile/upload 会返回 200 空文件，onload 也会触发但 naturalWidth=0，
-     * 必须快速失败回退，否则移动端会卡满超时。
+     * 加载图片为 HTMLImageElement。
+     * 注意：线上部分 /profile/upload 会 200 但空文件，onload 后 naturalWidth=0，需立刻失败回退。
      */
-    imageToDataUrl(src, fallback, timeoutMs) {
+    loadImageEl(src, timeoutMs) {
       return new Promise((resolve) => {
-        const fail = () => resolve(fallback || "");
         if (!src) {
-          fail();
+          resolve(null);
           return;
         }
-        if (typeof src === "string" && src.indexOf("data:") === 0) {
-          resolve(src);
-          return;
+        if (typeof src !== "string") {
+          // webpack require 已是 url 字符串；若已是 Image 直接返回
+          if (src && src.tagName === "IMG") {
+            resolve(src);
+            return;
+          }
         }
         const absolute = this.resolveShareCoverSrc(src);
         const img = new Image();
@@ -746,83 +730,43 @@ export default {
         const finish = (val) => {
           if (done) return;
           done = true;
-          resolve(val || fallback || "");
+          resolve(val);
         };
-        const paint = () => {
-          try {
-            const w = img.naturalWidth || 0;
-            const h = img.naturalHeight || 0;
-            if (!w || !h) {
-              finish(fallback || "");
-              return;
-            }
-            const maxSide = 720;
-            const scale = Math.min(1, maxSide / Math.max(w, h));
-            const cw = Math.max(1, Math.round(w * scale));
-            const ch = Math.max(1, Math.round(h * scale));
-            const canvas = document.createElement("canvas");
-            canvas.width = cw;
-            canvas.height = ch;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, cw, ch);
-            finish(canvas.toDataURL("image/jpeg", 0.85));
-          } catch (e) {
-            finish(fallback || "");
-          }
+        img.onload = () => {
+          if (!img.naturalWidth) finish(null);
+          else finish(img);
         };
-        img.onload = paint;
-        img.onerror = fail;
+        img.onerror = () => finish(null);
         const isRemote = /^https?:\/\//i.test(absolute) && absolute.indexOf(window.location.origin) !== 0;
-        if (isRemote) {
-          img.crossOrigin = "anonymous";
-        }
+        if (isRemote) img.crossOrigin = "anonymous";
         img.src = absolute;
-        if (img.complete) paint();
-        window.setTimeout(() => finish(fallback || ""), timeoutMs || 700);
+        if (img.complete && img.naturalWidth) finish(img);
+        window.setTimeout(() => finish(img.naturalWidth ? img : null), timeoutMs || 500);
       });
     },
-    waitImageReady(src, timeout) {
-      return new Promise((resolve) => {
-        if (!src) {
-          resolve();
-          return;
-        }
-        const img = new Image();
-        let done = false;
-        const finish = () => {
-          if (done) return;
-          done = true;
-          resolve();
-        };
-        img.onload = finish;
-        img.onerror = finish;
-        img.src = src;
-        if (img.complete) finish();
-        window.setTimeout(finish, timeout || 400);
-      });
-    },
+    /**
+     * 组装素材并 Canvas 绘制分享卡。
+     * 相比 html2canvas：无动态大包、无 DOM 截图，移动端通常可在 1s 内完成。
+     */
     async prepareAndGenerateShareCard() {
       const token = ++this.shareGenToken;
-      const html2canvasP = this.loadHtml2Canvas();
       const localCover = this.articleCover;
       const logoSrc = require("@/assets/logo.png");
       const remoteCover = this.articleInfo.indexPicture || "";
       try {
-        this.shareStatusText = "加载封面中…";
-        const [coverData, logoData, qrData] = await Promise.all([
-          this.imageToDataUrl(remoteCover || localCover, localCover, 700),
-          this.imageToDataUrl(logoSrc, logoSrc, 500),
+        this.shareStatusText = "准备素材…";
+        const [coverImg, logoImg, qrData] = await Promise.all([
+          this.loadImageEl(remoteCover, 450).then((img) => img || this.loadImageEl(localCover, 400)),
+          this.loadImageEl(logoSrc, 400),
           new Promise((resolve) => {
             QRCode.toDataURL(
               this.windowUrl,
-              { width: 128, height: 128, margin: 1, errorCorrectionLevel: "M" },
+              { width: 120, height: 120, margin: 1, errorCorrectionLevel: "M" },
               (err, res) => resolve(err ? "" : res)
             );
           })
         ]);
         if (token !== this.shareGenToken || !this.showShareDialog) return;
-        this.shareCoverDataUrl = coverData || localCover;
-        this.shareLogoDataUrl = logoData || logoSrc;
         if (!qrData) {
           this.shareCardGenerating = false;
           this.shareStatusText = "二维码生成失败";
@@ -830,69 +774,161 @@ export default {
           return;
         }
         this.qrCodeImg = qrData;
-        this.shareStatusText = "正在渲染分享图…";
-        await this.$nextTick();
-        await this.generateShareCardImg(html2canvasP, token);
-      } catch (e) {
-        if (token !== this.shareGenToken) return;
-        this.shareCardGenerating = false;
-        this.shareStatusText = "生成失败";
-        this.$message({ message: "分享图生成失败，请稍后重试", type: "error", duration: 3000 });
-      }
-    },
-    async generateShareCardImg(html2canvasPromise, token) {
-      const div = this.$refs.shareCard;
-      if (!div) {
-        this.shareCardGenerating = false;
-        return;
-      }
-      const genToken = token || this.shareGenToken;
-      try {
-        const html2canvas = await (html2canvasPromise || this.loadHtml2Canvas());
-        if (genToken !== this.shareGenToken || !this.showShareDialog) return;
-        await Promise.all([
-          this.waitImageReady(this.qrCodeImg, 300),
-          this.waitImageReady(this.shareCoverDataUrl || this.articleCover, 400),
-          this.waitImageReady(this.shareLogoDataUrl, 300)
-        ]);
-        if (genToken !== this.shareGenToken || !this.showShareDialog) return;
-        const dpr = window.devicePixelRatio || 1;
-        const scale = this.isTouchDevice
-          ? Math.min(Math.max(dpr, 1.5), 2)
-          : Math.min(Math.max(dpr, 2), 2.5);
-        const canvas = await html2canvas(div, {
-          useCORS: true,
-          allowTaint: false,
-          backgroundColor: "#ffffff",
-          scale,
-          width: 360,
-          height: div.scrollHeight,
-          windowWidth: 360,
-          logging: false,
-          imageTimeout: 800,
-          foreignObjectRendering: false,
-          removeContainer: true
+        this.shareStatusText = "渲染中…";
+        const qrImg = await this.loadImageEl(qrData, 300);
+        if (token !== this.shareGenToken || !this.showShareDialog) return;
+        const dataUrl = this.drawShareCardToDataUrl({
+          coverImg: coverImg || null,
+          logoImg: logoImg || null,
+          qrImg: qrImg || null,
+          title: this.articleInfo.articleTitle || "",
+          summary: this.articleInfo.abstractText || "",
+          link: this.windowUrl || "",
+          brand: "极客普拉斯"
         });
-        if (genToken !== this.shareGenToken || !this.showShareDialog) return;
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.86);
+        if (token !== this.shareGenToken || !this.showShareDialog) return;
         this.shareCardImg = dataUrl;
         this.revokeShareBlobUrl();
-        try {
-          const blob = this.dataUrlToBlob(dataUrl);
-          this.shareCardBlobUrl = URL.createObjectURL(blob);
-        } catch (e) {
-          this.shareCardBlobUrl = "";
+        // 触控端预览只用 dataURL，不建 blob，避免 Web Share 后长按菜单失效
+        if (!this.isTouchDevice) {
+          try {
+            this.shareCardBlobUrl = URL.createObjectURL(this.dataUrlToBlob(dataUrl));
+          } catch (e) {
+            this.shareCardBlobUrl = "";
+          }
         }
         this.shareStatusText = "已生成";
       } catch (e) {
-        if (genToken !== this.shareGenToken) return;
+        if (token !== this.shareGenToken) return;
         this.shareStatusText = "生成失败";
         this.$message({ message: "分享图生成失败，请稍后重试", type: "error", duration: 3000 });
       } finally {
-        if (genToken === this.shareGenToken) {
-          this.shareCardGenerating = false;
+        if (token === this.shareGenToken) this.shareCardGenerating = false;
+      }
+    },
+    wrapText(ctx, text, maxWidth, maxLines) {
+      const str = String(text || "").replace(/\s+/g, " ").trim();
+      if (!str) return [];
+      const lines = [];
+      let line = "";
+      for (let i = 0; i < str.length; i++) {
+        const test = line + str[i];
+        if (ctx.measureText(test).width > maxWidth && line) {
+          lines.push(line);
+          line = str[i];
+          if (lines.length >= maxLines) break;
+        } else {
+          line = test;
         }
       }
+      if (lines.length < maxLines && line) lines.push(line);
+      if (lines.length >= maxLines) {
+        let last = lines[maxLines - 1];
+        while (last.length > 1 && ctx.measureText(last + "…").width > maxWidth) {
+          last = last.slice(0, -1);
+        }
+        lines[maxLines - 1] = last + "…";
+      }
+      return lines;
+    },
+    drawCoverFit(ctx, img, x, y, w, h) {
+      if (!img) {
+        ctx.fillStyle = "#e8ecf1";
+        ctx.fillRect(x, y, w, h);
+        return;
+      }
+      const iw = img.naturalWidth || img.width;
+      const ih = img.naturalHeight || img.height;
+      const scale = Math.max(w / iw, h / ih);
+      const dw = iw * scale;
+      const dh = ih * scale;
+      const dx = x + (w - dw) / 2;
+      const dy = y + (h - dh) / 2;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x, y, w, h);
+      ctx.clip();
+      ctx.drawImage(img, dx, dy, dw, dh);
+      ctx.restore();
+    },
+    /**
+     * 在离屏 canvas 上绘制固定 360 宽分享卡并导出 JPEG。
+     * dpr=2 兼顾清晰度与体积；封面缺失时画灰底占位。
+     */
+    drawShareCardToDataUrl({ coverImg, logoImg, qrImg, title, summary, link, brand }) {
+      const cssW = 360;
+      const dpr = this.isTouchDevice ? 2 : 2;
+      const pad = 14;
+      const coverH = 170;
+      // 预估高度
+      const cssH = 14 + coverH + 12 + 52 + 10 + 54 + 12 + 68 + 10 + 28 + 14;
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(cssW * dpr);
+      canvas.height = Math.round(cssH * dpr);
+      const ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
+      // 背景
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, cssW, cssH);
+      // 封面
+      this.roundRect(ctx, pad, pad, cssW - pad * 2, coverH, 8);
+      ctx.save();
+      ctx.clip();
+      this.drawCoverFit(ctx, coverImg, pad, pad, cssW - pad * 2, coverH);
+      ctx.restore();
+      let y = pad + coverH + 12;
+      // 标题
+      ctx.fillStyle = "#1f2329";
+      ctx.font = "600 16px -apple-system,BlinkMacSystemFont,PingFang SC,Microsoft YaHei,sans-serif";
+      const titleLines = this.wrapText(ctx, title, cssW - pad * 2, 2);
+      titleLines.forEach((ln) => {
+        ctx.fillText(ln, pad, y + 16);
+        y += 22;
+      });
+      y += 6;
+      // 摘要
+      ctx.fillStyle = "#646a73";
+      ctx.font = "12px -apple-system,BlinkMacSystemFont,PingFang SC,Microsoft YaHei,sans-serif";
+      const sumLines = this.wrapText(ctx, summary, cssW - pad * 2, 3);
+      sumLines.forEach((ln) => {
+        ctx.fillText(ln, pad, y + 12);
+        y += 18;
+      });
+      y += 10;
+      // footer
+      const qrSize = 64;
+      if (logoImg) {
+        ctx.drawImage(logoImg, pad, y + 18, 28, 28);
+      } else {
+        ctx.fillStyle = "#2f6fed";
+        ctx.fillRect(pad, y + 18, 28, 28);
+      }
+      ctx.fillStyle = "#1f2329";
+      ctx.font = "500 13px -apple-system,BlinkMacSystemFont,PingFang SC,Microsoft YaHei,sans-serif";
+      ctx.fillText(brand || "极客普拉斯", pad + 36, y + 36);
+      if (qrImg) {
+        ctx.drawImage(qrImg, cssW - pad - qrSize, y, qrSize, qrSize);
+      }
+      y += qrSize + 8;
+      // link
+      ctx.fillStyle = "#8a919f";
+      ctx.font = "10px -apple-system,BlinkMacSystemFont,PingFang SC,Microsoft YaHei,sans-serif";
+      const linkLines = this.wrapText(ctx, link, cssW - pad * 2, 2);
+      linkLines.forEach((ln) => {
+        ctx.fillText(ln, pad, y + 10);
+        y += 14;
+      });
+      return canvas.toDataURL("image/jpeg", 0.88);
+    },
+    roundRect(ctx, x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
     },
     dataUrlToBlob(dataUrl) {
       const parts = String(dataUrl).split(",");
@@ -904,7 +940,13 @@ export default {
       for (let i = 0; i < len; i++) u8[i] = bin.charCodeAt(i);
       return new Blob([u8], { type: mime });
     },
-    /** 下载/分享：移动端优先 Web Share，规避 iOS 对 a[download]+dataURL 无效 */
+    /**
+     * 下载/分享分享图。
+     * 根因说明：触控端点此按钮后长按失效，常见于
+     * 1) 预览使用 blob:，Web Share / 程序化 download 后 WebKit 不再对同页 blob 图弹出存储菜单
+     * 2) iOS 上 a[download]+blob 会干扰后续长按
+     * 处理：触控预览固定 dataURL；分享只传 files；触控不再走 a[download]；结束后强制重挂载预览图。
+     */
     async saveShareCardImg() {
       if (!this.shareCardImg) {
         if (!this.shareCardGenerating) {
@@ -919,24 +961,47 @@ export default {
         blob = this.dataUrlToBlob(this.shareCardImg);
       } catch (e) {
         this.$message({ message: "图片处理失败，请长按上方图片保存", type: "warning", duration: 3000 });
+        this.reviveSharePreviewLongPress();
         return;
       }
-      try {
-        if (navigator.share && navigator.canShare) {
-          const file = new File([blob], fileName, { type: blob.type || "image/jpeg" });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: this.articleInfo.articleTitle || "分享图片",
-              text: this.articleInfo.articleTitle || ""
-            });
-            this.$message({ message: "已打开系统分享", type: "success", duration: 2000 });
-            return;
+
+      // —— 触控端：优先系统分享；失败/取消后恢复长按，且不触发 a[download] ——
+      if (this.isTouchDevice) {
+        let shared = false;
+        try {
+          if (navigator.share && navigator.canShare) {
+            const file = new File([blob], fileName, { type: blob.type || "image/jpeg" });
+            // iOS：files 与 title/text 同时传时行为异常，只传 files
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({ files: [file] });
+              shared = true;
+              this.$message({ message: "已打开系统分享", type: "success", duration: 2000 });
+            }
           }
+        } catch (e) {
+          // 用户取消分享：不报错，但仍需恢复长按能力
+          if (e && e.name !== "AbortError" && e.name !== "NotAllowedError") {
+            this.$message({
+              message: "分享未完成，请长按上方图片保存",
+              type: "info",
+              duration: 3000
+            });
+          }
+        } finally {
+          // 无论成功/取消/失败，都重挂载预览，避免 WebKit 长按菜单丢失
+          this.reviveSharePreviewLongPress();
         }
-      } catch (e) {
-        if (e && (e.name === "AbortError" || e.name === "NotAllowedError")) return;
+        if (!shared) {
+          this.$message({
+            message: "请长按上方图片，选择“存储图像/保存图片”",
+            type: "info",
+            duration: 3500
+          });
+        }
+        return;
       }
+
+      // —— 桌面端：blob + a[download] ——
       const objectUrl = URL.createObjectURL(blob);
       try {
         const link = document.createElement("a");
@@ -947,22 +1012,38 @@ export default {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        if (this.isTouchDevice) {
-          this.$message({
-            message: "若未开始下载，请长按上方图片选择“存储图像”",
-            type: "info",
-            duration: 3500
-          });
-        } else {
-          this.$message({ message: "已开始下载", type: "success", duration: 2000 });
-        }
+        this.$message({ message: "已开始下载", type: "success", duration: 2000 });
       } catch (e) {
         this.fallbackOpenImage(objectUrl);
       } finally {
         window.setTimeout(() => {
           try { URL.revokeObjectURL(objectUrl); } catch (err) { /* ignore */ }
         }, 60000);
+        this.reviveSharePreviewLongPress();
       }
+    },
+    /**
+     * 恢复预览图的系统长按菜单。
+     * WebKit 在系统分享面板关闭后，常需短延迟 + 重挂载 img 才恢复 callout。
+     */
+    reviveSharePreviewLongPress() {
+      const run = () => {
+        this.sharePreviewKey += 1;
+        this.$nextTick(() => {
+          const img = this.$refs.sharePreviewImg;
+          const src = this.sharePreviewSrc;
+          if (!img || !src) return;
+          // 先清空再赋回，强制 WebKit 重新识别为可存储图片
+          try {
+            img.removeAttribute("src");
+            // eslint-disable-next-line no-unused-expressions
+            img.offsetWidth;
+            img.src = src;
+          } catch (e) { /* ignore */ }
+        });
+      };
+      // 分享面板动画/焦点切回页面后再重挂载，比立刻执行更稳
+      window.setTimeout(run, this.isTouchDevice ? 160 : 0);
     },
     fallbackOpenImage(url) {
       const src = url || this.shareCardBlobUrl || this.shareCardImg;
@@ -1200,36 +1281,101 @@ export default {
   flex-direction: column;
 }
 
+/* 文章阅读区：圆角卡片 + 舒适行高，适配移动端阅读 */
 .article-container {
-  padding: 6px;
-  margin-bottom: 10px;
-  background-color: var(--background-1, #303133);
-  border-radius: 4px;
+  padding: 16px 14px 18px;
+  margin-bottom: 12px;
+  background-color: var(--background-1, #fff);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .article-comments-container {
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: 12px;
+  background: var(--background-1, #fff);
+  padding: 8px 4px 4px;
 }
 
 .article-header .article-title {
-  font-size: 1.1rem;
-  margin-bottom: 10px;
+  font-size: 1.35rem;
+  line-height: 1.4;
+  font-weight: 700;
+  margin: 4px 0 12px;
+  color: var(--fontColor, #1f2329);
+  letter-spacing: 0.01em;
 }
 
 .article-meta {
-  font-size: 0.8em;
-  color: #999;
-  margin-bottom: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font-size: 12px;
+  color: #8a919f;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .article-meta span {
-  margin-right: 10px;
+  margin-right: 0;
 }
 
 .article-content {
-  line-height: 1.4;
-  font-size: 1em;
+  line-height: 1.75;
+  font-size: 15px;
+  color: var(--fontColor, #2b2f36);
+  word-break: break-word;
+}
+
+/* 点赞/分享/链接：胶囊按钮，触控更友好 */
+.plus-article-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.plus-article-toolbar .toolbar-button {
+  flex: 1 1 auto;
+  min-width: 88px;
+  height: 36px;
+  border-radius: 20px;
+  border: 1px solid rgba(47, 111, 237, 0.28);
+  background: rgba(47, 111, 237, 0.06);
+  color: #2f6fed;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background 0.2s ease, transform 0.15s ease;
+
+  &:active {
+    transform: scale(0.98);
+    background: rgba(47, 111, 237, 0.12);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .article-container {
+    padding: 14px 12px 16px;
+    border-radius: 10px;
+    margin-left: -2px;
+    margin-right: -2px;
+  }
+
+  .article-header .article-title {
+    font-size: 1.2rem;
+  }
+
+  .article-content {
+    font-size: 15px;
+    line-height: 1.7;
+  }
 }
 
 .tips {
@@ -1398,6 +1544,10 @@ export default {
   padding-top: 3em;
   padding-bottom: 3em;
   transition: all 0.3s ease-in-out;
+  /* 允许长按图片；避免继承页面其它 user-select:none */
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 .share-overlay {
@@ -1407,9 +1557,13 @@ export default {
   width: 100%;
   height: 100%;
   animation: slide-top 0.15s both;
+  /* 遮罩不拦截长按手势 */
+  pointer-events: none;
 }
 
 .share-box {
+  position: relative;
+  z-index: 2;
   background: transparent;
   flex-direction: column;
   justify-content: center;
@@ -1421,6 +1575,8 @@ export default {
   max-height: calc(-5em + 100vh);
   max-width: 320px;
   min-width: 220px;
+  pointer-events: auto;
+  -webkit-touch-callout: default;
 }
 
 .share-box.open {
@@ -1474,7 +1630,8 @@ export default {
   position: relative;
   min-height: 200px;
   border-radius: 8px;
-  overflow: hidden;
+  /* 勿用 overflow:hidden：iOS 上祖先裁剪会导致长按「存储图像」菜单无法弹出 */
+  overflow: visible;
   background: var(--background-origin, #fff);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
 }
@@ -1484,6 +1641,9 @@ export default {
   text-align: center;
   padding: 8px;
   box-sizing: border-box;
+  -webkit-touch-callout: default;
+  -webkit-user-select: auto;
+  user-select: auto;
 }
 
 .share-preview--loading {
@@ -1562,12 +1722,13 @@ export default {
   height: auto;
   display: block;
   border-radius: 6px;
-  /* 允许移动端长按呼出“存储图像” */
+  /* 允许长按「存储图像」；勿用 touch-action:manipulation（会抑制长按菜单） */
   -webkit-touch-callout: default !important;
-  -webkit-user-select: auto;
-  user-select: auto;
+  -webkit-user-select: auto !important;
+  user-select: auto !important;
   pointer-events: auto;
-  touch-action: manipulation;
+  touch-action: auto;
+  -webkit-user-drag: auto;
 }
 
 .share-cover-wrap {

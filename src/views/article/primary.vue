@@ -17,23 +17,20 @@
       <el-main>
         <el-row :gutter="10">
           <el-col :xs="24" :sm="24" :md="17" :lg="17" :xl="17">
-            <div class="article-container" :class="{ 'skeleton-loading': loading }">
-              <h1 v-if="!loading">{{ articleInfo.articleTitle || '概率抽奖算法工具类'}}</h1>
+            <div class="article-container gp-article-panel" :class="{ 'skeleton-loading': loading }">
+              <h1 v-if="!loading" class="gp-article-title">{{ articleInfo.articleTitle || '概率抽奖算法工具类'}}</h1>
               <div v-else class="skeleton-block article-skeleton-title"></div>
 
-              <div v-if="!loading" class="user-info">
+              <div v-if="!loading" class="user-info gp-article-meta">
                 <img :src="userAvatar" alt="User Avatar" class="avatar">
-                <span>{{ articleInfo.authorName || '伴个白天'}}</span>
-                <el-tag type="warning">学习笔记</el-tag>
-                <el-tag type="success">Java</el-tag>
-                <el-tag type="info">学习笔记</el-tag>
-                <span class="views">{{ articleInfo.viewCount || '357'}}</span>
-                <span class="time">{{ articleInfo.createTime || '2023-08-11 16:24:57' }}</span>
-                <el-button type="text" size="small">举报</el-button>
+                <span class="meta-author">{{ articleInfo.authorName || '伴个白天'}}</span>
+                <span class="meta-divider">·</span>
+                <span class="views"><i class="el-icon-view"></i> {{ articleInfo.viewCount || '357'}}</span>
+                <span class="time"><i class="el-icon-time"></i> {{ articleInfo.createTime || '2023-08-11 16:24:57' }}</span>
               </div>
               <div v-else class="article-skeleton-meta"></div>
 
-              <div v-if="!loading && articleInfo.articleContent" class="article-content"
+              <div v-if="!loading && articleInfo.articleContent" class="article-content gp-article-body"
                v-html="renderMdText(articleInfo.articleContent)" v-highlight v-viewer>
               </div>
               <div v-else-if="!loading" class="article-content">
@@ -568,10 +565,7 @@ export default {
 
 <style lang="scss" scoped>
 .left-aside {
-  width: 60px;
-  /* background-color: #f5f7fa; */
-  /* Element UI's light gray */
-  /* Align buttons to top */
+  width: 56px;
   height: fit-content;
 }
 
@@ -581,18 +575,21 @@ export default {
   align-items: center;
   justify-content: flex-start;
   position: fixed;
-  top: 70px;
+  top: 88px;
   left: auto;
+  gap: 10px;
+  padding: 10px 8px;
+  background: var(--background-1, #fff);
+  border-radius: 28px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
 .left-aside .el-button {
-  margin-bottom: 10px;
+  margin: 0 !important;
 }
-
 
 .el-container {
   height: 100%;
-  /* Make container fill viewport height */
 }
 
 .right-aside {
@@ -613,32 +610,80 @@ export default {
   padding: 5px 5px 5px 20px;
 }
 
-.el-button {
-  margin-left: 10px;
+.gp-article-panel {
+  /* 桌面文章主栏：简洁卡片阅读区（个人博客风格） */
+  background: var(--background-1, #fff);
+  margin: 0 auto 14px;
+  padding: 28px 32px 32px;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.04);
 }
 
-.article-container {
-  background-color: var(--background-1, #fff);
-  /* Limit content width for readability */
-  margin: 0 auto;
-  padding: 6px;
-  margin-bottom: 10px;
+.gp-article-title {
+  margin: 0 0 16px;
+  font-size: 28px;
+  line-height: 1.35;
+  font-weight: 700;
+  color: var(--fontColor, #1a1d21);
+  letter-spacing: 0.01em;
+}
+
+.gp-article-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-bottom: 22px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  color: #8a919f;
+  font-size: 13px;
+}
+
+.gp-article-meta .avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 4px;
+  object-fit: cover;
+}
+
+.gp-article-meta .meta-author {
+  color: #3d4450;
+  font-weight: 600;
+}
+
+.gp-article-meta .meta-divider {
+  opacity: 0.45;
+}
+
+.gp-article-meta .views,
+.gp-article-meta .time {
+  margin-left: 0;
+}
+
+.gp-article-body {
+  line-height: 1.8;
+  font-size: 16px;
+  color: var(--fontColor, #2b2f36);
 }
 
 .user-profile {
   text-align: center;
-  margin-bottom: 15px;
-  padding: 10px;
+  margin-bottom: 14px;
+  padding: 18px 14px;
   background: var(--background-1);
-  border-radius: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.04);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
 }
 
 .user-image {
-  width: 80px;
-  height: 80px;
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
   margin: 0 auto 10px;
-
   overflow: hidden;
 }
 
@@ -670,77 +715,74 @@ export default {
   margin-left: 10px;
 }
 
-
 pre,
 pre.code-block {
   background-color: var(--color-article-pre, #f5f5f5);
   color: var(--color-article-pre-font);
   padding: 10px;
-  border-radius: 4px;
+  border-radius: 8px;
   font-family: monospace;
-  /* Use a monospace font for code */
 }
 
+.related-articles {
+  background-color: var(--background-1, #fff);
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.04);
+}
 
-/* Responsive adjustments */
+.related-articles h2 {
+  font-size: 16px;
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+
+.related-articles ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.related-articles li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.related-articles li:last-child {
+  border-bottom: none;
+}
+
+.article-comments-container {
+  background: var(--background-1, #fff);
+  border-radius: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(15, 23, 42, 0.04);
+}
+
 @media (max-width: 992px) {
-  .el-aside {
-    width: auto;
-    /* Allow aside to collapse */
-  }
-
   .left-aside {
-    flex-direction: column;
-    justify-content: center;
-    /* Distribute buttons evenly */
-    padding: 10px 0;
+    display: none;
   }
 
   .right-aside {
     display: none;
   }
 
-  .article-container {
-    max-width: 100%;
-    /* Remove max-width on smaller screens */
+  .gp-article-panel {
+    padding: 16px 14px 20px;
+    border-radius: 10px;
   }
 
-  .related-articles,
-  .interaction-section {
-    padding: 8px;
+  .gp-article-title {
+    font-size: 22px;
   }
 
-  .like-button button,
-  .comment-section button {
-    font-size: 14px;
+  .gp-article-body {
+    font-size: 15px;
   }
-}
-
-/* Related Articles Section */
-.related-articles {
-  background-color: var(--background-1, #f9f9f9);
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 10px;
-}
-
-.related-articles h2 {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
-.related-articles ul {
-  list-style: none;
-  padding: 0;
-}
-
-.related-articles li {
-  padding: 5px 0;
-  border-bottom: 1px solid var(--border-color, #ddd);
-}
-
-.related-articles li:last-child {
-  border-bottom: none;
 }
 
 /* Like and Comment Section */
