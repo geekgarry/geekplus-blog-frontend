@@ -159,9 +159,10 @@ import PlusPager from '@/components/PlusPager';
 import lazyLoadDirectives from '@/mixins/lazyLoadDirectives'
 
 import {
-  getArticleDetailIsDisplay, getArticleDetail, getRandomRecommendArt, getTagArticleCount, getFourPlusOneArticles,
-  updateViewCountAndLikeCount, getArticleLatestUserComment, getWebHotUserComment, getAllArticleComment, sendArticleComment
+  getArticleDetail, getRandomRecommendArt, getTagArticleCount,
+  updateViewCountAndLikeCount, getAllArticleComment, sendArticleComment
 } from '@/api/geekplus/geekplus'
+import { runWhenIdle, scheduleArticleViewCount, cancelIdle } from '@/utils/deferRequest'
 
 export default {
   mixins: [lazyLoadDirectives],
@@ -226,18 +227,22 @@ export default {
       commentsCount: 0,
       showShareDialog: false,
       qrCodeImg: "",
-      shareCardImg: ""
+      shareCardImg: "",
+      recommendedArticles: [],
+      _viewCountJob: null,
+      _sidebarIdleId: null,
+      _commentsIdleId: null
     };
   },
   created() {
-    this.getAllArticleTags();
-    this.getRecommendArticles();
+    // 正文优先；侧栏请求桌面 idle 后再发
     this.getArticleContent();
   },
   mounted() {
     window.addEventListener("scroll", this.onScrollPage);
   },
   destroyed() {
+    this.cancelDeferredJobs();
     window.removeEventListener("scroll", this.onScrollPage);
   },
   computed: {
@@ -295,18 +300,44 @@ export default {
         this.fixedTopHeight = 70;
       }
     },
-    articleInfo(val) {
-      this.articleInfo = val;
-      this.modifyViewCount();
-      this.getArticleAllUserComments();
-    },
     $route(to, from) {
-      if (to.path.includes("/article")) {
+      if (to.path !== from.path && String(to.path).indexOf('/article') === 0) {
+        this.cancelDeferredJobs();
         this.getArticleContent();
       }
     }
   },
   methods: {
+    cancelDeferredJobs() {
+      if (this._viewCountJob && this._viewCountJob.cancel) this._viewCountJob.cancel();
+      this._viewCountJob = null;
+      cancelIdle(this._sidebarIdleId);
+      cancelIdle(this._commentsIdleId);
+      this._sidebarIdleId = null;
+      this._commentsIdleId = null;
+    },
+    scheduleSidebarRequests() {
+      if (this.isMobile) return;
+      this._sidebarIdleId = runWhenIdle(() => {
+        this.getAllArticleTags();
+        this.getRecommendArticles();
+      }, 2500);
+    },
+    scheduleCommentsRequest() {
+      this._commentsIdleId = runWhenIdle(() => {
+        this.getArticleAllUserComments();
+      }, 1800);
+    },
+    scheduleViewCountUpdate() {
+      if (this._viewCountJob && this._viewCountJob.cancel) this._viewCountJob.cancel();
+      const id = this.articleId;
+      const nextCount = this.articleInfo.viewCount;
+      this._viewCountJob = scheduleArticleViewCount({
+        articleId: id,
+        dwellMs: 3000,
+        send: () => updateViewCountAndLikeCount({ viewCount: nextCount, id })
+      });
+    },
     sendComment(data) {
       if (this.userId && this.nickname) {
         data.name = this.nickname;
@@ -342,6 +373,11 @@ export default {
           this.prevArticle = res.prevRow;
           this.nextArticle = res.nextRow;
           window.document.title = (res.data.articleTitle || this.$route.meta.title) + " - 极客普拉斯,拾光梦集,极客普拉斯&拾光梦集 - GeekPlus";
+          if (this.articleInfo.viewCount == null) this.articleInfo.viewCount = 0;
+          this.articleInfo.viewCount = Number(this.articleInfo.viewCount) + 1;
+          this.scheduleViewCountUpdate();
+          this.scheduleCommentsRequest();
+          this.scheduleSidebarRequests();
         }
       }).catch((error) => {
         this.$message({
@@ -354,12 +390,14 @@ export default {
       });
     },
     getRecommendArticles() {
+      if (this.isMobile) return;
       getRandomRecommendArt().then((res) => {
         this.recommendedArticles = res && res.data !== undefined ? res.data : (res || []);
       });
     },
     //获取所有文章标签和文章数量
     getAllArticleTags() {
+      if (this.isMobile) return;
       getTagArticleCount()
         .then((response) => {
           this.articleTags = response.data;
@@ -372,13 +410,7 @@ export default {
     },
     //修改文章的浏览量和点赞数
     modifyViewCount() {
-      if (this.articleInfo.viewCount == null) {
-        this.articleInfo.viewCount = 0;
-      }
-      const articleViewAndLike = { viewCount: this.articleInfo.viewCount + 1, id: this.articleId };
-      updateViewCountAndLikeCount(articleViewAndLike)
-        .then((response) => { })
-        .catch((error) => { });
+      this.scheduleViewCountUpdate();
     },
     modifyLikeCount() {
       if (this.articleInfo.likeCount == null) {

@@ -385,12 +385,13 @@ export function deleteFile(filePath) {
     })
 }
 
-// 更新文章浏览量和文章点赞量
+// 更新文章浏览量和文章点赞量（低优先级：不重试，避免首屏失败风暴）
 export function updateViewCountAndLikeCount(queryParams) {
     return request({
         url: '/geekplusapp/updateArticleViewCount',
         method: 'get',
-        params: queryParams
+        params: queryParams,
+        retry: 0
     })
 }
 

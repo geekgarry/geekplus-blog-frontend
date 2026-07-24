@@ -259,6 +259,7 @@ import mousedown from '@/utils/mousedown';
 import { mapState } from 'vuex'
 import LoginSignup from '@/components/LoginSignup/index'
 import { getGpWebTitleInfo, selectGpArticlesListByKeyWords, getMostViewedArticle } from '@/api/geekplus/geekplus'
+import { runWhenIdle, cancelIdle } from '@/utils/deferRequest'
 // import '@/utils/TweenMax.min.js';
 // import '@/utils/paopaoScript.js';
 
@@ -324,7 +325,10 @@ export default {
     };
     this.$store.commit("changeNavbarStatus", navbarStatus);
     this.getWebInfo();
-    this.getMostViewedArticles();
+    // 热门文章非首屏关键：idle 后再拉，减轻与首页/正文的瞬时并发
+    this._hotIdleId = runWhenIdle(() => {
+      this.getMostViewedArticles();
+    }, 2200);
     // this.getSysConfig();
     // this.getSortInfo();
 
@@ -354,6 +358,7 @@ export default {
     // }
   },
   destroyed() {
+    cancelIdle(this._hotIdleId);
     window.removeEventListener("scroll", this.onScrollPage);
     window.removeEventListener('resize', this.updateScreenSize);
   },

@@ -131,10 +131,11 @@
 
 <script>
 import { listNotice, getNotice, delNotice, addNotice, updateNotice, exportNotice } from "@/api/geekplus/notice";
-
+import QuillEditor  from '@/components/QuillEditor/index.vue';
 export default {
   name: "GpNotice",
   components: {
+    QuillEditor
   },
   data() {
     return {

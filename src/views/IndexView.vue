@@ -1,4 +1,5 @@
 <template>
+  <!-- 视口宽度优先：缩放窗口也能切移动/桌面首页，避免仅靠 UA 误判 -->
   <MobileIndexView v-if="isMobile" />
   <DesktopIndexView v-else />
 </template>
@@ -14,7 +15,6 @@ export default {
   },
   data() {
     return {
-      // 同时看 UA 与视口宽度，窗口缩放时也能切换布局
       viewportMobile: typeof window !== "undefined" ? window.innerWidth < 768 : false
     }
   },

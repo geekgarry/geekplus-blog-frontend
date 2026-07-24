@@ -279,6 +279,7 @@ import {
   getVisitInfo, getCarousel, getArticlesByCategoryLimit, getArticleLatestUserComment, getWebHotUserComment,
   getIndexAllCategoryArticleList, getGpNoticeNewOne
 } from '@/api/geekplus/geekplus'
+import { runWhenIdle, runAfter, cancelIdle } from '@/utils/deferRequest'
 
 export default {
   name: 'DesktopIndexView',
@@ -463,14 +464,20 @@ export default {
   created() {
     this.getIndexViewCarousel();
     this.getIndexArticleList();
-    this.getSixRecommendArticle();
-    this.getOneNewestNotice();
-    this.getPageVisitInfo();
+    // 侧栏非关键请求：错开并发，idle 后串行拉取
+    this._secondaryIdleId = runWhenIdle(() => {
+      this.getSixRecommendArticle();
+      runAfter(() => this.getOneNewestNotice(), 400);
+      runAfter(() => this.getPageVisitInfo(), 800);
+      runAfter(() => this.getWebHotUserComments(), 1200);
+    }, 1800);
   },
   mounted() {
     //TODO: 注释掉轮播图滑动，因为已经没有在用官方element UI的el-carousel了
     // this.slideBanner();
-    this.getWebHotUserComments();
+  },
+  beforeDestroy() {
+    cancelIdle(this._secondaryIdleId);
   },
   computed: {
     hotArticleList() {

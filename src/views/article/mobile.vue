@@ -228,13 +228,14 @@
                 </el-input>
               </el-card>
 
-              <el-card class="box-card" :class="{ 'mobile-view': isMobile }">
+              <!-- 移动端隐藏侧栏：标签云 / 相关 / 推荐（同时不发起对应请求） -->
+              <el-card v-if="!isMobile" class="box-card">
                 <Adsense data-ad-format="rectangle, vertical, horizontal" data-full-width-responsive="yes"
                   data-ad-client="ca-pub-7291512442295477" data-ad-slot="1460930833">
                 </Adsense>
               </el-card>
 
-              <el-card class="box-card" :class="{ 'mobile-view': isMobile }">
+              <el-card v-if="!isMobile" class="box-card">
                 <div slot="header" class="clearfix">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-data-board"></i>标签云</span>
@@ -249,15 +250,7 @@
                 </div>
               </el-card>
 
-              <!-- <div class="bottom-ad">
-                <el-tag type="danger" closable>广告</el-tag>
-                <h2>新用户注册将免费进行到底</h2>
-                <p>100+款云产品免费试用，支持开发者0门槛上云。赠亚马逊云科技 logo 无线耳机，无线键盘活动</p>
-                <p>亚马逊云科技</p>
-                <el-button type="primary">打开 <i class="el-icon-arrow-right"></i></el-button>
-              </div> -->
-
-              <el-card class="related-articles" :class="{ 'mobile-view': isMobile }">
+              <el-card v-if="!isMobile" class="related-articles">
                 <div slot="header" class="clearfix">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-data-board"></i>相关文章</span>
@@ -279,7 +272,7 @@
                 </div>
               </el-card>
 
-              <el-card class="box-card" :class="{ 'mobile-view': isMobile }">
+              <el-card v-if="!isMobile" class="box-card">
                 <div slot="header" class="clearfix">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-data-board"></i>推荐文章</span>
@@ -353,9 +346,10 @@ import CommentReply from '@/components/CommentReply'
 import PlusPager from '@/components/PlusPager';
 import lazyLoadDirectives from '@/mixins/lazyLoadDirectives'
 import {
-  getArticleDetailIsDisplay, getArticleDetail, getRandomRecommendArt, getTagArticleCount, getFourPlusOneArticles,
-  updateViewCountAndLikeCount, getArticleLatestUserComment, getWebHotUserComment, getAllArticleComment, sendArticleComment
+  getArticleDetail, getRandomRecommendArt, getTagArticleCount,
+  updateViewCountAndLikeCount, getAllArticleComment, sendArticleComment
 } from '@/api/geekplus/geekplus'
+import { runWhenIdle, scheduleArticleViewCount, cancelIdle } from '@/utils/deferRequest'
 
 export default {
   mixins: [lazyLoadDirectives],
@@ -439,68 +433,24 @@ export default {
       shareStatusText: "正在生成分享图…",
       // 强制重挂载预览 img，修复「点保存后无法长按」的 WebKit 问题
       sharePreviewKey: 0,
-      _html2canvasPromise: null
+      _html2canvasPromise: null,
+      // 浏览量上报句柄，离开页取消
+      _viewCountJob: null,
+      _sidebarIdleId: null,
+      _commentsIdleId: null
     };
   },
-  // metaInfo () {
-  //   return {
-  //     title:this.articleInfo.articleTitle,
-	// 	  meta:[{
-	// 	    charset: "utf-8"
-	//     },
-	//     {
-	// 	    name: "viewport",
-	// 	    content: "width=device-width, initial-scale=1.0,minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
-	//     },
-  //     {
-  //       name: 'keyWords',
-  //       content: this.articleInfo.tags.map(tag => tag.tagName).join(", ") // 将数组转换为逗号分隔的字符串
-  //     },
-  //     {
-  //       name:'description',
-  //       content: this.articleInfo.articleTitle
-  //     }
-  //     ]
-	//   }
-  // },
   async created() {
-    // 动态导入 vue-google-adsense
-    // try {
-    //   const Ads = await import('vue-google-adsense');
-    //   const AdsModule = Ads.default;
-    //   // 注册组件
-    //   this.$options.components.Adsense = AdsModule.Adsense;
-    //   this.$options.components.InArticleAdsense = AdsModule.InArticleAdsense;
-    //   this.$options.components.InFeedAdsense = AdsModule.InFeedAdsense;
-    // } catch (error) {
-    //   console.error('Failed to load vue-google-adsense:', error);
-    // }
-    //     2: show the navbar only when the screen width is greater than 768 pixels
-    //     3: show the navbar only when the screen width is greater than 992 pixels
-    //     4: show the navbar only when the screen width is greater than 1200 pixels
-    //图片预览器
-    //用于图片预览的指令方式调用 在元素上加上会处理元素下所有的图片,为图片添加点击事件,点击即可预览
-    // 全局注册指令（仅首次加载时执行）
-    // 注意：this.$app 是 Vue 2 中的写法；Vue 3 中应使用 app.directive()，但需在 main.js 中保留一个空的 app 实例用于后续注册。
-    // this.$app.directive('viewer', viewerDirective({
-    //   //debug: true
-    // }));
-    // this.$nextTick(() => {});
-    this.getAllArticleTags();
-    this.getRecommendArticles();
+    // 正文优先；侧栏标签/推荐仅桌面且 idle 后再请求，减轻移动端首屏并发
     this.getArticleContent();
-    // window.document.title = (res.data.articleTitle || this.$route.meta.title) + " - 极客普拉斯,拾光梦集,极客普拉斯&拾光梦集 - GeekPlus";
   },
   watch: {
-    articleInfo(val) {
-      this.articleInfo = val;
-      this.modifyViewCount();
-      this.getArticleAllUserComments();
-    },
+    // 不在 deep watch 里改 articleInfo / 刷浏览量，避免重复请求
     $route(to, from) {
-      // if (to.path.includes("/article")) {
-      //   this.getArticleContent();
-      // }
+      if (to.path !== from.path && String(to.path).indexOf('/article') === 0) {
+        this.cancelDeferredJobs();
+        this.getArticleContent();
+      }
     }
   },
   computed: {
@@ -573,9 +523,32 @@ export default {
   },
   mounted() {},
   beforeDestroy() {
+    this.cancelDeferredJobs();
     this.revokeShareBlobUrl();
   },
   methods: {
+    cancelDeferredJobs() {
+      if (this._viewCountJob && this._viewCountJob.cancel) this._viewCountJob.cancel();
+      this._viewCountJob = null;
+      cancelIdle(this._sidebarIdleId);
+      cancelIdle(this._commentsIdleId);
+      this._sidebarIdleId = null;
+      this._commentsIdleId = null;
+    },
+    /** 桌面侧栏：空闲后再拉标签云与推荐，移动端直接跳过 */
+    scheduleSidebarRequests() {
+      if (this.isMobile) return;
+      this._sidebarIdleId = runWhenIdle(() => {
+        this.getAllArticleTags();
+        this.getRecommendArticles();
+      }, 2500);
+    },
+    /** 评论区延后加载，优先保证正文 */
+    scheduleCommentsRequest() {
+      this._commentsIdleId = runWhenIdle(() => {
+        this.getArticleAllUserComments();
+      }, 1800);
+    },
     sendComment(data) {
       if (this.userId && this.nickname) {
         data.name = this.nickname;
@@ -608,7 +581,6 @@ export default {
     },
     getArticleContent() {
       this.loading = true;
-      // var id = this.$route.params.articleId;
       const param = { id: this.articleId };
       getArticleDetail(param).then((res) => {
         if (res && res.data !== undefined) {
@@ -617,6 +589,12 @@ export default {
           this.prevArticle = res.prevRow;
           this.nextArticle = res.nextRow;
           window.document.title = (res.data.articleTitle || this.$route.meta.title) + " - 极客普拉斯,拾光梦集,极客普拉斯&拾光梦集 - GeekPlus";
+          // 乐观更新本地展示；真实上报走延后+会话去重
+          if (this.articleInfo.viewCount == null) this.articleInfo.viewCount = 0;
+          this.articleInfo.viewCount = Number(this.articleInfo.viewCount) + 1;
+          this.scheduleViewCountUpdate();
+          this.scheduleCommentsRequest();
+          this.scheduleSidebarRequests();
         }
       }).catch((error) => {
         this.$message({
@@ -629,12 +607,14 @@ export default {
       });
     },
     getRecommendArticles() {
+      if (this.isMobile) return;
       getRandomRecommendArt().then((res) => {
         this.recommendedArticles = res && res.data !== undefined ? res.data : (res || []);
       });
     },
     //获取所有文章标签和文章数量
     getAllArticleTags() {
+      if (this.isMobile) return;
       getTagArticleCount()
         .then((res) => {
           this.articleTags = res && res.data !== undefined ? res.data : (res || []);
@@ -645,15 +625,22 @@ export default {
           });
         });
     },
-    //修改文章的浏览量和点赞数
+    /**
+     * 浏览量：停留约 3s + idle 后再上报；同会话同篇只计一次（成熟站点常见做法）
+     */
+    scheduleViewCountUpdate() {
+      if (this._viewCountJob && this._viewCountJob.cancel) this._viewCountJob.cancel();
+      const id = this.articleId;
+      const nextCount = this.articleInfo.viewCount;
+      this._viewCountJob = scheduleArticleViewCount({
+        articleId: id,
+        dwellMs: 3000,
+        send: () => updateViewCountAndLikeCount({ viewCount: nextCount, id })
+      });
+    },
+    // 兼容旧调用名
     modifyViewCount() {
-      if (this.articleInfo.viewCount == null) {
-        this.articleInfo.viewCount = 0;
-      }
-      const articleViewAndLike = { viewCount: this.articleInfo.viewCount + 1, id: this.articleId };
-      updateViewCountAndLikeCount(articleViewAndLike)
-        .then((response) => { })
-        .catch((error) => { });
+      this.scheduleViewCountUpdate();
     },
     modifyLikeCount() {
       if (this.articleInfo.likeCount == null) {
@@ -661,8 +648,8 @@ export default {
       }
       const articleViewAndLike = { likeCount: this.articleInfo.likeCount, id: this.articleId };
       updateViewCountAndLikeCount(articleViewAndLike)
-        .then((response) => { })
-        .catch((error) => { });
+        .then(() => {})
+        .catch(() => {});
     },
     onThumbsUpButtonTap() {
       this.articleInfo.likeCount += 1;
@@ -707,18 +694,97 @@ export default {
       if (src.charAt(0) === "/") return window.location.origin + src;
       return src;
     },
+    /** 封面候选 URL：原地址、同源补全、去掉 query 再试 */
+    buildShareCoverCandidates(src) {
+      if (!src || typeof src !== "string") return [];
+      const list = [];
+      const add = (u) => {
+        if (u && list.indexOf(u) === -1) list.push(u);
+      };
+      const raw = String(src).trim();
+      add(raw);
+      add(this.resolveShareCoverSrc(raw));
+      if (raw.charAt(0) === "/") {
+        add(window.location.origin + raw);
+      }
+      // 去掉 ?x= 后再试（部分 CDN 签名参数导致 canvas CORS 失败）
+      const noQuery = raw.split("?")[0];
+      if (noQuery !== raw) {
+        add(noQuery);
+        add(this.resolveShareCoverSrc(noQuery));
+      }
+      return list;
+    },
+    /** 经 fetch→blob→objectURL 加载，规避跨域导致 canvas 无法导出 */
+    async fetchCoverAsObjectUrl(url) {
+      if (!url || /^(data:|blob:)/i.test(url)) return "";
+      try {
+        const res = await fetch(url, { mode: "cors", credentials: "omit", cache: "force-cache" });
+        if (!res.ok) return "";
+        const blob = await res.blob();
+        // 空文件（线上偶发 200 + Content-Length:0）视为失败
+        if (!blob || !blob.size) return "";
+        if (blob.type && blob.type.indexOf("image") === -1 && blob.type.indexOf("octet") === -1) {
+          // 仍可能是图片但 type 不准，继续尝试
+        }
+        return URL.createObjectURL(blob);
+      } catch (e) {
+        return "";
+      }
+    },
+    /** 检测图能否安全画入 canvas 并 toDataURL（防污染） */
+    canUseImageInCanvas(img) {
+      if (!img || !img.naturalWidth) return false;
+      try {
+        const c = document.createElement("canvas");
+        c.width = 2;
+        c.height = 2;
+        const ctx = c.getContext("2d");
+        ctx.drawImage(img, 0, 0, 2, 2);
+        c.toDataURL("image/jpeg", 0.5);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
+    /**
+     * 加载分享封面：优先文章 indexPicture（多候选 + blob 中转），失败才用默认 articleCover。
+     */
+    async loadShareCoverImage(remoteCover, localCover) {
+      const candidates = this.buildShareCoverCandidates(remoteCover);
+      for (let i = 0; i < candidates.length; i++) {
+        const url = candidates[i];
+        // 1) fetch→blob：同源/可 CORS 时最稳，objectURL 可直接进 canvas
+        const blobUrl = await this.fetchCoverAsObjectUrl(url);
+        if (blobUrl) {
+          const img = await this.loadImageEl(blobUrl, 3200, { crossOrigin: null });
+          if (img && this.canUseImageInCanvas(img)) {
+            img._revokeUrl = blobUrl;
+            return img;
+          }
+          try { URL.revokeObjectURL(blobUrl); } catch (e) { /* ignore */ }
+        }
+        // 2) 直接 Image + anonymous
+        const imgCors = await this.loadImageEl(url, 2800, { crossOrigin: "anonymous" });
+        if (imgCors && this.canUseImageInCanvas(imgCors)) return imgCors;
+      }
+      // 确无可用封面时再回退默认图
+      return this.loadImageEl(localCover, 800, { crossOrigin: null });
+    },
     /**
      * 加载图片为 HTMLImageElement。
      * 注意：线上部分 /profile/upload 会 200 但空文件，onload 后 naturalWidth=0，需立刻失败回退。
+     * @param {string} src
+     * @param {number} timeoutMs
+     * @param {{ crossOrigin?: string|null }} [opts]
      */
-    loadImageEl(src, timeoutMs) {
+    loadImageEl(src, timeoutMs, opts) {
       return new Promise((resolve) => {
         if (!src) {
           resolve(null);
           return;
         }
         if (typeof src !== "string") {
-          // webpack require 已是 url 字符串；若已是 Image 直接返回
           if (src && src.tagName === "IMG") {
             resolve(src);
             return;
@@ -737,11 +803,19 @@ export default {
           else finish(img);
         };
         img.onerror = () => finish(null);
-        const isRemote = /^https?:\/\//i.test(absolute) && absolute.indexOf(window.location.origin) !== 0;
-        if (isRemote) img.crossOrigin = "anonymous";
+        const cross = opts && Object.prototype.hasOwnProperty.call(opts, "crossOrigin")
+          ? opts.crossOrigin
+          : undefined;
+        if (cross) {
+          img.crossOrigin = cross;
+        } else if (cross !== null) {
+          // 默认：跨站才加 anonymous，避免同站误设导致失败
+          const isRemote = /^https?:\/\//i.test(absolute) && absolute.indexOf(window.location.origin) !== 0;
+          if (isRemote) img.crossOrigin = "anonymous";
+        }
         img.src = absolute;
         if (img.complete && img.naturalWidth) finish(img);
-        window.setTimeout(() => finish(img.naturalWidth ? img : null), timeoutMs || 500);
+        window.setTimeout(() => finish(img.naturalWidth ? img : null), timeoutMs || 2500);
       });
     },
     /**
@@ -752,12 +826,13 @@ export default {
       const token = ++this.shareGenToken;
       const localCover = this.articleCover;
       const logoSrc = require("@/assets/logo.png");
-      const remoteCover = this.articleInfo.indexPicture || "";
+      const remoteCover = this.articleInfo.indexPicture || this.articleInfo.cover || "";
+      let coverBlobToRevoke = "";
       try {
-        this.shareStatusText = "准备素材…";
+        this.shareStatusText = remoteCover ? "加载文章封面…" : "准备默认封面…";
         const [coverImg, logoImg, qrData] = await Promise.all([
-          this.loadImageEl(remoteCover, 450).then((img) => img || this.loadImageEl(localCover, 400)),
-          this.loadImageEl(logoSrc, 400),
+          this.loadShareCoverImage(remoteCover, localCover),
+          this.loadImageEl(logoSrc, 400, { crossOrigin: null }),
           new Promise((resolve) => {
             QRCode.toDataURL(
               this.windowUrl,
@@ -766,6 +841,7 @@ export default {
             );
           })
         ]);
+        if (coverImg && coverImg._revokeUrl) coverBlobToRevoke = coverImg._revokeUrl;
         if (token !== this.shareGenToken || !this.showShareDialog) return;
         if (!qrData) {
           this.shareCardGenerating = false;
@@ -775,7 +851,7 @@ export default {
         }
         this.qrCodeImg = qrData;
         this.shareStatusText = "渲染中…";
-        const qrImg = await this.loadImageEl(qrData, 300);
+        const qrImg = await this.loadImageEl(qrData, 300, { crossOrigin: null });
         if (token !== this.shareGenToken || !this.showShareDialog) return;
         const dataUrl = this.drawShareCardToDataUrl({
           coverImg: coverImg || null,
@@ -803,6 +879,9 @@ export default {
         this.shareStatusText = "生成失败";
         this.$message({ message: "分享图生成失败，请稍后重试", type: "error", duration: 3000 });
       } finally {
+        if (coverBlobToRevoke) {
+          try { URL.revokeObjectURL(coverBlobToRevoke); } catch (e) { /* ignore */ }
+        }
         if (token === this.shareGenToken) this.shareCardGenerating = false;
       }
     },

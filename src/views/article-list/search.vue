@@ -118,8 +118,16 @@
             </div>
 
             <div class="article-list">
-              <div v-if="!loading && total <= 0">
-                没有内容，请重新搜索！！！
+              <div class="archive-empty" v-if="!loading && total <= 0">
+                没有找到与「<span class="archive-empty-keywords">{{ keyWords || tagName }}</span>」相关的内容
+                <!-- <div class="archive-empty-tips">
+                  <p>请尝试以下建议：</p>
+                  <ul>
+                    <li>检查拼写是否正确</li>
+                    <li>使用更常见的词汇</li>
+                    <li>使用更具体的关键词</li>
+                  </ul>
+                </div> -->
               </div>
               <div v-for="article in articlesList" :key="article.id" class="article-card is-always-shadow"
                 :class="{ 'skeleton-loading': loading }">
@@ -507,6 +515,41 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.archive-empty {
+  text-align: center;
+  padding: 60px 0;
+  font-size: 14px;
+  color: var(--font-color, #777);
+  background: var(--background-1, #f8f9fa);
+  border-radius: var(--border-radius, 8px);
+}
+
+.archive-empty-keywords {
+  color: var(--theme-color);
+  font-weight: 600;
+}
+
+.archive-empty-tips {
+  text-align: center;
+  padding: 10px 0;
+  font-size: 14px;
+  color: var(--font-color, #777);
+  background: var(--background-1, #f8f9fa);
+  border-radius: var(--border-radius, 8px);
+}
+
+.archive-empty-tips p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--font-color, #777);
+}
+
+.archive-empty-tips ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .article-list a:hover {

@@ -10,7 +10,7 @@ const pendingRequests = new Map()
 // create an axios instance
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
-  timeout: 20000, // request timeout
+  timeout: 25000, // request timeout
   // withCredentials: true // 是否允许跨域请求携带cookie
 })
 
