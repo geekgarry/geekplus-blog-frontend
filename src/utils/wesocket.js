@@ -5,8 +5,8 @@ import store from '@/store';
 //var url =  'wss://' + location.host + '/websocket/'
 //两种连接地址ws和wss，正式上线申请证书后使用域名作为连接地址
 //利用userAgent判断浏览器使用不同连接协议
-var urls = "wss://mkapi.geekplus.xyz:8443/websocket/";
-var url = "ws://mkapi.geekplus.xyz:9002/websocket/";
+var urls = "wss://127.0.0.1:8443/websocket/";
+var url = "ws://127.0.0.1:9002/websocket/";
 var ws;
 var tt;
 var lockReconnect = false;//避免重复连接
