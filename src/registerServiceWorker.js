@@ -2,6 +2,24 @@
 import store from "./store";
 import { register } from "register-service-worker";
 
+function registerDownloadServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  navigator.serviceWorker
+    .register("/worker/downloadServiceWorker.js")
+    .then(() => {
+      store.commit("app/SET_SW_REGISTERED", true);
+    })
+    .catch((err) => {
+      console.warn(
+        "Download Service Worker 注册失败, 将回退到 Web Worker 或普通下载:",
+        err
+      );
+    });
+}
+
+// 下载专用 SW：开发/生产都注册，文件中转大文件可走流式下载
+registerDownloadServiceWorker();
+
 if (process.env.NODE_ENV === "production") {
   if ("serviceWorker" in navigator) {
     register(`${process.env.BASE_URL}service-worker.js`, {
@@ -32,34 +50,5 @@ if (process.env.NODE_ENV === "production") {
         console.error("Error during service worker registration:", error);
       },
     });
-    navigator.serviceWorker
-      .register("/worker/downloadServiceWorker.js")
-      .then((registration) => {
-        store.commit("app/SET_SW_REGISTERED", true);
-        //store.dispatch
-        // this.swRegistered = true;
-        // 监听来自 SW 的下载进度消息
-        // navigator.serviceWorker.addEventListener("message", (event) => {
-          // if (event.data.type === "sw_progress") {
-            // if (!this.progressVisible) {
-            //   this.progressTitle = "后台下载中 (Service Worker)";
-            //   this.progressDesc = "基于浏览器底层流进行极速下载中...";
-            //   this.progressVisible = true;
-            // }
-            // this.progressPercent = event.data.percent;
-          // } else if (event.data.type === "sw_success") {
-            // this.$message.success("下载流已完成传递");
-            // setTimeout(() => {
-            //   this.progressVisible = false;
-            // }, 500);
-          // }
-        // });
-      })
-      .catch((err) => {
-        console.warn(
-          "Service Worker 注册失败, 将回退到 Web Worker 或普通下载:",
-          err
-        );
-      });
   }
 }

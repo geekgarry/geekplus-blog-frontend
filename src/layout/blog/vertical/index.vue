@@ -21,55 +21,12 @@
           </div>
         </div>
       </div>
-      <ul class="menu-list">
-        <li class="menu-item" v-if="!$common.isEmpty(username)">
-          <div class="menu-title" @click="toNavMenu({ path: '/admin' })">
-            <span><svg-icon class="menu-icon" icon-class="manage-center"></svg-icon>管理中心</span>
-          </div>
-        </li>
-        <li class="menu-item">
-          <div class="menu-title" @click="toNavMenu({ path: '/' })">
-            <span><svg-icon class="menu-icon" icon-class="home"></svg-icon>首页</span>
-          </div>
-        </li>
-        <li v-for="(item, index) in addNavMenuRoutes" :key="index" class="menu-item">
-          <div class="menu-title" @click="toggleItem(index)">
-            <!-- 必须用 length 判断：children:[] 在 JS 里仍为 truthy，会误进分支读 children[0].path -->
-            <template v-if="item.children && item.children.length">
-              <!-- 如果有子菜单，显示箭头 -->
-              <router-link :to="navChildPath(item, item.children[0])">
-                <span><svg-icon v-if="item.icon" class="menu-icon" :icon-class="item.icon"></svg-icon>{{ item.categoryName }}</span>
-              </router-link>
-              <span class="arrow">
-                <!-- {{ openIndex === index ? "▲" : "▼" }} -->
-                <i :class="openIndexes.includes(index) ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"></i>
-              </span>
-            </template>
-            <template v-else>
-              <span @click="toNavMenu({ path: item.path })"><svg-icon v-if="item.icon" class="menu-icon" :icon-class="item.icon"></svg-icon>{{ item.categoryName }}</span>
-            </template>
-          </div>
-          <!-- 子菜单 -->
-          <ul v-if="item.children && item.children.length && openIndexes.includes(index)" class="submenu">
-            <li v-for="(subItem, subIndex) in item.children" :key="subIndex">
-              <div class="menu-title" @click="toNavMenu({ path: navChildPath(item, subItem) })">
-                <span><svg-icon v-if="subItem.icon" class="menu-icon" :icon-class="subItem.icon"></svg-icon>{{ subItem.categoryName }}</span>
-              </div>
-            </li>
-          </ul>
-        </li>
-        <li class="menu-item">
-          <div class="menu-title" @click="toNavMenu({ path: '/leave-word' })">
-            <span><svg-icon class="menu-icon" icon-class="leave-word"></svg-icon>给我留言</span>
-          </div>
-        </li>
-
-        <li class="menu-item">
-          <div class="menu-title" @click="toNavMenu({ path: '/about' })">
-            <span><svg-icon class="menu-icon" icon-class="cheers"></svg-icon>关于本站</span>
-          </div>
-        </li>
-      </ul>
+      <blog-nav-menu
+        mode="drawer"
+        :menus="addNavMenuRoutes"
+        :show-admin-entry="!$common.isEmpty(username)"
+        @navigate="onNavMenuNavigate"
+      />
     </div>
     <div class="search-wrapper" v-show="isSearchDrawerOpen">
       <div class="search-overlay" @click="toggleSearch"></div>
@@ -81,9 +38,18 @@
             </div>
           </div>
           <div class="drawer__search-container">
-            <el-input placeholder="搜索文章" v-model="searchQuery" @keyup.enter.native="searchArticles" clearable>
-              <el-button slot="append" icon="el-icon-search" @click="searchArticles"></el-button>
-            </el-input>
+            <!-- 搜索抽屉：原生 input，去掉 el-input 依赖 -->
+            <div class="gp-input-group">
+              <input
+                class="gp-input"
+                placeholder="搜索文章"
+                v-model="searchQuery"
+                @keyup.enter="searchArticles"
+              >
+              <button type="button" class="gp-btn gp-btn--append" @click="searchArticles">
+                <i class="el-icon-search"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -94,6 +60,8 @@
       <!-- 导航栏 -->
       <div class="navbar-content" ref="navbar" v-show="navbar.visible || isMobile" @mouseenter="hoverEnter = true" @mouseleave="hoverEnter = false"
         :class="[{ enter: navbar.enter }, { hoverEnter: (hoverEnter || this.$route.path === '/favorite' || this.$route.path === '/travel') && !navbar.enter }]">
+        <!-- 模糊背景单独一层，避免 backdrop-filter 成为下拉菜单的 containing block 导致裁切 -->
+        <div class="navbar-content__bg" aria-hidden="true"></div>
         <div class="navbar-container flex-between">
           <div v-if="isMobile" class="navbar-mobile-menu" :class="{ enter: navbar.enter }">
             <div class="mobile-menu-item" @click="toggleDrawer">
@@ -110,46 +78,13 @@
             </div>
           </router-link>
 
-          <!-- 导航列表 -->
-          <div v-if="!isMobile" class="desktop-menu-container">
-            <ul class="scroll-menu">
-              <li>
-                <div class="el-dropdown-link el-dropdown-self" @click="toNavMenu({ path: '/' })"><svg-icon class="menu-icon" icon-class="home"></svg-icon>首页</div>
-              </li>
-              <li v-for="(item, index) in addNavMenuRoutes" :key="index">
-                <template v-if="item.children && item.children.length">
-                  <!-- 如果有子菜单，显示箭头 -->
-                  <el-dropdown :hide-timeout="500" placement="bottom" class="top-nav-dropdown-menu">
-                    <div class="el-dropdown-link el-dropdown-self">
-                      <svg-icon v-if="item.icon" class="menu-icon" :icon-class="item.icon"></svg-icon>{{ item.categoryName }}<i class="el-icon-arrow-down el-icon--right"></i>
-                    </div>
-                    <el-dropdown-menu slot="dropdown">
-                      <el-dropdown-item class="pl-nav-menu-item" v-for="(subItem, index) in item.children" :key="index">
-                        <div class="pl-menu-item-inner" @click="toNavMenu({ path: navChildPath(item, subItem) })">
-                          <svg-icon v-if="subItem.icon" class="menu-icon" :icon-class="subItem.icon"></svg-icon>{{ subItem.categoryName }}
-                        </div>
-                      </el-dropdown-item>
-                    </el-dropdown-menu>
-                  </el-dropdown>
-                </template>
-                <template v-else>
-                  <div class="el-dropdown-link el-dropdown-self" @click="toNavMenu({ path: item.path })">
-                    <svg-icon v-if="item.icon" class="menu-icon" :icon-class="item.icon"></svg-icon>{{ item.categoryName }}
-                  </div>
-                </template>
-              </li>
-              <li>
-                <div class="el-dropdown-link el-dropdown-self" @click="toNavMenu({ path: '/leave-word' })">
-                  <svg-icon class="menu-icon" icon-class="leave-word"></svg-icon>给我留言
-                </div>
-              </li>
-              <li>
-                <div class="el-dropdown-link el-dropdown-self" @click="toNavMenu({ path: '/about' })">
-                  <svg-icon class="menu-icon" icon-class="cheers"></svg-icon>关于本站
-                </div>
-              </li>
-            </ul>
-          </div>
+          <!-- 导航列表：独立 BlogNavMenu，桌面溢出自动收进「更多」 -->
+          <blog-nav-menu
+            v-if="!isMobile"
+            mode="desktop"
+            :menus="addNavMenuRoutes"
+            @navigate="onNavMenuNavigate"
+          />
 
           <!-- 导航搜索按钮 -->
           <div class="navbar-header-menu" :class="{ enter: navbar.enter }">
@@ -170,43 +105,27 @@
                 <!-- <svg t="1732243120971" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5767" width="22" height="22"><path d="M689.067 631.467L889.6 832c38.4 38.4-19.2 96-57.6 57.6L631.467 689.067C576 731.733 505.6 757.333 430.933 757.333 249.6 757.333 102.4 610.133 102.4 428.8s147.2-326.4 328.533-326.4 328.534 147.2 328.534 328.533c-2.134 74.667-27.734 145.067-70.4 200.534z m-258.134 44.8c136.534 0 245.334-110.934 245.334-245.334S565.333 183.467 430.933 183.467 183.467 294.4 183.467 430.933 294.4 676.267 430.933 676.267z" fill="currentColor" p-id="5768"></path></svg> -->
               </span>
             </div>
-            <!-- 个人中心 -->
+            <!-- 个人中心：自研下拉，去掉 el-dropdown -->
             <div class="header-menu-item" v-if="!isMobile">
-              <el-dropdown placement="bottom" trigger="click" class="user-operate-center">
-                <el-avatar class="user-avatar web-app" :size="32"
-                  :src="!$common.isEmpty(username) ? userAvatar : require('@/assets/images/user-placeholder.png')">
-                </el-avatar>
-
-                <el-dropdown-menu slot="dropdown" class="user-operate-dropdown">
-                  <template v-if="!$common.isEmpty(username)">
-                    <el-dropdown-item @click.native="toNavMenu({ path: '/admin' })">
-                      <i class="el-icon-house" aria-hidden="true"></i> <span>管理中心</span>
-                    </el-dropdown-item>
-                    <el-dropdown-item @click.native="toNavMenu({ path: '/admin/user/profile' })">
-                      <i class="el-icon-user" aria-hidden="true"></i> <span>个人中心</span>
-                    </el-dropdown-item>
-                    <el-dropdown-item @click.native="logout">
-                      <i class="el-icon-switch-button" aria-hidden="true"></i> <span>退出登录</span>
-                    </el-dropdown-item>
-                  </template>
-                  <el-dropdown-item @click.native="showUserLogin" v-else>
-                    <i class="fa fa-sign-in" aria-hidden="true"></i> <span>登录</span>
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </el-dropdown>
+              <blog-user-menu
+                :username="username"
+                :avatar="userAvatar"
+                @login="showUserLogin"
+                @logout="logout"
+              />
             </div>
           </div>
         </div>
       </div>
     </transition>
 
-    <el-container type="flex" direction="horizontal" :style="{ paddingTop: navbarHeight + 'px' }">
+    <div class="gp-blog-main" :style="{ paddingTop: navbarHeight + 'px' }">
       <!-- <transition name="fade-transform" mode="out-in"> -->
       <keep-alive>
         <router-view :key="keyMenuPath"></router-view>
       </keep-alive>
       <!-- </transition> -->
-    </el-container>
+    </div>
 
     <!--    <div href="#" class="cd-top" v-if="isMobile" @click="toTop()"></div>-->
     <!-- 回到顶部按钮 -->
@@ -228,16 +147,20 @@
             <!-- 月亮按钮 -->
             <i v-else class="el-icon-moon" aria-hidden="true" @click="changeColor()"></i>
           </div>
-          <div>
+          <div :title="mouseAnimation ? '关闭点击飘字' : '开启点击飘字'">
             <i class="el-icon-magic-stick" aria-hidden="true" @click="changeMouseAnimation()"></i>
+          </div>
+          <div title="阅读进度复位">
+            <i class="el-icon-reading" aria-hidden="true" @click="toTop()"></i>
           </div>
         </div>
       </el-popover>
     </div>
 
-    <!-- 点击动画 -->
-    <canvas v-if="mouseAnimation" id="mousedown" style="position:fixed;left:0;top:0;pointer-events:none;z-index: 1000">
-    </canvas>
+    <!-- 阅读进度条（站点特色，替代 anime 粒子） -->
+    <div class="gp-read-progress" aria-hidden="true">
+      <div class="gp-read-progress__bar" :style="{ width: readProgress + '%' }"></div>
+    </div>
 
     <!-- <canvas id="search-canvas" class="search-canvas"></canvas> -->
 
@@ -255,17 +178,21 @@
 </template>
 
 <script>
-import mousedown from '@/utils/mousedown';
 import { mapState } from 'vuex'
 import LoginSignup from '@/components/LoginSignup/index'
-import { getGpWebTitleInfo, selectGpArticlesListByKeyWords, getMostViewedArticle } from '@/api/geekplus/geekplus'
+import BlogNavMenu from '@/components/BlogNavMenu/index'
+import BlogUserMenu from '@/components/BlogUserMenu/index'
+import { getGpWebTitleInfo, selectGpArticlesListByKeyWords, getMostViewedArticle, getClickTextWords } from '@/api/geekplus/geekplus'
+import { enableClickFloat, disableClickFloat, setClickFloatWords } from '@/utils/clickFloat'
 import { runWhenIdle, cancelIdle } from '@/utils/deferRequest'
 // import '@/utils/TweenMax.min.js';
 // import '@/utils/paopaoScript.js';
 
 export default {
   components: {
-    LoginSignup
+    LoginSignup,
+    BlogNavMenu,
+    BlogUserMenu
   },
   data() {
     return {
@@ -274,6 +201,7 @@ export default {
       toolButton: false,
       hoverEnter: false,
       mouseAnimation: false,
+      readProgress: 0,
       scrollTop: 0,
       mobile: false,//根据网页宽度判断是否是移动端
       windowHeight: 0,
@@ -283,8 +211,6 @@ export default {
       showSearch: false,
       showSearchTips: false,
       showLoginSignup: false, //显示登录注册
-      openIndex: null, // 当前展开的菜单索引
-      openIndexes: [], // 使用数组存储所有展开的菜单索引
       navbarHeight: 60,//默认导航栏高度
       searchQuery: "",// 搜索关键词
       navMenuLit: [
@@ -335,9 +261,10 @@ export default {
     this.updateScreenSize();
   },
   mounted() {
-    // this.$nextTick(() => {});
-    if (this.mouseAnimation) {
-      mousedown();
+    const savedFloat = localStorage.getItem('gp-click-float')
+    if (savedFloat === '1') {
+      this.mouseAnimation = true
+      this.bootClickFloat()
     }
 
     window.addEventListener("scroll", this.onScrollPage);
@@ -359,6 +286,7 @@ export default {
   },
   destroyed() {
     cancelIdle(this._hotIdleId);
+    disableClickFloat();
     window.removeEventListener("scroll", this.onScrollPage);
     window.removeEventListener('resize', this.updateScreenSize);
   },
@@ -456,18 +384,9 @@ export default {
       this.showSearchTips = true;
       // this.$refs.headerSearchSelect && this.$refs.headerSearchSelect.focus()
     },
-    toggleItem(index) {
-      // this.openIndex = this.openIndex === index ? null : index;
-      if (this.openIndexes.includes(index)) {
-        // 如果已经展开，则关闭
-        this.openIndexes = this.openIndexes.filter((i) => i !== index);
-      } else {
-        // 否则展开
-        this.openIndexes.push(index);
-      }
-      // if (item.children) { // 只处理有子菜单的项
-      //     item.isOpen = !item.isOpen; // 切换 isOpen 状态
-      // }
+    /** BlogNavMenu 导航后关闭抽屉（组件内已 push 路由） */
+    onNavMenuNavigate() {
+      this.isDrawerOpen = false;
     },
     //菜单标题转换，Tina记一个属性isOpen
     menuToNavMenu(menus) {
@@ -476,12 +395,6 @@ export default {
           this.$set(item, 'isOpen', false)
         }
       })
-      // const finalMenu = menus.map(item => {
-      //     if(item.children && item.children.length > 0){
-      //         return { ...item, isOpen: false };
-      //     }
-      //     return item;
-      // });
       return menus;
     },
 
@@ -651,14 +564,31 @@ export default {
     },
     onScrollPage() {
       this.scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+      this.updateReadProgress();
     },
     changeMouseAnimation() {
-      this.mouseAnimation = !this.mouseAnimation;
+      this.mouseAnimation = !this.mouseAnimation
+      localStorage.setItem('gp-click-float', this.mouseAnimation ? '1' : '0')
       if (this.mouseAnimation) {
-        this.$nextTick(() => {
-          mousedown();
-        });
+        this.bootClickFloat()
+        this.$message && this.$message.success('已开启点击飘字')
+      } else {
+        disableClickFloat()
+        this.$message && this.$message.info('已关闭点击飘字')
       }
+    },
+    bootClickFloat() {
+      enableClickFloat()
+      getClickTextWords().then((res) => {
+        const list = (res && res.data) || []
+        setClickFloatWords(list)
+      }).catch(() => {})
+    },
+    updateReadProgress() {
+      const doc = document.documentElement
+      const scrollTop = window.pageYOffset || doc.scrollTop || 0
+      const height = (doc.scrollHeight || 0) - (window.innerHeight || 1)
+      this.readProgress = height > 0 ? Math.min(100, Math.round((scrollTop / height) * 100)) : 0
     },
     updateScreenSize() {
       this.windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight; // 高
@@ -701,6 +631,10 @@ export default {
 .web-title {
   font: caption;
   font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: min(28vw, 180px);
 }
 
 /* 顶部滑动抽屉搜索区域 */
@@ -730,6 +664,7 @@ export default {
   animation: slide-top 0.15s both;
 }
 
+/* 搜索抽屉：与顶栏/侧栏同一表面，避免旧硬阴影割裂 */
 .search-drawer {
   background: transparent;
   flex-direction: column;
@@ -741,9 +676,10 @@ export default {
   width: calc(-20px + 100vw);
   max-height: calc(-5em + 100vh);
   max-width: 580px;
-  border-radius: 4px;
-  background: var(--navbarBackground);
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+  border-radius: var(--gp-surface-radius, 12px);
+  background: var(--gp-surface-bg, var(--navbarBackground));
+  border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
+  box-shadow: var(--gp-surface-shadow-hover, 0 6px 18px rgba(15, 23, 42, 0.06));
 }
 
 .search-drawer.open {
@@ -797,6 +733,7 @@ export default {
   z-index: 9999;
 }
 
+/* 移动端抽屉导航：对齐管理端侧栏表面 Token */
 .drawer {
   position: fixed;
   top: 0;
@@ -804,13 +741,15 @@ export default {
   left: 0;
   width: 225px;
   height: 100%;
-  background: var(--color-background);
+  background: var(--gp-surface-bg, var(--color-background));
   transform: translateX(-100%);
   transition: transform 0.4s ease;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--gp-nav-shadow, 2px 0 8px rgba(0, 0, 0, 0.2));
+  border-right: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
   z-index: 10000;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .drawer.open {
@@ -821,8 +760,8 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: var(--navbarBackground);
-  border-bottom: 1px solid var(--border-color, #ddd);
+  background: var(--gp-surface-bg, var(--navbarBackground));
+  border-bottom: 1px solid var(--gp-surface-border, var(--border-color, #ddd));
 }
 
 .drawer-header-title {
@@ -901,9 +840,11 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 10px;
-  border-radius: 3px;
-  background: var(--navbarBackground);
-  /* #f1f1f0 */
+  border-radius: 8px;
+  background: var(--gp-surface-bg, var(--navbarBackground, #f1f1f0));
+  &:hover {
+    background: #dfdfdf88;
+  }
 }
 
 .menu-icon {
@@ -938,10 +879,9 @@ export default {
 .submenu li {
   margin: 8px 0;
   padding: 0;
-  background: var(--color-background, #f1f1f0);
+  /* background: var(--color-background, #f1f1f0); */
   height: 35px;
   line-height: 35px;
-  border-radius: 3px;
 }
 
 .arrow {
@@ -949,6 +889,14 @@ export default {
 }
 
 /* 左侧滑动抽屉导航菜单结束 */
+
+/* 主内容区：替代 el-container，仅负责顶栏占位 */
+.gp-blog-main {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 40vh;
+}
 
 /* 主页面才是区域 */
 .main-container {
@@ -961,25 +909,43 @@ export default {
   height: auto;
   line-height: 60px;
   color: var(--navbarFont);
-  background: var(--navbarBackground);
+  background: transparent;
   position: fixed;
   z-index: 100;
   user-select: none;
   transition: all 0.3s ease-in-out;
   padding: 0 14px;
+  /* blur 挪到 __bg，避免成为 fixed 下拉的 containing block */
+  border-bottom: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
+  overflow: visible;
+}
+
+.navbar-content__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--gp-surface-bg, var(--navbarBackground));
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 0 solid rgba(255, 255, 255, .07);
-  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
-  -webkit-box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--gp-nav-shadow, 0 4px 18px rgba(15, 23, 42, 0.06));
+  -webkit-box-shadow: var(--gp-nav-shadow, 0 4px 18px rgba(15, 23, 42, 0.06));
+}
+
+.navbar-content > .navbar-container {
+  position: relative;
+  z-index: 1;
 }
 
 .navbar-content.enter {
   color: var(--navbarFont);
+}
+
+.navbar-content.enter .navbar-content__bg {
   box-shadow: 0 1px 3px 0 rgba(0, 34, 77, 0.05);
 }
 
-.navbar-content.hoverEnter {
+.navbar-content.hoverEnter .navbar-content__bg {
   background: var(--navbarBackgroundHover);
   box-shadow: 0 1px 3px 0 rgba(0, 34, 77, 0.05);
 }
@@ -992,6 +958,8 @@ export default {
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 .navbar-mobile-menu {
@@ -1002,6 +970,7 @@ export default {
   flex-wrap: nowrap;
   align-items: center;
   justify-items: center;
+  flex-shrink: 0;
 }
 
 .mobile-menu-item {
@@ -1017,11 +986,16 @@ export default {
   flex-wrap: nowrap;
   align-items: center;
   justify-items: center;
+  /* 右侧操作区不参与挤压，避免菜单把头像挤换行 */
+  flex-shrink: 0;
 }
 
 .header-menu-item {
   margin: 0 10px;
   position: relative;
+  /* 新增居中显示 */
+  text-align: center;
+  line-height: 1; /* 新增垂直居中显示,lineHeight为1表示行高为1 */
 }
 
 .menu-btn {
@@ -1030,15 +1004,31 @@ export default {
   display: grid;
 }
 
+/* 顶栏三区：品牌 | 可收缩菜单 | 操作；菜单过多由 BlogNavMenu 溢出折叠 */
+.navbar-container.flex-between {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.navbar-container.flex-between > a {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
 .desktop-menu-container {
-  flex: 1 0 auto;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .scroll-menu {
-  margin: 0 0 0 0;
+  margin: 0;
   display: flex;
   justify-content: flex-end;
   padding: 0;
+  flex-wrap: nowrap;
 }
 
 .scroll-menu li {
@@ -1049,6 +1039,7 @@ export default {
   line-height: 60px;
   position: relative;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .scroll-menu li:hover .my-menu span {
@@ -1191,6 +1182,24 @@ export default {
 
 .my-setting i:hover {
   color: var(--theme-color);
+}
+
+.gp-read-progress {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 3px;
+  z-index: 1300;
+  pointer-events: none;
+  background: transparent;
+}
+
+.gp-read-progress__bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--theme-color-soft, #9aafb1), var(--theme-color, #6e8b8e));
+  transition: width 0.12s ease-out;
 }
 
 /* .cd-top {

@@ -8,7 +8,7 @@
 </template>
 <script>
 const version = require('element-ui/package.json').version // element-ui version from node_modules
-const ORIGINAL_THEME = '#0badb6' // default color
+const ORIGINAL_THEME = '#6e8b8e' // 默认雾霾青绿（莫兰迪）
 
 export default {
   name: 'App',
@@ -23,11 +23,13 @@ export default {
     // this.preloadLibraries();
     console.log('当前时间：%O', new Date());
     console.log("%c"+window.location.host, "background-image:-webkit-gradient( linear, left top, right top, color-stop(0, #f22), color-stop(0.15, #f2f), color-stop(0.3, #22f), color-stop(0.45, #2ff), color-stop(0.6, #25e),color-stop(0.75, #4f2), color-stop(0.9, #f2f), color-stop(1, #f22) );color:transparent;-webkit-background-clip: text;font-size:2em;")
-    // if(this.storageThemeColor) {
-    //   this.themeColor = this.storageThemeColor;
-      //把更换的颜色设置为全局css变量
-      // document.documentElement.style.setProperty('--theme-color', this.storageThemeColor);
-    // }
+    // 旧版亮青主题迁移到莫兰迪默认色
+    const storedTheme = localStorage.getItem('themeColor')
+    if (!storedTheme || /^#0badb6$/i.test(storedTheme) || /^#13c2c2$/i.test(storedTheme)) {
+      localStorage.setItem('themeColor', ORIGINAL_THEME)
+      this.$store && this.$store.dispatch('settings/changeSetting', { key: 'themeColor', value: ORIGINAL_THEME })
+    }
+    document.documentElement.style.setProperty('--theme-color', localStorage.getItem('themeColor') || ORIGINAL_THEME)
     var key = "theme-mode";
     const themeMode = localStorage.getItem(key);//"light"
     if (themeMode) {

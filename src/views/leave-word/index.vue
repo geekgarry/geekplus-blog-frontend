@@ -1,95 +1,110 @@
 <template>
-  <div class="container-fluid">
-    <el-container class="container" type="flex" direction="vertical">
-      <el-main>
-        <el-row :gutter="10" justify="center">
-          <el-col :xs="24" :sm="24" :md="17" :lg="17" :xl="17">
-            <div class="leave-word-container is-always-shadow">
-              <div class="text-title-container">
-                <span class="text-title-plus typing">给我留言</span>
-              </div>
-              <div class="skeleton-wrapper" v-if="loading"></div>
-              <template v-else>
-                <comment-reply :hasLogin="!$common.isEmpty(username)" :comments="leaveWords" :isArticle="false"
-                  @comment="sendComment"></comment-reply>
-              </template>
-              <plus-pager @pagination="getAllWebComments" :total="total" :page.sync="queryParams.pageNum"
-                :limit="queryParams.pageSize">
-              </plus-pager>
-              <br />
-              <div class="ads-container">
-                <Adsense data-ad-client="ca-pub-7291512442295477" data-ad-slot="3776635819">
-                </Adsense>
+  <!-- 页面骨架：gp-page 替代 el-container/el-main/el-row/el-col -->
+  <div class="gp-page container-fluid">
+    <div class="gp-page__inner container">
+      <div class="gp-page__main">
+        <div class="gp-row">
+          <div class="gp-col-24 gp-col-lg-17 gp-col-md-17 gp-col-sm-17 gp-col-xs-24">
+            <div class="leave-word-container">
+              <header class="lw-hero">
+                <p class="lw-hero__eyebrow">Guestbook</p>
+                <h1 class="lw-hero__title">给我留言</h1>
+                <p class="lw-hero__lead">
+                  想说的话、路过的脚印、纠错或点子，都欢迎留下。语气随意就好，这里偏安静一点。
+                </p>
+              </header>
+              <div class="lw-body">
+                <div class="skeleton-wrapper" v-if="loading"></div>
+                <template v-else>
+                  <comment-reply :hasLogin="!$common.isEmpty(username)" :comments="leaveWords" :isArticle="false"
+                    @comment="sendComment"></comment-reply>
+                </template>
+                <plus-pager @pagination="getAllWebComments" :total="total" :page.sync="queryParams.pageNum"
+                  :limit="queryParams.pageSize">
+                </plus-pager>
+                <div class="ads-container lw-ads">
+                  <Adsense data-ad-client="ca-pub-7291512442295477" data-ad-slot="3776635819">
+                  </Adsense>
+                </div>
               </div>
             </div>
-          </el-col>
-          <el-col :xs="24" :sm="24" :md="7" :lg="7" :xl="7">
+          </div>
+          <div class="gp-col-24 gp-col-lg-7 gp-col-md-7 gp-col-sm-7 gp-col-xs-24">
             <div class="blog-side-container">
-              <el-card class="profile-card">
-                <div class="user-info">
-                  <img :src="userAvatar" alt="User Avatar" class="user-avatar">
-                  <div class="user-details">
-                    <h2 class="user-name">{{ userName }}</h2>
-                    <p class="user-description">{{ userDescription }}</p>
-                    <div class="user-stats">
-                      <span class="stat"><i class="el-icon-s-opportunity"></i> {{ categoryCount
-                      }}</span>
-                      <!-- <span class="stat"><i class="el-icon-document"></i> {{ articleCount }}</span> -->
-                      <span class="stat"><i class="el-icon-chat-line-square"></i> {{ commentCount }}</span>
+              <div class="gp-surface-card profile-card">
+                <div class="gp-surface-card__body">
+                  <div class="user-info">
+                    <img :src="userAvatar" alt="User Avatar" class="user-avatar">
+                    <div class="user-details">
+                      <h2 class="user-name">{{ userName }}</h2>
+                      <p class="user-description">{{ userDescription }}</p>
+                      <div class="user-stats">
+                        <span class="stat"><i class="el-icon-s-opportunity"></i> {{ categoryCount
+                        }}</span>
+                        <span class="stat"><i class="el-icon-chat-line-square"></i> {{ commentCount }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </el-card>
+              </div>
 
-              <el-card class="box-card">
-                <div slot="header" class="clearfix">
+              <div class="gp-surface-card box-card">
+                <div class="gp-surface-card__header">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-folder-opened"></i>分类云</span>
-                    <el-button type="text" class="more-button">更多 <i class="el-icon-arrow-right"></i></el-button>
+                    <button type="button" class="more-button">更多 <i class="el-icon-arrow-right"></i></button>
                   </div>
                 </div>
-                <div class="article-category-wrapper">
-                  <span class="article-category" v-for="(cat, index) in allCategoryList" :key="index">
-                    <router-link class="butt" :to="{ path: cat.path }">
-                      {{ cat.categoryName }}
-                    </router-link>
-                  </span>
+                <div class="gp-surface-card__body">
+                  <div class="article-category-wrapper">
+                    <span class="article-category" v-for="(cat, index) in allCategoryList" :key="index">
+                      <router-link class="butt" :to="{ path: cat.path }">
+                        {{ cat.categoryName }}
+                      </router-link>
+                    </span>
+                  </div>
                 </div>
-              </el-card>
+              </div>
 
-              <el-card class="box-card">
-                <Adsense data-ad-client="ca-pub-7291512442295477" data-ad-slot="1460930833">
-                </Adsense>
-              </el-card>
+              <div class="gp-surface-card box-card">
+                <div class="gp-surface-card__body">
+                  <Adsense data-ad-client="ca-pub-7291512442295477" data-ad-slot="1460930833">
+                  </Adsense>
+                </div>
+              </div>
 
-              <el-card class="box-card" :class="{ 'skeleton-loading': otherLoading }">
-                <div slot="header" class="clearfix">
+              <div class="gp-surface-card box-card" :class="{ 'skeleton-loading': otherLoading }">
+                <div class="gp-surface-card__header">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-data-board"></i>推荐文章</span>
                   </div>
                 </div>
-                <div class="recommend-article-container">
-                  <div v-for="article in recommendedArticles" :key="article.id" class="recommended-article">
-                    <router-link :to="`/article/${article.id}`">{{ article.articleTitle }}</router-link>
+                <div class="gp-surface-card__body">
+                  <div class="recommend-article-container">
+                    <div v-for="article in recommendedArticles" :key="article.id" class="recommended-article">
+                      <router-link :to="`/article/${article.id}`">{{ article.articleTitle }}</router-link>
+                    </div>
                   </div>
                 </div>
-              </el-card>
+              </div>
 
-              <el-card class="box-card" :class="{ 'skeleton-loading': otherLoading }">
-                <div slot="header" class="clearfix">
+              <div class="gp-surface-card box-card" :class="{ 'skeleton-loading': otherLoading }">
+                <div class="gp-surface-card__header">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-data-board"></i>网站公告</span>
                   </div>
                 </div>
-                <div class="announcement">
-                  <span v-html="oneNewNotice.noticeContent || '小站初建，欢迎来访~'"></span>
+                <div class="gp-surface-card__body">
+                  <div class="announcement">
+                    <span v-html="oneNewNotice.noticeContent || '小站初建，欢迎来访~'"></span>
+                  </div>
                 </div>
-              </el-card>
+              </div>
             </div>
-          </el-col>
-        </el-row>
-      </el-main>
-    </el-container>
+          </div>
+        </div>
+      </div>
+    </div>
     <transition name="el-fade-in-linear">
       <plus-footer></plus-footer>
     </transition>
@@ -278,121 +293,53 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-/* 给我留言页面 */
 .leave-word-container {
   overflow: hidden;
-  border-radius: 4px;
-  background-color: var(--background-1, #303133);
-  margin-bottom: 10px;
+  border-radius: var(--gp-surface-radius, 14px);
+  background: var(--gp-surface-bg, var(--background-1));
+  border: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.06));
+  box-shadow: var(--gp-surface-shadow);
+  margin-bottom: 16px;
 }
 
-.text-title-container {
-  width: 100%;
-  height: 32px;
-  line-height: 32px;
-  text-align: center;
-  margin-bottom: 5px;
+.lw-hero {
+  padding: 28px 22px 20px;
+  background:
+    radial-gradient(560px 200px at 12% -10%, rgba(154, 175, 177, 0.2), transparent 58%),
+    radial-gradient(420px 160px at 95% 30%, rgba(196, 184, 174, 0.18), transparent 55%);
+  border-bottom: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.06));
 }
 
-.text-title-plus {
-  margin: 3px auto;
+.lw-hero__eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--theme-color, #6e8b8e);
 }
 
-.text-flash {
-  background: linear-gradient(90deg, black 0%, white 50%, black 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-animation: flashNone 3s linear infinite;
-  animation: flashNone 3s linear infinite;
+.lw-hero__title {
+  margin: 0 0 10px;
+  font-size: clamp(1.45rem, 2.2vw, 1.8rem);
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  color: var(--fontColor);
 }
 
-@keyframes flashNone {
-  0% {}
-
-  100% {
-    transform: translateX(100%);
-  }
+.lw-hero__lead {
+  margin: 0;
+  max-width: 40em;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--font-color, #5c5854);
 }
 
-.emit-light {
-  color: var(--font-color, #3d3d3d);
-  font-size: 22px;
-  -webkit-animation: shining 0.5s alternate infinite;
-  animation: shining 0.5s alternate infinite;
+.lw-body {
+  padding: 16px 18px 20px;
 }
 
-@keyframes shining {
-  from {
-    text-shadow: 0 0 10px lightblue, 0 0 20px lightblue, 0 0 30px lightblue, 0 0 40px skyblue, 0 0 50px skyblue, 0 0 60px skyblue;
-  }
-
-  to {
-    text-shadow: 0 0 5px lightblue, 0 0 10px lightblue, 0 0 15px lightblue, 0 0 20px skyblue, 0 0 25px skyblue, 0 0 30px skyblue;
-  }
-}
-
-.text-carousel {
-  letter-spacing: 4px;
-  font-size: 20px;
-  -webkit-text-fill-color: transparent;
-  -moz-text-fill-color: transparent;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-background-size: 200% 100%;
-  background-size: 200% 100%;
-  background-image: -webkit-linear-gradient(to right, #147B96, #E6D205 25%, #147B96 50%, #E6D205 75%, #147B96);
-  background: linear-gradient(to right, #147B96, #E6D205 25%, #147B96 50%, #E6D205 75%, #147B96);
-  -webkit-animation: maskedAnimation 4s infinite linear;
-  animation: maskedAnimation 4s infinite linear;
-}
-
-@keyframes maskedAnimation {
-  0% {
-    background-position: 0 0;
-  }
-
-  100% {
-    background-position: -100% 0;
-  }
-}
-
-.typing {
-  display: block;
-  color: var(--fontColor, black);
-  font-size: 18px;
-  width: 100px;
-  height: 26px;
-  line-height: 26px;
-  border-right: 1px solid transparent;
-  animation: typing 3s steps(42, end) forwards, blink-caret .8s step-end infinite;
-  font-family: Consolas, Monaco;
-  word-break: break-all;
-  overflow: hidden;
-  letter-spacing: 4px;
-}
-
-/* 打印效果 */
-@keyframes typing {
-  from {
-    width: 0;
-  }
-
-  to {
-    width: 100px;
-  }
-}
-
-/* 光标 */
-@keyframes blink-caret {
-
-  from,
-  to {
-    border-color: transparent;
-  }
-
-  50% {
-    border-color: currentColor;
-  }
+.lw-ads {
+  margin-top: 16px;
 }
 
 .user-info {
@@ -402,50 +349,68 @@ export default {
 }
 
 .user-avatar {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  margin-right: 20px;
+  margin-right: 16px;
+  object-fit: cover;
 }
 
 .user-details {
   display: flex;
   flex-direction: column;
-  flex-wrap: nowrap;
 }
 
 .user-name {
   margin: 0;
-  font-size: 1.4em;
+  font-size: 1.35em;
+  color: var(--fontColor);
 }
 
 .user-description {
   margin: 5px 0;
-  color: #888;
+  color: var(--muted-1-color, #8a8580);
+  font-size: 13px;
 }
 
 .user-stats {
   display: flex;
-
+  gap: 14px;
 }
 
 .stat {
-  margin-right: 20px;
-  color: #666;
+  color: var(--font-color, #5c5854);
+  font-size: 13px;
 }
 
-.article-category a{
+.article-category a {
   margin-right: 10px;
-  /* Adjust spacing as needed */
   margin-bottom: 10px;
-  /* Add vertical margin */
   cursor: pointer;
 }
 
 .recommend-article-container {
   .recommended-article {
-    line-height: 20px;
-    margin-bottom: 4px;
+    line-height: 1.5;
+    margin-bottom: 8px;
+
+    a {
+      color: var(--font-color, #5c5854);
+      text-decoration: none;
+
+      &:hover {
+        color: var(--theme-color, #6e8b8e);
+      }
+    }
+  }
+}
+
+@media screen and (min-width: 1920px) {
+  .lw-hero {
+    padding: 36px 28px 24px;
+  }
+  .lw-body {
+    padding: 20px 26px 24px;
   }
 }
 </style>

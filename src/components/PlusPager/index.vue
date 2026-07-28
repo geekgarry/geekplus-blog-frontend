@@ -120,7 +120,7 @@ export default {
 
 <style lang="scss" scoped>
 .navigation_pager {
-  padding: 2px 5px;
+  padding: 5px;
 }
 
 .pagination {

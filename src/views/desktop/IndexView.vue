@@ -1,6 +1,7 @@
 <template>
-  <div class="container-fluid">
-    <el-container class="container" direction="vertical">
+  <!-- 页面骨架：gp-page 替代 el-container/el-main；内层专题卡片栅格仍用 el-row -->
+  <div class="gp-page container-fluid">
+    <div class="gp-page__inner container">
       <!-- <div class="app-home">
           <div class="wave-container">
                   <div class="wave"></div>
@@ -25,9 +26,9 @@
                   </el-col>
               </el-row>
           </el-main> -->
-      <el-main>
-        <el-row :gutter="10">
-          <el-col :xs="24" :sm="24" :md="17" :lg="17" :xl="17">
+      <div class="gp-page__main">
+        <div class="gp-row">
+          <div class="gp-col-24 gp-col-xl-17 gp-col-lg-17 gp-col-md-17 gp-col-sm-24 gp-col-xs-24">
             <!--
               首页轮播：使用自研 PlusCarousel（桌面支持滚轮 + 鼠标拖拽）
               若需 Element UI 原版 el-carousel，改用 @/components/ElCarouselBanner
@@ -48,9 +49,12 @@
               <span class="welcome-message">欢迎光临! 体验AI助手: <a href="/chat" target="_blank">点击直达</a></span>
             </div>
             <div class="special-recommend-container" v-if="sixSpecialArticles && sixSpecialArticles.length > 0">
-              <el-row :gutter="12">
-                <el-col :xs="12" :sm="8" :md="8" :lg="8" :xl="8" v-for="(item, index) in sixSpecialArticles"
-                  :key="index">
+              <div class="gp-row special-recommend-row">
+                <div
+                  class="gp-col-24 gp-special-col"
+                  v-for="(item, index) in sixSpecialArticles"
+                  :key="index"
+                >
                   <div class="special-article-wrapper is-always-shadow" :class="{ 'skeleton-loading': otherLoading }">
                     <div class="special-article-content">
                       <div class="special-article-cover" @click="navToArticle(item.id)">
@@ -66,8 +70,8 @@
                       <a href="javascript:;" @click="navToArticle(item.id)">{{ item.articleTitle }}</a>
                     </div>
                   </div>
-                </el-col>
-              </el-row>
+                </div>
+              </div>
             </div>
             <!-- <div class="tabs-container">
               <ul class="tabs">
@@ -141,105 +145,109 @@
               :limit="queryParams.pageSize"></plus-pager>
             <br />
             <!-- <el-button type="text" class="more-button"> > MORE</el-button> -->
-          </el-col>
+          </div>
 
-          <el-col :xs="24" :sm="24" :md="7" :lg="7" :xl="7">
-            <el-card class="profile-card">
-              <div class="profile-image-wrapper"> <!-- Wrapper for circular image -->
-                <img :src="profileCover" alt="Profile Image" class="profile-image" />
+          <div class="gp-col-24 gp-col-xl-7 gp-col-lg-7 gp-col-md-7 gp-col-sm-24 gp-col-xs-24">
+            <!-- 侧栏卡片：第一批去掉 el-card，改用 gp-surface-card -->
+            <div class="gp-surface-card profile-card">
+              <div class="gp-surface-card__body">
+                <div class="profile-image-wrapper">
+                  <img :src="profileCover" alt="Profile Image" class="profile-image" />
+                </div>
+                <div class="stats">
+                  <p>文章: {{ articleCount }}</p>
+                  <p>分类: {{ categoryCount }}</p>
+                  <p>访问量: {{ abbreviateNumber(visitCount) }}</p>
+                </div>
+                <div style="text-align: center;">
+                  <button class="butt my-github" @click="goToExternalLink('https://github.com/geekgarry')"><svg-icon icon-class="github"></svg-icon></button>
+                </div>
               </div>
-              <!-- <h2 style="text-align: center;">GeekPlus</h2> -->
-              <div class="stats">
-                <p>文章: {{ articleCount }}</p>
-                <p>分类: {{ categoryCount }}</p>
-                <p>访问量: {{ abbreviateNumber(visitCount) }}</p>
-              </div>
-              <div style="text-align: center;">
-                <button class="butt my-github" @click="goToExternalLink('https://github.com/geekgarry')"><svg-icon icon-class="github"></svg-icon></button>
-              </div>
-            </el-card>
+            </div>
 
-            <el-card class="box-card" :class="{ 'skeleton-loading': otherLoading }">
-              <div slot="header" class="clearfix">
+            <div class="gp-surface-card box-card" :class="{ 'skeleton-loading': otherLoading }">
+              <div class="gp-surface-card__header">
                 <div class="category-section">
                   <span class="category-title"><i class="el-icon-data-board"></i>网站公告</span>
                 </div>
               </div>
-              <div class="web-notice-container">
-                <span v-html="oneNewNotice.noticeContent"></span>
-                <!-- 欢迎来到我的网站！ -->
+              <div class="gp-surface-card__body">
+                <div class="web-notice-container">
+                  <span v-html="oneNewNotice.noticeContent"></span>
+                </div>
               </div>
-            </el-card>
+            </div>
 
-            <el-card class="box-card">
-              <!-- <div slot="header" class="clearfix"><span>日历</span> </div> -->
-              <div>
-                <!-- <el-calendar v-model="calendarValue"></el-calendar> -->
+            <div class="gp-surface-card box-card">
+              <div class="gp-surface-card__body">
                 <my-calendar></my-calendar>
               </div>
-            </el-card>
+            </div>
 
-            <el-card class="box-card">
-              <div slot="header" class="clearfix">
+            <div class="gp-surface-card box-card">
+              <div class="gp-surface-card__header">
                 <div class="category-section">
                   <span class="category-title"><i class="el-icon-search"></i>搜索</span>
                 </div>
               </div>
-              <el-input placeholder="搜索文章" v-model="searchQuery" @keyup.enter.native="searchArticles" clearable>
-                <el-button slot="append" icon="el-icon-search" @click="searchArticles"></el-button>
-              </el-input>
-            </el-card>
+              <div class="gp-surface-card__body">
+                <!-- 侧栏搜索：gp-input-group 替代 el-input append 模式 -->
+                <div class="gp-input-group">
+                  <input class="gp-input" placeholder="搜索文章" v-model="searchQuery" @keyup.enter="searchArticles">
+                  <button type="button" class="gp-btn gp-btn--append" @click="searchArticles"><i class="el-icon-search"></i></button>
+                </div>
+              </div>
+            </div>
 
-            <el-card class="box-card" :class="{ 'skeleton-loading': otherLoading }">
-              <div slot="header" class="clearfix">
+            <div class="gp-surface-card box-card" :class="{ 'skeleton-loading': otherLoading }">
+              <div class="gp-surface-card__header">
                 <div class="category-section">
                   <span class="category-title"><i class="el-icon-data-board"></i>点击热门</span>
                 </div>
               </div>
-              <div class="article-card-container">
-                <template v-for="(article, index) in hotArticleList">
-                  <div class="top-article-card" :key="index" v-if="index == 0">
-                    <div class="top-article-card-cover">
-                      <a class="thumbnail-b" href="javascript:void(0);" v-if="article.indexPicture"
-                        @click="navToArticle(article.id)"
-                        :style="{ backgroundImage: 'url(' + article.indexPicture + ')' }"></a>
-                      <a class="thumbnail-b" href="javascript:void(0);" v-else @click="navToArticle(article.id)"
-                        :style="{ backgroundImage: 'url(' + articleCover + ')' }"></a>
-                      <span class="top-article-card-caption"><router-link :to="'/article/' + article.id">{{
-                        article.articleTitle }}</router-link></span>
-                    </div>
-                  </div>
-                  <div class="article-card-list" :key="article.id" v-else>
-                    <div class="article-card-cover">
-                      <a class="thumbnail-b" href="javascript:void(0);" v-if="article.indexPicture"
-                        @click="navToArticle(article.id)"
-                        :style="{ backgroundImage: 'url(' + article.indexPicture + ')' }"></a>
-                      <a class="thumbnail-b" href="javascript:void(0);" v-else @click="navToArticle(article.id)"
-                        :style="{ backgroundImage: 'url(' + articleCover + ')' }"></a>
-                    </div>
-                    <div class="article-card-detail">
-                      <div class="article-card-detail-title"><router-link :to="'/article/' + article.id">{{
-                        article.articleTitle }}</router-link>
+              <div class="gp-surface-card__body">
+                <div class="article-card-container">
+                  <template v-for="(article, index) in hotArticleList">
+                    <div class="top-article-card" :key="index" v-if="index == 0">
+                      <div class="top-article-card-cover">
+                        <a class="thumbnail-b" href="javascript:void(0);" v-if="article.indexPicture"
+                          @click="navToArticle(article.id)"
+                          :style="{ backgroundImage: 'url(' + article.indexPicture + ')' }"></a>
+                        <a class="thumbnail-b" href="javascript:void(0);" v-else @click="navToArticle(article.id)"
+                          :style="{ backgroundImage: 'url(' + articleCover + ')' }"></a>
+                        <span class="top-article-card-caption"><router-link :to="'/article/' + article.id">{{
+                          article.articleTitle }}</router-link></span>
                       </div>
-                      <div class="article-card-detail-date">{{ dateTimeAgo(article.createTime) }}</div>
                     </div>
-                  </div>
-                </template>
-              </div>
-            </el-card>
-
-            <el-card class="box-card" :class="{ 'skeleton-loading': commentLoading }">
-              <div slot="header" class="clearfix">
-                <div class="category-section">
-                  <span class="category-title"><i class="el-icon-data-board"></i>留言足迹</span>
-                  <el-button type="text" class="more-button" @click="$router.push('/leave-word')">更多 <i
-                      class="el-icon-arrow-right"></i></el-button>
+                    <div class="article-card-list" :key="article.id" v-else>
+                      <div class="article-card-cover">
+                        <a class="thumbnail-b" href="javascript:void(0);" v-if="article.indexPicture"
+                          @click="navToArticle(article.id)"
+                          :style="{ backgroundImage: 'url(' + article.indexPicture + ')' }"></a>
+                        <a class="thumbnail-b" href="javascript:void(0);" v-else @click="navToArticle(article.id)"
+                          :style="{ backgroundImage: 'url(' + articleCover + ')' }"></a>
+                      </div>
+                      <div class="article-card-detail">
+                        <div class="article-card-detail-title"><router-link :to="'/article/' + article.id">{{
+                          article.articleTitle }}</router-link>
+                        </div>
+                        <div class="article-card-detail-date">{{ dateTimeAgo(article.createTime) }}</div>
+                      </div>
+                    </div>
+                  </template>
                 </div>
               </div>
-              <!-- <div v-for="article in recommendedArticles" :key="article.id" class="recommended-article">
-                <router-link :to="`/article/${article.id}`">{{ article.articleTitle }}</router-link>
-              </div> -->
-              <div>
+            </div>
+
+            <div class="gp-surface-card box-card" :class="{ 'skeleton-loading': commentLoading }">
+              <div class="gp-surface-card__header">
+                <div class="category-section">
+                  <span class="category-title"><i class="el-icon-data-board"></i>留言足迹</span>
+                  <button type="button" class="more-button" @click="$router.push('/leave-word')">更多 <i
+                      class="el-icon-arrow-right"></i></button>
+                </div>
+              </div>
+              <div class="gp-surface-card__body">
                 <div class="hot-user-comment" v-for="(item, index) in hotUserComment" :key="index">
                   <div class="user-comment-info">
                     <span class="comment-name">{{ item.name }}</span>
@@ -255,11 +263,11 @@
                   </div>
                 </div>
               </div>
-            </el-card>
-          </el-col>
-        </el-row>
-      </el-main>
-    </el-container>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <transition name="el-fade-in-linear">
       <plus-footer></plus-footer>
     </transition>
@@ -495,11 +503,17 @@ export default {
     selectTab(index) {
       this.currentTab = index; // 设置当前激活的Tab索引
     },
-    //获取首页轮播图
+    //获取首页轮播图：接口失败或空数据时保留本地默认图，避免白屏
     getIndexViewCarousel() {
       this.carouselLoading = true;
       getCarousel().then((res) => {
-        this.carouselList = res.data;
+        const list = res && res.data !== undefined ? res.data : res;
+        if (Array.isArray(list) && list.length) {
+          this.carouselList = list;
+        }
+      }).catch(() => {
+        // 保留 data 里的本地封面
+      }).finally(() => {
         this.carouselLoading = false;
       });
     },
@@ -746,8 +760,7 @@ export default {
 }
 
 .welcome-message a {
-  color: #409eff;
-  /* Element UI's primary color for links */
+  color: var(--theme-color, #6e8b8e);
   text-decoration: none;
   /* Remove underline from link */
 }
@@ -758,7 +771,7 @@ export default {
   /* Make it circular */
   overflow: hidden;
   /* Hide any image overflow */
-  margin: -15px -15px 15px -15px;
+  margin: -18px -18px 0 -18px;
   /* Center the image and add bottom margin */
 }
 
@@ -800,10 +813,10 @@ export default {
 }
 
 .article-card {
-  border-radius: 10px;
-  padding: 14px 16px;
+  border-radius: var(--gp-surface-radius-sm, 10px);
+  padding: var(--gp-surface-padding, 14px 16px);
   margin-bottom: 0;
-  background: var(--background-1);
+  background: var(--gp-surface-bg, var(--background-1));
   color: var(--fontColor);
   display: block;
   width: 100%;
@@ -813,8 +826,8 @@ export default {
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 
   &:hover {
-    border-color: rgba(0, 0, 0, 0.06);
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    border-color: var(--gp-surface-border-hover, rgba(0, 0, 0, 0.06));
+    box-shadow: var(--gp-surface-shadow-hover, 0 6px 18px rgba(15, 23, 42, 0.06));
     transform: translateY(-1px);
   }
 }
@@ -953,6 +966,23 @@ export default {
   margin: 8px 0 14px;
 }
 
+.special-recommend-row {
+  margin-left: -6px;
+  margin-right: -6px;
+}
+
+.gp-special-col {
+  width: 50%;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .gp-special-col {
+    width: 33.333333%;
+  }
+}
+
 .special-article-wrapper {
   margin-bottom: 10px;
   border-radius: 10px;
@@ -1031,14 +1061,6 @@ export default {
   color: #2f6fed;
   text-decoration: none;
   font-weight: 600;
-}
-
-.profile-image-wrapper {
-  width: auto;
-  height: 140px;
-  overflow: hidden;
-  margin: -15px -15px 15px -15px;
-  border-radius: 4px 4px 0 0;
 }
 
 @media screen and (max-width: 992px) {

@@ -1,6 +1,6 @@
 <template>
   <div class="container-fluid">
-    <el-container class="container" type="flex" direction="vertical">
+    <div class="gp-page container">
     <div class="resume-editor-page">
       <!-- Header -->
       <div class="resume-toolbar no-print">
@@ -172,7 +172,7 @@
         </div>
       </el-dialog>
     </div>
-    </el-container>
+    </div>
   </div>
 </template>
 

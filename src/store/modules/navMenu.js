@@ -1,6 +1,6 @@
 /**
  * 前台博客导航菜单（栏目）→ 动态路由
- * 与后台 permission/user 菜单分离：数据来自 listSubParentCategory，挂到 router 的 webApp 下。
+ * 与后台 permission/user 菜单分离：数据来自 listSubParentCategory，挂到 router 的 sideApp 下。
  */
 import { constantRoutes } from "@/router";
 import { listSubParentCategory } from "@/api/geekplus/geekplus";

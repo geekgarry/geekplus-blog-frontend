@@ -1,130 +1,101 @@
 <template>
-  <div class="container-fluid">
-    <el-container class="container" direction="vertical">
-      <!-- <el-main>
-              <el-row :gutter="10">
-                  <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-                      <div class="index-carousel-wrapper">
-                          <el-carousel :interval="3000" arrow="always" ref="slideCarousel">
-                              <el-carousel-item v-for="(item, index) in carouselList" :key="index">
-                                  <img class="carousel-item__img" :src="item.carouselImg" :alt="item.carouselTitle" />
-                                  <div class="carousel-item__caption"><a :href="carouselLink">{{ item.carouselTitle }}</a></div>
-                              </el-carousel-item>
-                          </el-carousel>
-                      </div>
-                  </el-col>
-              </el-row>
-          </el-main> -->
-      <el-main>
-        <el-row :gutter="10">
-          <el-col :xs="24" :sm="24" :md="{ span: 16, offset: 4 }" :lg="{ span: 16, offset: 4 }" :xl="{ span: 12, offset: 6 }">
-            <!--
-              移动端首页轮播：PlusCarousel + touch 跟手滑动
-              Element UI 原版保留在 @/components/ElCarouselBanner，勿直接删除历史能力
-            -->
-            <div class="index-carousel-wrapper" :class="{ 'skeleton-loading': carouselLoading }">
-              <plus-carousel
-                mode="mobile"
-                :items="carouselList"
-                :height="180"
-                :interval="4000"
-                :touch="true"
-                :show-arrows="false"
-                :mouse-drag="false"
-                :mouse-wheel="false"
-              />
-            </div>
-            <div class="welcome">
-              <i class="el-icon-s-opportunity"></i>
-              <span class="welcome-message">欢迎光临! 体验AI助手: <router-link to="/chat">点击直达</router-link></span>
-            </div>
-            <!-- <div class="tabs-container">
-              <ul class="tabs">
-                <li v-for="(cat, index) in sortCategoryList" :key="index" :class="{ active: currentTab === index }" @click="selectTab(index)">
-                  {{ cat.categoryName }}
-                </li>
-              </ul>
-              <div class="tab-content">
-                "cat.categoryName"
+  <div class="gp-page container-fluid">
+    <div class="gp-page__inner container mobile-index">
+      <div class="gp-page__main">
+        <!--
+          移动端首页轮播：PlusCarousel + touch 跟手滑动
+          Element UI 原版保留在 @/components/ElCarouselBanner，勿直接删除历史能力
+        -->
+        <div class="index-carousel-wrapper" :class="{ 'skeleton-loading': carouselLoading }">
+          <plus-carousel
+            mode="mobile"
+            :items="carouselList"
+            :height="180"
+            :interval="4000"
+            :touch="true"
+            :show-arrows="false"
+            :mouse-drag="false"
+            :mouse-wheel="false"
+          />
+        </div>
+        <div class="welcome">
+          <i class="el-icon-s-opportunity"></i>
+          <span class="welcome-message">欢迎光临! 体验AI助手: <router-link to="/chat">点击直达</router-link></span>
+        </div>
+
+        <div class="gp-tabs">
+          <div class="gp-tabs__nav" role="tablist">
+            <button
+              v-for="(cat, index) in sortCategoryList"
+              :key="index"
+              type="button"
+              class="gp-tabs__item"
+              :class="{ 'is-active': activeName === cat.pathName }"
+              @click="selectMobileTab(cat)"
+            >{{ cat.categoryName }}</button>
+          </div>
+          <div class="gp-tabs__panel">
+            <div class="index-blog-post" ref="articleListContainer" v-pull-refresh="onPullRefresh" v-infinite-scroll="onInfiniteScroll">
+              <div v-if="isPullingDown" class="refresh-indicator">
+                <span v-if="pullDownDistance < 50">下拉刷新</span>
+                <span v-else>释放刷新</span>
               </div>
-            </div> -->
-            <el-tabs class="my-tabs-plus" v-model="activeName" @tab-click="handleClick">
-              <el-tab-pane v-for="(cat, index) in sortCategoryList" :key="index" :label="cat.categoryName" :name="cat.pathName">
-                <div class="index-blog-post" ref="articleListContainer" v-pull-refresh="onPullRefresh" v-infinite-scroll="onInfiniteScroll">
-                  <div v-if="isPullingDown" class="refresh-indicator">
-                    <span v-if="pullDownDistance < 50">下拉刷新</span>
-                    <span v-else>释放刷新</span>
-                  </div>
-                  <div class="article-list">
-                    <div v-for="(article, index) in articlesList" :key="index" class="article-card is-always-shadow"
-                      :class="{ 'skeleton-loading': loading }">
-                      <div class="article-content">
-                        <div class="article-content-wrapper">
-                          <h3 class="article-title"><a href="javascript:void(0);"
-                              @click="$router.push({ path: '/article/' + article.id })">{{ article.articleTitle }}</a></h3>
-                          <div class="article-info">
-                            <p class="article-summary">{{ article.abstractText }}</p>
-                          </div>
-                        </div>
-                        <div class="article-cover">
-                          <router-link
-                            class="article-cover-link"
-                            :to="'/article/' + article.id"
-                          >
-                            <img
-                              class="article-image"
-                              :src="article.indexPicture || require('@/assets/images/cover1.jpeg')"
-                              :alt="article.articleTitle"
-                              loading="lazy"
-                            >
-                          </router-link>
-                        </div>
-                      </div>
-                      <div class="article-footer">
-                        <a class="article-author-a" href="javascript:void(0);">
-                          <img class="author-avatar" :src="article.authorAvatar || userAvatar" :alt="article.authorName">
-                        </a>
-                        <span class="author-name hidden-xs-only">{{ article.authorName }}</span>
-                        <span v-for="tag in article.tags" :key="tag.tagName" class="article-tag">
-                          <router-link class="butt" :to="{ path: '/search', query: { tagName: tag.tagName } }">#{{ tag.tagName
-                            }}</router-link>
-                        </span>
-                        <span class="view-count">
-                          <i class="el-icon-view"></i> {{ article.viewCount }}
-                        </span>
-                        <span class="time-ago">
-                          <i class="el-icon-time"></i> {{ dateTimeAgo(article.createTime) }}
-                        </span>
-                        <!-- <span class="collect-count">
-                                              <i class="el-icon-star-off"></i> {{ article.collectCount }}
-                                          </span> -->
-                        <span class="like-count hidden-xs-only" v-show="article.likeCount">
-                          <i class="el-icon-thumb"></i> {{ article.likeCount }}
-                        </span>
-                        <!-- <span class="comment-count">
-                                              <i class="el-icon-chat-line-round"></i> {{ article.commentCount }}
-                                          </span> -->
+              <div class="article-list">
+                <div v-for="(article, index) in articlesList" :key="index" class="article-card is-always-shadow"
+                  :class="{ 'skeleton-loading': loading }">
+                  <div class="article-content">
+                    <div class="article-content-wrapper">
+                      <h3 class="article-title"><a href="javascript:void(0);"
+                          @click="$router.push({ path: '/article/' + article.id })">{{ article.articleTitle }}</a></h3>
+                      <div class="article-info">
+                        <p class="article-summary">{{ article.abstractText }}</p>
                       </div>
                     </div>
+                    <div class="article-cover">
+                      <router-link
+                        class="article-cover-link"
+                        :to="'/article/' + article.id"
+                      >
+                        <img
+                          class="article-image"
+                          :src="article.indexPicture || require('@/assets/images/cover1.jpeg')"
+                          :alt="article.articleTitle"
+                          loading="lazy"
+                        >
+                      </router-link>
+                    </div>
                   </div>
-                  <div v-if="total>queryParams.pageSize" class="load-more-tips">
-                    <a class="load-more-btn" href="javascript:void(0);" @click="loadMore" v-if="queryParams.pageNum < total/queryParams.pageSize">点击加载更多</a>
-                    <a class="load-more-btn" href="javascript:void(0);" v-else>没有了...</a>
+                  <div class="article-footer">
+                    <a class="article-author-a" href="javascript:void(0);">
+                      <img class="author-avatar" :src="article.authorAvatar || userAvatar" :alt="article.authorName">
+                    </a>
+                    <span class="author-name hidden-xs-only">{{ article.authorName }}</span>
+                    <span v-for="tag in article.tags" :key="tag.tagName" class="article-tag">
+                      <router-link class="butt" :to="{ path: '/search', query: { tagName: tag.tagName } }">#{{ tag.tagName
+                        }}</router-link>
+                    </span>
+                    <span class="view-count">
+                      <i class="el-icon-view"></i> {{ article.viewCount }}
+                    </span>
+                    <span class="time-ago">
+                      <i class="el-icon-time"></i> {{ dateTimeAgo(article.createTime) }}
+                    </span>
+                    <span class="like-count hidden-xs-only" v-show="article.likeCount">
+                      <i class="el-icon-thumb"></i> {{ article.likeCount }}
+                    </span>
                   </div>
-                  <div v-if="isLoadingMore" class="loading-indicator">加载中...</div>
                 </div>
-              </el-tab-pane>
-              <!-- <el-tab-pane label="配置管理" name="second">配置管理</el-tab-pane>
-              <el-tab-pane label="角色管理" name="third">角色管理</el-tab-pane>
-              <el-tab-pane label="定时任务补偿" name="fourth">定时任务补偿</el-tab-pane> -->
-            </el-tabs>
-            <!-- <el-pagination background :pagerCount="5" layout="prev, pager, next" :total="1000"></el-pagination> -->
-            <!-- <plus-pager @pagination="getIndexArticleList" :total="total" :page.sync="queryParams.pageNum"
-              :limit="queryParams.pageSize"></plus-pager> -->
-          </el-col>
-        </el-row>
-      </el-main>
-    </el-container>
+              </div>
+              <div v-if="total>queryParams.pageSize" class="load-more-tips">
+                <a class="load-more-btn" href="javascript:void(0);" @click="loadMore" v-if="queryParams.pageNum < total/queryParams.pageSize">点击加载更多</a>
+                <a class="load-more-btn" href="javascript:void(0);" v-else>没有了...</a>
+              </div>
+              <div v-if="isLoadingMore" class="loading-indicator">加载中...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <transition name="el-fade-in-linear">
       <plus-footer></plus-footer>
     </transition>
@@ -136,7 +107,7 @@ import PlusFooter from '@/layout/components/Footer'
 import PlusCarousel from '@/components/PlusCarousel'
 // 备用：原 el-carousel 封装组件，便于其它页面继续使用官方轮播
 // import ElCarouselBanner from '@/components/ElCarouselBanner'
-import { Message, Pagination } from 'element-ui'
+import { Message } from 'element-ui'
 import {
   getHomeViewData, getCarousel, getArticlesByCategoryLimit, getArticleLatestUserComment, getWebHotUserComment,
   getIndexAllCategoryArticleList, getGpArticlesByCategory, getGpNoticeNewOne
@@ -380,27 +351,26 @@ export default {
       // console.log(tab, event);
       this.activeName = tab.name;
       this.queryParams = { pageNum: 1, pageSize: 10, pathName: tab.name && tab.name === 'index' ? null : tab.name };
-      // if(tab.name && tab.name !== '') {
-      //   this.$set('index', {
-      //     'articlesList': [],
-      //     'total': 0,
-      //     'queryParams': {
-      //       'pageNum': 1,
-      //       'pageSize': 10,
-      //       'pathName': tab.name
-      //     }
-      //   })
-      // }
       this.getIndexArticleList();
+    },
+    selectMobileTab(cat) {
+      const name = cat.pathName
+      this.activeName = name
+      this.queryParams = { pageNum: 1, pageSize: 10, pathName: name && name === 'index' ? null : name }
+      this.getIndexArticleList()
     },
     selectTab(index) {
       this.currentTab = index; // 设置当前激活的Tab索引
     },
-    //获取首页轮播图
+    //获取首页轮播图：空数据不覆盖本地默认图
     getIndexViewCarousel() {
       this.carouselLoading = true;
       getCarousel().then((res) => {
-        this.carouselList = res && res.data !== undefined ? res.data : res || [];
+        const list = res && res.data !== undefined ? res.data : res;
+        if (Array.isArray(list) && list.length) {
+          this.carouselList = list;
+        }
+      }).catch(() => {
       }).finally(() => {
         this.carouselLoading = false;
       });
@@ -554,6 +524,37 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.mobile-index {
+  max-width: 720px;
+}
+
+.gp-tabs__nav {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 6px;
+  margin: 8px 0 12px;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gp-tabs__item {
+  flex: 0 0 auto;
+  border: none;
+  background: var(--background-2, #f7f4f0);
+  color: var(--font-color);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.gp-tabs__item.is-active {
+  background: var(--theme-color-muted);
+  color: var(--theme-color);
+  font-weight: 600;
+}
+
 @keyframes to-right {
   0% {
     transform: translateX(0) translateZ(0) scaleY(1);
@@ -667,11 +668,12 @@ export default {
   color: var(--theme-color);
 }
 
+/* 移动端文章卡：与桌面/侧栏共用 gp-surface Token */
 .article-card {
-  border-radius: 10px;
+  border-radius: var(--gp-surface-radius-sm, 10px);
   padding: 12px;
   margin-bottom: 0;
-  background: var(--background-1);
+  background: var(--gp-surface-bg, var(--background-1));
   color: var(--fontColor);
   display: block;
   width: 100%;
@@ -681,8 +683,8 @@ export default {
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
-    border-color: rgba(0, 0, 0, 0.06);
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    border-color: var(--gp-surface-border-hover, rgba(0, 0, 0, 0.06));
+    box-shadow: var(--gp-surface-shadow-hover, 0 4px 14px rgba(15, 23, 42, 0.06));
   }
 }
 

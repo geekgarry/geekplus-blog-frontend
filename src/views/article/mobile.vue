@@ -1,9 +1,10 @@
 <template>
-  <div class="container-fluid">
-    <el-container class="container">
-      <el-main>
-        <el-row :gutter="10">
-          <el-col :xs="24" :sm="24" :md="17" :lg="17" :xl="17">
+  <!-- 页面骨架：gp-page 替代 el-container/el-main/el-row/el-col -->
+  <div class="gp-page container-fluid">
+    <div class="gp-page__inner container">
+      <div class="gp-page__main">
+        <div class="gp-row">
+          <div class="gp-col-24 gp-col-md-17">
             <div class="main-article-content">
               <div class="top-ads" v-if="showTopAds">
                 <div class="ad-item" v-for="ad in topAds" :key="ad.title">
@@ -157,8 +158,8 @@
               </div>
 
             </div>
-          </el-col>
-          <el-col :xs="24" :sm="24" :md="7" :lg="7" :xl="7">
+          </div>
+          <div class="gp-col-24 gp-col-md-7">
             <!-- <div class="left-sidebar">
                           <el-menu default-active="more" class="el-menu-vertical-demo" background-color="#27292b"
                               text-color="#fff" active-text-color="#ffd04b">
@@ -217,78 +218,91 @@
                 </div>
               </div>
 
-              <el-card v-if="!isMobile" class="box-card">
-                <div slot="header" class="clearfix">
+              <!-- 侧栏卡片：去掉 el-card，改用 gp-surface-card 统一博客侧栏视觉 -->
+              <div v-if="!isMobile" class="gp-surface-card box-card">
+                <div class="gp-surface-card__header">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-search"></i>搜索</span>
                   </div>
                 </div>
-                <el-input placeholder="搜索文章" v-model="searchQuery" @keyup.enter.native="searchArticles" clearable>
-                  <el-button slot="append" icon="el-icon-search" @click="searchArticles"></el-button>
-                </el-input>
-              </el-card>
+                <div class="gp-surface-card__body">
+                  <!-- 侧栏搜索：gp-input-group 替代 el-input append 模式 -->
+                  <div class="gp-input-group">
+                    <input class="gp-input" placeholder="搜索文章" v-model="searchQuery" @keyup.enter="searchArticles">
+                    <button type="button" class="gp-btn gp-btn--append" @click="searchArticles"><i class="el-icon-search"></i></button>
+                  </div>
+                </div>
+              </div>
 
               <!-- 移动端隐藏侧栏：标签云 / 相关 / 推荐（同时不发起对应请求） -->
-              <el-card v-if="!isMobile" class="box-card">
-                <Adsense data-ad-format="rectangle, vertical, horizontal" data-full-width-responsive="yes"
-                  data-ad-client="ca-pub-7291512442295477" data-ad-slot="1460930833">
-                </Adsense>
-              </el-card>
+              <div v-if="!isMobile" class="gp-surface-card box-card">
+                <div class="gp-surface-card__body">
+                  <Adsense data-ad-format="rectangle, vertical, horizontal" data-full-width-responsive="yes"
+                    data-ad-client="ca-pub-7291512442295477" data-ad-slot="1460930833">
+                  </Adsense>
+                </div>
+              </div>
 
-              <el-card v-if="!isMobile" class="box-card">
-                <div slot="header" class="clearfix">
+              <div v-if="!isMobile" class="gp-surface-card box-card">
+                <div class="gp-surface-card__header">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-data-board"></i>标签云</span>
                   </div>
                 </div>
-                <div class="tag-cloud">
-                  <span v-for="(tag, index) in styledTags" :key="index" :style="tag.style">
-                    <router-link :to="{ path: '/search', query: { tagName: tag.tagName }, }" exact>
-                      {{ tag.tagName }} ({{ tag.articleCount }})
-                    </router-link>
-                  </span>
+                <div class="gp-surface-card__body">
+                  <div class="tag-cloud">
+                    <span v-for="(tag, index) in styledTags" :key="index" :style="tag.style">
+                      <router-link :to="{ path: '/search', query: { tagName: tag.tagName }, }" exact>
+                        {{ tag.tagName }} ({{ tag.articleCount }})
+                      </router-link>
+                    </span>
+                  </div>
                 </div>
-              </el-card>
+              </div>
 
-              <el-card v-if="!isMobile" class="related-articles">
-                <div slot="header" class="clearfix">
+              <div v-if="!isMobile" class="gp-surface-card related-articles">
+                <div class="gp-surface-card__header">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-data-board"></i>相关文章</span>
                   </div>
                 </div>
-                <div class="related-article-item" v-for="(relatedArticle, index) in relatedArticles" :key="index">
-                  <div class="related-article-cover">
-                    <router-link :to="'/article/' + relatedArticle.id">
-                      <el-image class="article-cover" :src="relatedArticle.indexPicture || articleCover" fit="cover">
-                      </el-image>
-                    </router-link>
-                  </div>
-                  <div class="related-article-intro">
-                    <h3><router-link :to="'/article/' + relatedArticle.id">{{ relatedArticle.articleTitle
-                        }}</router-link>
-                    </h3>
-                    <p>{{ relatedArticle.abstractText }}</p>
+                <div class="gp-surface-card__body">
+                  <div class="related-article-item" v-for="(relatedArticle, index) in relatedArticles" :key="index">
+                    <div class="related-article-cover">
+                      <router-link :to="'/article/' + relatedArticle.id">
+                        <el-image class="article-cover" :src="relatedArticle.indexPicture || articleCover" fit="cover">
+                        </el-image>
+                      </router-link>
+                    </div>
+                    <div class="related-article-intro">
+                      <h3><router-link :to="'/article/' + relatedArticle.id">{{ relatedArticle.articleTitle
+                          }}</router-link>
+                      </h3>
+                      <p>{{ relatedArticle.abstractText }}</p>
+                    </div>
                   </div>
                 </div>
-              </el-card>
+              </div>
 
-              <el-card v-if="!isMobile" class="box-card">
-                <div slot="header" class="clearfix">
+              <div v-if="!isMobile" class="gp-surface-card box-card">
+                <div class="gp-surface-card__header">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-data-board"></i>推荐文章</span>
                   </div>
                 </div>
-                <div class="recommend-article-container">
-                  <div v-for="article in recommendedArticles" :key="article.id" class="recommended-article">
-                    <router-link :to="`/article/${article.id}`">{{ article.articleTitle }}</router-link>
+                <div class="gp-surface-card__body">
+                  <div class="recommend-article-container">
+                    <div v-for="article in recommendedArticles" :key="article.id" class="recommended-article">
+                      <router-link :to="`/article/${article.id}`">{{ article.articleTitle }}</router-link>
+                    </div>
                   </div>
                 </div>
-              </el-card>
+              </div>
             </div>
-          </el-col>
-        </el-row>
-      </el-main>
-    </el-container>
+          </div>
+        </div>
+      </div>
+    </div>
     <transition name="el-fade-in-linear">
       <plus-footer></plus-footer>
     </transition>
@@ -1476,12 +1490,15 @@ export default {
   margin-bottom: 10px;
 }
 
+/* 侧栏用户卡：表面由全局 Token 统一，这里只保留布局细节 */
 .user-profile {
   text-align: center;
-  margin-bottom: 15px;
-  padding: 10px;
-  background: var(--background-1);
-  border-radius: 4px;
+  margin-bottom: 14px;
+  padding: 18px 14px;
+  background: var(--gp-surface-bg, var(--background-1));
+  border-radius: var(--gp-surface-radius, 12px);
+  border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
+  box-shadow: var(--gp-surface-shadow, 0 2px 12px rgba(15, 23, 42, 0.04));
 }
 
 .user-image {
@@ -1489,8 +1506,8 @@ export default {
   height: 80px;
   border-radius: 50%;
   margin: 0 auto 10px;
-
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
 
 .user-image img {
@@ -1507,33 +1524,39 @@ export default {
   padding: 15px;
   background-color: #409eff;
   color: white;
-  border-radius: 4px;
+  border-radius: var(--gp-surface-radius-sm, 10px);
   margin-bottom: 15px;
 }
 
+/* 相关文章块与 post 列表卡片同一表面语言 */
 .related-articles {
-  background-color: var(--background-1, #212121);
-  /* padding: 15px;
-    border-radius: 4px; */
+  background-color: var(--gp-surface-bg, var(--background-1));
+  border-radius: var(--gp-surface-radius, 12px);
 }
 
 .related-article-item {
   display: flex;
   align-items: flex-start;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
+  padding: 4px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.related-article-item:hover {
+  background: var(--interactive-bg-secondary-hover);
 }
 
 .related-article-item+.related-article-item {
-  margin-top: 10px;
+  margin-top: 8px;
   padding-top: 10px;
-  border-top: 1px solid var(--borderColor, #999);
-  /* Add a separator between related articles */
+  border-top: 1px solid var(--gp-surface-border, var(--borderColor));
 }
 
 .related-article-cover {
   display: flex;
   overflow: hidden;
-  border-radius: 3px;
+  border-radius: 8px;
   -o-object-fit: cover;
   object-fit: cover;
   -o-object-position: center;

@@ -1,7 +1,8 @@
 <template>
-  <div class="container-fluid">
+  <!-- 页面骨架：gp-page 替代 el-container/el-main；左侧浮动工具栏保留在 inner 内 -->
+  <div class="gp-page container-fluid">
 
-    <el-container class="container">
+    <div class="gp-page__inner container">
       <div class="left-aside">
         <div class="left-tool-area" :style="{ position: 'fixed', top: fixedTopHeight }">
           <el-button type="primary" circle>
@@ -14,9 +15,9 @@
           <el-button type="primary" icon="el-icon-chat-round" circle></el-button>
         </div>
       </div>
-      <el-main>
-        <el-row :gutter="10">
-          <el-col :xs="24" :sm="24" :md="17" :lg="17" :xl="17">
+      <div class="gp-page__main">
+        <div class="gp-row">
+          <div class="gp-col-24 gp-col-md-17">
             <div class="article-container gp-article-panel" :class="{ 'skeleton-loading': loading }">
               <h1 v-if="!loading" class="gp-article-title">{{ articleInfo.articleTitle || '概率抽奖算法工具类'}}</h1>
               <div v-else class="skeleton-block article-skeleton-title"></div>
@@ -67,8 +68,8 @@
                 :limit="queryParams.pageSize">
               </plus-pager>
             </div>
-          </el-col>
-          <el-col :xs="24" :sm="24" :md="7" :lg="7" :xl="7">
+          </div>
+          <div class="gp-col-24 gp-col-md-7">
             <div class="user-profile" v-if="!isMobile">
               <div class="user-image">
                 <img :src="userAvatar">
@@ -93,20 +94,23 @@
               </div>
             </div>
 
-            <el-card class="box-card">
-              <div slot="header" class="clearfix">
+            <!-- 侧栏标签云：去掉 el-card，改用 gp-surface-card 统一博客侧栏视觉 -->
+            <div class="gp-surface-card box-card">
+              <div class="gp-surface-card__header">
                 <div class="category-section">
                   <span class="category-title"><i class="el-icon-data-board"></i>标签云</span>
                 </div>
               </div>
-              <div class="tag-cloud">
-                <span v-for="(tag, index) in styledTags" :key="index" :style="tag.style">
-                  <router-link :to="{ path: '/search', query: { tagName: tag.tagName }, }" exact>
-                    {{ tag.tagName }} ({{ tag.articleCount }})
-                  </router-link>
-                </span>
+              <div class="gp-surface-card__body">
+                <div class="tag-cloud">
+                  <span v-for="(tag, index) in styledTags" :key="index" :style="tag.style">
+                    <router-link :to="{ path: '/search', query: { tagName: tag.tagName }, }" exact>
+                      {{ tag.tagName }} ({{ tag.articleCount }})
+                    </router-link>
+                  </span>
+                </div>
               </div>
-            </el-card>
+            </div>
 
             <!-- Related Articles Section -->
             <section class="related-articles">
@@ -117,8 +121,8 @@
                 </li>
               </ul>
             </section>
-          </el-col>
-        </el-row>
+          </div>
+        </div>
 
         <!-- Like and Comment Section -->
         <!-- <section class="interaction-section">
@@ -138,7 +142,7 @@
             </ul>
           </div>
         </section> -->
-      </el-main>
+      </div>
       <!-- <div class="right-aside">
         <div class="right-content" :style="{position: 'fixed', top: fixedTopHeight}">
           <ul>
@@ -148,7 +152,7 @@
           </ul>
         </div>
       </div> -->
-    </el-container>
+    </div>
   </div>
 </template>
 
@@ -620,7 +624,7 @@ export default {
   margin: 0 !important;
 }
 
-.el-container {
+.gp-page__inner {
   height: 100%;
 }
 
@@ -701,14 +705,15 @@ export default {
   color: var(--fontColor, #2b2f36);
 }
 
+/* 侧栏用户卡：对齐首页 post 列表表面 Token */
 .user-profile {
   text-align: center;
   margin-bottom: 14px;
   padding: 18px 14px;
-  background: var(--background-1);
-  border-radius: 12px;
-  border: 1px solid rgba(15, 23, 42, 0.04);
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+  background: var(--gp-surface-bg, var(--background-1));
+  border-radius: var(--gp-surface-radius, 12px);
+  border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
+  box-shadow: var(--gp-surface-shadow, 0 2px 12px rgba(15, 23, 42, 0.04));
 }
 
 .user-image {
@@ -757,11 +762,12 @@ pre.code-block {
 }
 
 .related-articles {
-  background-color: var(--background-1, #fff);
-  padding: 14px 16px;
-  border-radius: 12px;
+  background-color: var(--gp-surface-bg, var(--background-1));
+  padding: var(--gp-surface-padding, 14px 16px);
+  border-radius: var(--gp-surface-radius, 12px);
   margin-bottom: 12px;
-  border: 1px solid rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
+  box-shadow: var(--gp-surface-shadow, 0 2px 12px rgba(15, 23, 42, 0.04));
 }
 
 .related-articles h2 {
@@ -778,7 +784,7 @@ pre.code-block {
 
 .related-articles li {
   padding: 8px 0;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  border-bottom: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.06));
   font-size: 13px;
   line-height: 1.45;
 }

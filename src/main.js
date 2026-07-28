@@ -23,17 +23,21 @@ import i18n from './lang/index'
 
 import { parseTime, dateFormat, resetForm, addDateRange, selectDictLabel, selectDictLabels, download, handleTree, firstUpperCase } from "@/utils/gputil";
 
-// Element 仍全量引入（体积大）；babel component 插件已备好，后续可改为按需注册以再砍首包
+// Element 全量引入须在其它可能触碰 element-ui 的模块之前完成注册意图（见 babel 注释）
 import ElementUI from "element-ui";
 import "element-ui/lib/theme-chalk/index.css";
 import "element-ui/lib/theme-chalk/display.css";
 import "./styles/index.scss";
 // geekplusadmin.scss 仅在管理端 Layout 中加载，避免污染博客首屏 CSS
 
+// 广告组件同步注册，杜绝首屏 Unknown custom element: <Adsense>
+import AdsenseWidget from '@/components/Adsense/index.vue';
+
 import "./assets/css/color.css";
 import "./assets/css/animation.css";
 import "./assets/css/index.css";
 import "./assets/css/tocbot.css";
+import "./assets/css/gp-blog-ui.css";
 // markdown-highlight 仅文章页需要，由文章页 / mixin 按需引入
 
 import {
@@ -121,17 +125,12 @@ Vue.component('Pagination', () => import("@/components/Pagination"))
 Vue.component('RightToolbar', () => import("@/components/RightToolbar"))
 // 可复用 AI 弹出对话（任意页 <ai-chat-popup v-model="visible" /> 或 ref.open()）
 Vue.component('AiChatPopup', () => import("@/views/admin/tool/chatbot/index.vue"))
+Vue.component('Adsense', AdsenseWidget)
+Vue.component('InArticleAdsense', AdsenseWidget)
+Vue.component('InFeedAdsense', AdsenseWidget)
 
-// 广告 / 图片预览延后到空闲时再装，避免堵住首页首屏
+// 广告脚本由 Adsense 组件自管；此处仅延后加载图片预览等
 function loadDeferredPlugins() {
-  import('vue-script2').then((Script2) => {
-    Vue.use(Script2.default || Script2);
-    return import('vue-google-adsense');
-  }).then((Ads) => {
-    const AdsModule = Ads.default || Ads;
-    Vue.use(AdsModule.Adsense);
-  }).catch(() => {});
-
   import('v-viewer').then((mod) => {
     const VueViewer = mod.default;
     const viewerDirective = mod.directive;

@@ -30,9 +30,13 @@ export default {
   computed: {
     ...mapState(["settings"]),
     ...mapGetters([
-      'permission_routes',
+      // 'permission_routes',
       'sidebar'
     ]),
+    permission_routes() {
+      var result = this.$store.getters.permission_routes || [];
+      return result.filter(function(item) {return item.type === 'admin'});
+    },
     // routes() {
     //   return this.$router.options.routes
     // },

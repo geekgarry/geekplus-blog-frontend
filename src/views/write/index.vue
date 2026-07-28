@@ -1,34 +1,31 @@
 <template>
-  <div class="container-fluid">
-    <div class="container">
-      <el-main>
-        <el-row :gutter="10">
-          <el-col :xs="24" :sm="24" :md="24" :lg="{ span: 14, offset: 5 }" :xl="{ span: 12, offset: 6 }">
-            <div class="write-container">
-              <div class="write-heading">
-                <h3 class="text-center">用户投稿</h3>
-              </div>
-              <div class="write-body">
-                <el-form ref="articleData" :model="articleData" label-width="60px">
-                  <el-form-item label="标题">
-                    <el-input type="text" v-model="articleData.name"></el-input>
-                  </el-form-item>
-                  <el-form-item label="作者">
-                    <el-input type="text" v-model="articleData.authorName"></el-input>
-                  </el-form-item>
-                  <el-form-item label="分类">
-                    <el-select placeholder="请选择分类" v-model="articleData.articleCategory"
-                      @change="getSelect(articleData.articleCategory)">
-                      <el-option-group v-for="(item, index) in listCategory" :key="index" :label="item.categoryName">
-                        <el-option v-for="(subitem, subindex) in item.children" :key="subindex" :value="subitem.id">
-                          {{ subitem.categoryName }}
-                        </el-option>
-                      </el-option-group>
-                    </el-select>
-                  </el-form-item>
-                  <el-form-item label="内容">
-                    <quill-editor v-model="articleContent"></quill-editor>
-                    <!-- <quill-editor
+  <div class="gp-page">
+    <div class="gp-page__inner">
+      <div class="gp-page__main">
+        <div class="write-container">
+          <div class="write-heading">
+            <h3 class="text-center">用户投稿</h3>
+          </div>
+          <div class="write-body">
+            <el-form ref="articleData" :model="articleData" label-width="60px">
+              <el-form-item label="标题">
+                <el-input type="text" v-model="articleData.name"></el-input>
+              </el-form-item>
+              <el-form-item label="作者">
+                <el-input type="text" v-model="articleData.authorName"></el-input>
+              </el-form-item>
+              <el-form-item label="分类">
+                <el-select placeholder="请选择分类" v-model="articleData.articleCategory"
+                  @change="getSelect(articleData.articleCategory)">
+                  <el-option-group v-for="(item, index) in listCategory" :key="index" :label="item.categoryName">
+                    <el-option v-for="(subitem, subindex) in item.children" :key="subindex" :label="subitem.categoryName" :value="subitem.id">
+                    </el-option>
+                  </el-option-group>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="内容">
+                <quill-editor v-model="articleContent"></quill-editor>
+                <!-- <quill-editor
                         class="gpeditor"
                         ref="gpTextEditor"
                         name="gpTextEditor"
@@ -40,18 +37,16 @@
                         @change="onEditorChange($event)"
                       >
                       </quill-editor> -->
-                  </el-form-item>
-                </el-form>
-              </div>
-              <div class="write-footer">
-                <div class="text-center">
-                  <el-button type="primary" @click="userWriteArticles">投稿</el-button>
-                </div>
-              </div>
+              </el-form-item>
+            </el-form>
+          </div>
+          <div class="write-footer">
+            <div class="text-center">
+              <el-button type="primary" @click="userWriteArticles">投稿</el-button>
             </div>
-          </el-col>
-        </el-row>
-      </el-main>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

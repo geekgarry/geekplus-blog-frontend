@@ -58,7 +58,9 @@ export default {
   width: 100%;
   height: 50px;
   line-height: 50px;
-  background: #2b2f3a;
+  /* 去掉硬编码深色底，跟随主题表面 Token */
+  background: var(--gp-surface-bg, var(--background-origin, #fff));
+  border-bottom: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
   text-align: center;
   overflow: hidden;
 
@@ -76,7 +78,7 @@ export default {
     & .sidebar-title {
       display: inline-block;
       margin: 0;
-      color: #fff;
+      color: var(--fontColor, #1f2329);
       font-weight: 600;
       line-height: 50px;
       font-size: 14px;

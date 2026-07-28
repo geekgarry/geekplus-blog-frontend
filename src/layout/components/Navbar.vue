@@ -255,8 +255,10 @@ export default {
   height: 50px;
   overflow: hidden;
   position: relative;
-  background: var(--background-origin,#fff);
-  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+  /* 顶栏与侧栏、博客卡片同一表面体系 */
+  background: var(--gp-surface-bg, var(--background-origin, #fff));
+  box-shadow: var(--gp-nav-shadow, 0 1px 4px rgba(15, 23, 42, 0.06));
+  border-bottom: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
 
   .hamburger-container {
     line-height: 46px;
@@ -267,7 +269,7 @@ export default {
     -webkit-tap-highlight-color:transparent;
 
     &:hover {
-      background: rgba(0, 0, 0, .025)
+      background: var(--interactive-bg-secondary-hover, rgba(0, 0, 0, .025));
     }
   }
   .point {
@@ -323,7 +325,7 @@ export default {
         transition: background .3s;
 
         &:hover {
-          background: rgba(0, 0, 0, .025)
+          background: var(--interactive-bg-secondary-hover, rgba(0, 0, 0, .025));
         }
       }
     }
@@ -345,7 +347,8 @@ export default {
           cursor: pointer;
           width: 40px;
           height: 40px;
-          border-radius: 3px;
+          border-radius: 10px;
+          object-fit: cover;
         }
 
         .el-icon-caret-bottom {
@@ -364,6 +367,6 @@ export default {
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: center;
-  background: var(--background,#f7f6f5);
+  background: var(--gp-surface-bg, var(--background, #f7f6f5));
 }
 </style>

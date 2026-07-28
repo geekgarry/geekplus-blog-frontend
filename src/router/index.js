@@ -1,7 +1,7 @@
 /**
  * 静态路由表（constantRoutes）
- * 博客栏目（/timeEssay/... 等）不在此表，由 navMenu + permission.js 运行时 addRoute 到 name:'webApp'。
- * 因此「首次直链」必须等动态路由注册后再 replace 重进，见 src/permission.js。
+ * 博客栏目（/timeEssay/... 等）不在此表，由 navMenu + permission.js 运行时 addRoute 到 name:'sideApp'。
+ * 首页用 VerticalBlog，其余前台页用 HorizontalBlog（侧栏布局）。
  */
 import Vue from "vue";
 import VueRouter from "vue-router";
@@ -79,16 +79,16 @@ export const constantRoutes = [
     ]
   },
   {
-    path: '/admin/system/ai',
+    path: '/admin/system/fileTransfer',
     component: Layout,
+    hidden: true,
     type: 'admin',
-    meta: { title: 'AI 管理', icon: 'tool' },
     children: [
       {
         path: 'index',
-        name: 'AiAdmin',
-        component: () => import('@/views/admin/system/ai/index'),
-        meta: { title: 'AI 模型与源', icon: 'component', noCache: true }
+        name: 'AdminFileTransfer',
+        component: () => import('@/views/admin/system/fileTransfer/index'),
+        meta: { title: '文件中转管理', icon: 'upload', noCache: true }
       }
     ]
   },
@@ -118,7 +118,16 @@ export const constantRoutes = [
       name: 'index',
       meta: { title: '首页', icon: '' },
       component: () => import("@/views/IndexView.vue")
-    },
+    }]
+  },
+  {
+    /* 侧栏布局：除首页外的博客前台页面 */
+    path: '/site',
+    component: HorizontalBlog,
+    type: "webApp",
+    name: "sideApp",
+    redirect: '/about',
+    children: [
     {
       path: '/ai-search',
       name: 'AI 聚合搜索',
@@ -129,66 +138,31 @@ export const constantRoutes = [
       path: '/resumeGenerator',
       name: 'ResumeEditor',
       meta: { title: '简历生成器', icon: '' },
-      // hidden: true,
       component: () => import('@/views/tool/ResumeEditor.vue'),
     },
-    // {
-    //   path: '/devTech',
-    //   name: 'devTech',
-    //   meta: { title: '编程技术', icon: '' },
-    //   component: (resolve) => require(['@/views/article-list/index.vue'], resolve),
-    //   children: [
-    //     {
-    //       path: ':pathName',
-    //       meta: { title: '编程技术', icon: '' },
-    //       component: (resolve) => require(['@/views/article-list/index.vue'], resolve)
-    //     }
-    //   ]
-    // },
-    // {
-    //   path: '/resourceWelfare',
-    //   name: 'resourceWelfare',
-    //   meta: { title: '资源福利', icon: '' },
-    //   component: (resolve) => require(['@/views/article-list/card.vue'], resolve),
-    //   children: [
-    //     {
-    //       path: ':pathName',
-    //       meta: { title: '资源福利', icon: '' },
-    //       component: (resolve) => require(['@/views/article-list/card.vue'], resolve),
-    //     }
-    //   ]
-    // },
-    // {
-    //   path: '/timeEssay',
-    //   name: 'timeEssay',
-    //   meta: { title: '拾光随想', icon: '' },
-    //   component: (resolve) => require(['@/views/article-list/index.vue'], resolve),
-    //   children: [
-    //     {
-    //       path: ':pathName',
-    //       meta: { title: '拾光随想', icon: '' },
-    //       component: (resolve) => require(['@/views/article-list/index.vue'], resolve)
-    //     },
-    //   ]
-    // },
-    // {
-    //   path: '/newTalk',
-    //   name: 'simpleText',
-    //   meta: { title: '新事旧谈', icon: '' },
-    //   component: (resolve) => require(['@/views/article-list/simple.vue'], resolve),
-    //   children: [
-    //     {
-    //       path: ':pathName',
-    //       meta: { title: '新事旧谈', icon: '' },
-    //       component: (resolve) => require(['@/views/article-list/simple.vue'], resolve),
-    //     },
-    //   ]
-    // },
     {
       path: '/search',
       name: 'search',
       meta: { title: '搜索文章', icon: '' },
       component: () => import("../views/article-list/search.vue")
+    },
+    {
+      path: '/categories',
+      name: 'categories',
+      meta: { title: '分类浏览', icon: '' },
+      component: () => import(/* webpackChunkName: "blog-categories" */ '@/views/blog/CategoriesView.vue')
+    },
+    {
+      path: '/tags',
+      name: 'tags',
+      meta: { title: '热门标签', icon: '' },
+      component: () => import(/* webpackChunkName: "blog-tags" */ '@/views/blog/TagsView.vue')
+    },
+    {
+      path: '/user/center',
+      name: 'userCenter',
+      meta: { title: '个人中心', icon: '' },
+      component: () => import(/* webpackChunkName: "blog-user-center" */ '@/views/blog/UserCenter.vue')
     },
     {
       path: '/article/:id',
@@ -219,6 +193,18 @@ export const constantRoutes = [
       name: 'leaveWord',
       meta: { title: '网站留言', icon: '' },
       component: () => import("../views/leave-word/index.vue")
+    },
+    {
+      path: '/file-transfer',
+      name: 'fileTransfer',
+      meta: { title: '文件中转', icon: '' },
+      component: () => import(/* webpackChunkName: "file-transfer" */ '@/views/file-transfer/index.vue')
+    },
+    {
+      path: '/file-transfer/d/:code',
+      name: 'fileTransferDownload',
+      meta: { title: '文件下载', icon: '' },
+      component: () => import(/* webpackChunkName: "file-transfer-dl" */ '@/views/file-transfer/download.vue')
     },
     {
       path: '/about',
@@ -255,23 +241,6 @@ export const constantRoutes = [
     name: 'login',
     meta: { title: '登录', icon: '' },
     component: () => import('@/views/login/index.vue'),
-  },
-  {
-    path: "/other_home",
-    component: HorizontalBlog,
-    children: [{
-      path: '/index',
-      name: 'hIndex',
-      meta: { title: '首页', icon: 'fa-home' },
-      component: () => import('@/views/article-list/simple.vue'),
-    },
-    {
-      path: '/about',
-      name: 'hAbout',
-      meta: { title: '关于', icon: '' },
-      component: () => import('@/views/AboutView.vue'),
-    },
-    ]
   },
   {
     path: '/chat',
@@ -340,7 +309,7 @@ export const dynamicRoutes = [
         meta: { title: "文件管理", activeMenu: "/admin/system/file-manager" },
       },
     ],
-  },
+  }
   // {
   //   path: "/monitor/job-log",
   //   component: Layout,

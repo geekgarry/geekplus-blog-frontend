@@ -1,54 +1,52 @@
 <template>
-  <div class="container-fluid">
-    <el-container class="container">
-      <!-- <div class="blog-home">
-          <div class="wave-container">
-                  <div class="wave"></div>
-                  <div class="wave">
-                      <div class="wave-item wave1"></div>
-                      <div class="wave-item wave2"></div>
-                      <div class="wave-item wave3"></div>
-                  </div>
-              </div>
-          </div> -->
-      <!-- <el-header height="auto" class="header"></el-header> -->
-      <el-main>
-        <el-row :gutter="10">
-          <el-col :xs="24" :sm="24" :md="8" :lg="6" :xl="6">
-            <el-card class="profile-card">
-              <div class="user-info">
-                <img :src="userAvatar" alt="User Avatar" class="user-avatar">
-                <div class="user-details">
-                  <h2 class="user-name">{{ userName }}</h2>
-                  <p class="user-description">{{ userDescription }}</p>
-                  <div class="user-stats">
-                    <span class="stat"><i class="el-icon-s-opportunity"></i> {{ categoryCount
-                      }}</span>
-                    <span class="stat"><i class="el-icon-document"></i> {{ articleCount }}</span>
-                    <span class="stat"><i class="el-icon-chat-line-square"></i> {{ commentCount
-                      }}</span>
+  <!-- 页面骨架：gp-page 替代 el-container/el-main；侧栏/主区用 md-7 + md-17 凑满 24 栅格 -->
+  <div class="gp-page container-fluid">
+    <div class="gp-page__inner container">
+      <div class="gp-page__main">
+        <div class="gp-row">
+          <div class="gp-col-24 gp-col-md-7">
+            <!-- 侧边栏用户信息：gp-surface-card 替代 el-card -->
+            <div class="gp-surface-card profile-card">
+              <div class="gp-surface-card__body">
+                <div class="user-info">
+                  <img :src="userAvatar" alt="User Avatar" class="user-avatar">
+                  <div class="user-details">
+                    <h2 class="user-name">{{ userName }}</h2>
+                    <p class="user-description">{{ userDescription }}</p>
+                    <div class="user-stats">
+                      <span class="stat"><i class="el-icon-s-opportunity"></i> {{ categoryCount
+                        }}</span>
+                      <span class="stat"><i class="el-icon-document"></i> {{ articleCount }}</span>
+                      <span class="stat"><i class="el-icon-chat-line-square"></i> {{ commentCount
+                        }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </el-card>
+            </div>
 
-            <el-card v-if="!isMobile" class="box-card">
-              <div slot="header" class="clearfix">
+            <div v-if="!isMobile" class="gp-surface-card box-card">
+              <div class="gp-surface-card__header">
                 <div class="category-section">
                   <span class="category-title"><i class="el-icon-search"></i>搜索</span>
                 </div>
               </div>
-              <el-input placeholder="搜索文章" v-model="searchQuery" @keyup.enter.native="searchArticles" clearable>
-                <el-button slot="append" icon="el-icon-search" @click="searchArticles"></el-button>
-              </el-input>
-            </el-card>
+              <div class="gp-surface-card__body">
+                <!-- 侧栏搜索：gp-input-group 替代 el-input append 模式 -->
+                <div class="gp-input-group">
+                  <input class="gp-input" placeholder="搜索文章" v-model="searchQuery" @keyup.enter="searchArticles">
+                  <button type="button" class="gp-btn gp-btn--append" @click="searchArticles"><i class="el-icon-search"></i></button>
+                </div>
+              </div>
+            </div>
 
-            <el-card v-if="!isMobile" class="box-card" :class="{ 'skeleton-loading': otherLoading }">
-              <div slot="header" class="clearfix">
+            <div v-if="!isMobile" class="gp-surface-card box-card" :class="{ 'skeleton-loading': otherLoading }">
+              <div class="gp-surface-card__header">
                 <div class="category-section">
                   <span class="category-title"><i class="el-icon-data-board"></i>点击热门</span>
                 </div>
               </div>
+              <div class="gp-surface-card__body">
               <div class="article-card-container">
                 <template v-for="(article, index) in hotArticleList">
                   <div class="top-article-card" :key="'top-' + article.id" v-if="index == 0">
@@ -79,21 +77,24 @@
                   </div>
                 </template>
               </div>
-            </el-card>
+              </div>
+            </div>
 
-            <el-card v-if="!isMobile" class="box-card" :class="{ 'skeleton-loading': otherLoading }">
-              <div slot="header" class="clearfix">
+            <div v-if="!isMobile" class="gp-surface-card box-card" :class="{ 'skeleton-loading': otherLoading }">
+              <div class="gp-surface-card__header">
                 <div class="category-section">
                   <span class="category-title"><i class="el-icon-data-board"></i>推荐文章</span>
                 </div>
               </div>
-              <div v-for="article in recommendedArticles" :key="article.id" class="recommended-article">
-                <router-link :to="`/article/${article.id}`">{{ article.articleTitle }}</router-link>
+              <div class="gp-surface-card__body">
+                <div v-for="article in recommendedArticles" :key="article.id" class="recommended-article">
+                  <router-link :to="`/article/${article.id}`">{{ article.articleTitle }}</router-link>
+                </div>
               </div>
-            </el-card>
-          </el-col>
+            </div>
+          </div>
 
-          <el-col :xs="24" :sm="24" :md="16" :lg="18" :xl="18">
+          <div class="gp-col-24 gp-col-md-17">
             <!-- <div class="welcome">
               <i class="el-icon-speaker"></i> 欢迎光临! 查看文章: <a
                 href="https://127.0.0.1/article/26">https://127.0.0.1/article/26</a>
@@ -143,10 +144,10 @@
               <Adsense data-ad-client="ca-pub-7291512442295477" data-ad-slot="6482220433">
               </Adsense>
             </div>
-          </el-col>
-        </el-row>
-      </el-main>
-    </el-container>
+          </div>
+        </div>
+      </div>
+    </div>
     <transition name="el-fade-in-linear">
       <plus-footer></plus-footer>
     </transition>

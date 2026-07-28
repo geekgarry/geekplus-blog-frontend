@@ -15,8 +15,11 @@ module.exports = {
     }, "cli-plugin-babel-preset"]
   ],
   // 切勿启用 babel-plugin-dynamic-import-node（会把 import() 转成同步 require，毁掉按需分包）
+  // 当前 main.js 为 Element 全量 Vue.use(ElementUI)；勿再开 component 按需插件，否则会报
+  // “both on-demand and importing all”。若日后改为按需引入，再启用并去掉全量 import。
   plugins: [
     '@babel/plugin-transform-runtime',
+    // 按需引入 Element UI 组件
     [
       'component',
       {

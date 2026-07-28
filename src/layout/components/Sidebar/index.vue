@@ -30,7 +30,6 @@ export default {
     permission_routes() {
     // addRoutes() {
       var result = this.$store.getters.permission_routes;
-      // console.log(result)
       return result.filter(function(item) {return item.type === 'admin'});
       // return result;
     },

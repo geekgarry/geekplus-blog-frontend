@@ -10,7 +10,7 @@
  */
 import router from "./router";
 import store from "./store";
-import Message from "element-ui/lib/message";
+import Message from "element-ui";
 import NProgress from "nprogress"; // progress bar
 import "nprogress/nprogress.css"; // progress bar style
 import { getToken } from "@/utils/auth"; // get token from cookie
@@ -50,6 +50,10 @@ const whiteList = [
   "/search",
   "/leave-word",
   "/about",
+  "/file-transfer",
+  "/categories",
+  "/tags",
+  "/user/center",
   "/resumeGenerate",
   "/404",
   "/403",
@@ -67,7 +71,7 @@ function isAdminRoute(path) {
 const publicMenuPrefetch = store.dispatch("navMenu/getMenu").catch(() => null);
 
 /**
- * 注册博客前台动态菜单路由（非后台 admin 菜单）
+ * 注册博客前台动态菜单路由（挂到 sideApp 侧栏布局）
  * @returns {{ ok: boolean, needRematch: boolean }}
  *   needRematch=true 表示本轮刚 addRoute，调用方必须 next({...to, replace:true})
  */
@@ -91,7 +95,7 @@ async function initPublicRoutes() {
 
     const accessRoutes = await store.dispatch("navMenu/generateRoutes", { routes });
     accessRoutes.forEach((item) => {
-      addChildRoute("webApp", item);
+      addChildRoute("sideApp", item);
     });
 
     // 404 必须在全部动态路由之后挂载，否则会抢先吞掉栏目路径

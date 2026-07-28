@@ -1,56 +1,64 @@
 <template>
-  <div class="container-fluid">
-    <el-container class="container" type="flex" direction="vertical">
-      <el-main>
-        <el-row :gutter="10" justify="center">
-          <el-col :xs="24" :sm="24" :md="7" :lg="7" :xl="7">
+  <!-- 页面骨架：gp-page 替代 el-container/el-main/el-row/el-col -->
+  <div class="gp-page container-fluid">
+    <div class="gp-page__inner container">
+      <div class="gp-page__main">
+        <div class="gp-row">
+          <div class="gp-col-24 gp-col-md-7">
             <div class="blog-side-container">
-              <el-card class="profile-card">
-                <div class="user-info">
-                  <img :src="userAvatar" alt="User Avatar" class="user-avatar">
-                  <div class="user-details">
-                    <h2 class="user-name">{{ userName }}</h2>
-                    <p class="user-description">{{ userDescription }}</p>
-                    <div class="user-stats">
-                      <span class="stat"><i class="el-icon-s-opportunity"></i> {{ categoryCount
-                      }}</span>
-                      <span class="stat"><i class="el-icon-document"></i> {{ articleCount }}</span>
-                      <span class="stat"><i class="el-icon-chat-line-square"></i> {{ commentCount
-                      }}</span>
+              <!-- 侧边栏用户信息：gp-surface-card 替代 el-card -->
+              <div class="gp-surface-card profile-card">
+                <div class="gp-surface-card__body">
+                  <div class="user-info">
+                    <img :src="userAvatar" alt="User Avatar" class="user-avatar">
+                    <div class="user-details">
+                      <h2 class="user-name">{{ userName }}</h2>
+                      <p class="user-description">{{ userDescription }}</p>
+                      <div class="user-stats">
+                        <span class="stat"><i class="el-icon-s-opportunity"></i> {{ categoryCount
+                        }}</span>
+                        <span class="stat"><i class="el-icon-document"></i> {{ articleCount }}</span>
+                        <span class="stat"><i class="el-icon-chat-line-square"></i> {{ commentCount
+                        }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </el-card>
+              </div>
 
-              <el-card v-if="!isMobile" class="box-card">
-                <div slot="header" class="clearfix">
+              <div v-if="!isMobile" class="gp-surface-card box-card">
+                <div class="gp-surface-card__header">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-folder-opened"></i>分类云</span>
-                    <el-button type="text" class="more-button">更多 <i class="el-icon-arrow-right"></i></el-button>
+                    <button type="button" class="more-button">更多 <i class="el-icon-arrow-right"></i></button>
                   </div>
                 </div>
-                <div class="article-category-wrapper">
-                  <span class="article-category" v-for="(cat, index) in allCategoryList" :key="index">
-                    <a class="butt" href="javascript:;" @click="$router.push({ path: cat.path })">
-                      {{ cat.categoryName }}
-                    </a>
-                  </span>
+                <div class="gp-surface-card__body">
+                  <div class="article-category-wrapper">
+                    <span class="article-category" v-for="(cat, index) in allCategoryList" :key="index">
+                      <a class="butt" href="javascript:;" @click="$router.push({ path: cat.path })">
+                        {{ cat.categoryName }}
+                      </a>
+                    </span>
+                  </div>
                 </div>
-              </el-card>
+              </div>
 
-              <el-card v-if="!isMobile" class="box-card">
-                <div slot="header" class="clearfix">
+              <div v-if="!isMobile" class="gp-surface-card box-card">
+                <div class="gp-surface-card__header">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-data-board"></i>网站公告</span>
                   </div>
                 </div>
-                <div class="announcement">
-                  小站初建，欢迎来访~
+                <div class="gp-surface-card__body">
+                  <div class="announcement">
+                    小站初建，欢迎来访~
+                  </div>
                 </div>
-              </el-card>
+              </div>
             </div>
-          </el-col>
-          <el-col :xs="24" :sm="24" :md="17" :lg="17" :xl="17">
+          </div>
+          <div class="gp-col-24 gp-col-md-17">
             <div class="section-header"><i class="el-icon-menu"></i><plus-breadcrumb></plus-breadcrumb></div>
             <div class="blog-post-container">
               <div class="post-item item-list" v-for="(post, index) in blogPosts" :key="index"
@@ -80,10 +88,10 @@
               <Adsense data-ad-client="ca-pub-7291512442295477" data-ad-slot="3158275447">
               </Adsense>
             </div>
-          </el-col>
-        </el-row>
-      </el-main>
-    </el-container>
+          </div>
+        </div>
+      </div>
+    </div>
     <transition name="el-fade-in-linear">
       <plus-footer></plus-footer>
     </transition>

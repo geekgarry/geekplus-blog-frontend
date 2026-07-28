@@ -1,43 +1,52 @@
 <template>
-  <div class="container-fluid">
-    <el-container class="container">
-      <el-main>
-        <el-row :gutter="10">
-          <el-col :xs="24" :sm="24" :md="7" :lg="7" :xl="7">
-            <el-card class="profile-card">
-              <div class="user-info">
-                <img :src="userAvatar" alt="User Avatar" class="user-avatar" />
-                <div class="user-details">
-                  <h2 class="user-name">{{ userName }}</h2>
-                  <p class="user-description">{{ userDescription }}</p>
-                  <div class="user-stats">
-                    <span class="stat"><i class="el-icon-s-opportunity"></i>
-                      {{ categoryCount }}</span>
-                    <span class="stat"><i class="el-icon-document"></i> {{ articleCount }}</span>
-                    <span class="stat"><i class="el-icon-chat-line-square"></i>
-                      {{ commentCount }}</span>
+  <!-- 页面骨架：gp-page 替代 el-container/el-main/el-row/el-col -->
+  <div class="gp-page container-fluid">
+    <div class="gp-page__inner container">
+      <div class="gp-page__main">
+        <div class="gp-row">
+          <div class="gp-col-24 gp-col-xl-7 gp-col-lg-7 gp-col-md-7 gp-col-sm-24 gp-col-xs-24">
+            <!-- 侧边栏用户信息：gp-surface-card 替代 el-card -->
+            <div class="gp-surface-card profile-card">
+              <div class="gp-surface-card__body">
+                <div class="user-info">
+                  <img :src="userAvatar" alt="User Avatar" class="user-avatar" />
+                  <div class="user-details">
+                    <h2 class="user-name">{{ userName }}</h2>
+                    <p class="user-description">{{ userDescription }}</p>
+                    <div class="user-stats">
+                      <span class="stat"><i class="el-icon-s-opportunity"></i>
+                        {{ categoryCount }}</span>
+                      <span class="stat"><i class="el-icon-document"></i> {{ articleCount }}</span>
+                      <span class="stat"><i class="el-icon-chat-line-square"></i>
+                        {{ commentCount }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </el-card>
+            </div>
 
-            <el-card v-if="!isMobile" class="box-card">
-              <div slot="header" class="clearfix">
+            <div v-if="!isMobile" class="gp-surface-card box-card">
+              <div class="gp-surface-card__header">
                 <div class="category-section">
                   <span class="category-title"><i class="el-icon-search"></i>搜索</span>
                 </div>
               </div>
-              <el-input placeholder="搜索文章" v-model="searchQuery" @keyup.enter.native="searchArticles" clearable>
-                <el-button slot="append" icon="el-icon-search" @click="searchArticles"></el-button>
-              </el-input>
-            </el-card>
+              <div class="gp-surface-card__body">
+                <!-- 侧栏搜索：gp-input-group 替代 el-input append 模式 -->
+                <div class="gp-input-group">
+                  <input class="gp-input" placeholder="搜索文章" v-model="searchQuery" @keyup.enter="searchArticles">
+                  <button type="button" class="gp-btn gp-btn--append" @click="searchArticles"><i class="el-icon-search"></i></button>
+                </div>
+              </div>
+            </div>
 
-            <el-card v-if="!isMobile" class="box-card" :class="{ 'skeleton-loading': otherLoading }">
-              <div slot="header" class="clearfix">
+            <div v-if="!isMobile" class="gp-surface-card box-card" :class="{ 'skeleton-loading': otherLoading }">
+              <div class="gp-surface-card__header">
                 <div class="category-section">
                   <span class="category-title"><i class="el-icon-data-board"></i>点击热门</span>
                 </div>
               </div>
+              <div class="gp-surface-card__body">
               <div class="article-card-container">
                 <template v-for="(article, index) in hotArticleList">
                   <div class="top-article-card" :key="'top-' + article.id" v-if="index == 0">
@@ -83,8 +92,10 @@
                   </div>
                 </template>
               </div>
-            </el-card>
+              </div>
+            </div>
 
+            <!-- 推荐文章块已注释，保留 el-card 注释供日后恢复 -->
             <!-- <el-card v-if="!isMobile" class="box-card" :class="{ 'skeleton-loading': otherLoading }">
               <div slot="header" class="clearfix">
                 <div class="category-section">
@@ -99,9 +110,9 @@
                 </div>
               </div>
             </el-card> -->
-          </el-col>
+          </div>
 
-          <el-col :xs="24" :sm="24" :md="17" :lg="17" :xl="17">
+          <div class="gp-col-24 gp-col-xl-17 gp-col-lg-17 gp-col-md-17 gp-col-sm-24 gp-col-xs-24">
             <!-- <div class="welcome">
               <i class="el-icon-speaker"></i> 欢迎光临! 查看文章: <a
                 href="https://127.0.0.1/article/26">https://127.0.0.1/article/26</a>
@@ -112,13 +123,18 @@
               <span v-if="tagName || keyWords" class="section-content">
                 {{ tagName ? "#" + tagName : "“" + keyWords + "” 的搜索结果" }}
               </span>
-              <span v-else class="section-content">
-                这是一个搜索页面，请输入搜索内容
-              </span>
+              <div v-else style="margin: 0px auto;">
+                <div class="search-container" style="max-width: 360px;">
+                  <div class="gp-input-group">
+                    <input class="gp-input" placeholder="搜索文章" v-model="searchQuery" @keyup.enter="searchArticles">
+                    <button type="button" class="gp-btn gp-btn--append" @click="searchArticles"><i class="el-icon-search"></i></button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="article-list">
-              <div class="archive-empty" v-if="!loading && total <= 0">
+              <div class="archive-empty" v-if="(!loading && total <= 0)">
                 没有找到与「<span class="archive-empty-keywords">{{ keyWords || tagName }}</span>」相关的内容
                 <!-- <div class="archive-empty-tips">
                   <p>请尝试以下建议：</p>
@@ -129,7 +145,7 @@
                   </ul>
                 </div> -->
               </div>
-              <div v-for="article in articlesList" :key="article.id" class="article-card is-always-shadow"
+              <div v-else v-for="article in articlesList" :key="article.id" class="article-card is-always-shadow"
                 :class="{ 'skeleton-loading': loading }">
                   <div class="article-content">
                     <div class="article-content-wrapper">
@@ -189,10 +205,10 @@
               <Adsense data-ad-client="ca-pub-7291512442295477" data-ad-slot="3158275447">
               </Adsense>
             </div>
-          </el-col>
-        </el-row>
-      </el-main>
-    </el-container>
+          </div>
+        </div>
+      </div>
+    </div>
     <transition name="el-fade-in-linear">
       <plus-footer></plus-footer>
     </transition>

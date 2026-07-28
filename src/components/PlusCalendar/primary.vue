@@ -131,11 +131,10 @@ export default {
 .days>div {
   margin: 0 5px;
   border-radius: 3px;
-  padding: 5px;
 }
 
 .today {
-  background-color: #0badb6;
+  background-color: var(--theme-color, #6e8b8e);
   color: #fff;
 }
 

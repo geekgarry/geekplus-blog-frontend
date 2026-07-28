@@ -40,6 +40,7 @@
             :src="item.img"
             :alt="item.title || ''"
             draggable="false"
+            @error="onImgError($event)"
           >
           <div v-if="item.title" class="plus-carousel__caption">
             <span>{{ item.title }}</span>
@@ -226,30 +227,37 @@ export default {
       }
       return this.mode === 'mobile' ? '180px' : '280px'
     },
-    /** 轨道位移：页偏移 + 拖拽跟手 / 松手补偿；suppressTransition 时无动画瞬移 */
+    /** 轨道位移：用「视口宽度 px」计算，避免 % 相对整条 track 导致白屏偏移 */
     trackStyle() {
-      const base = -this.trackIndex * 100
-      const dragPct = this.trackWidth ? (this.deltaX / this.trackWidth) * 100 : 0
+      const w = this.trackWidth || 0
+      const basePx = -this.trackIndex * w
+      let dragPx = this.dragging ? this.deltaX : 0
       // 非 loop 时在边界阻尼，避免拖出空白
-      let appliedDrag = this.dragging ? dragPct : 0
-      if (this.dragging && !this.useLoop && this.slides.length) {
-        const atFirst = this.trackIndex === 0 && dragPct > 0
-        const atLast = this.trackIndex === this.slides.length - 1 && dragPct < 0
-        if (atFirst || atLast) appliedDrag = dragPct * 0.35
+      if (this.dragging && !this.useLoop && this.slides.length && w) {
+        const atFirst = this.trackIndex === 0 && this.deltaX > 0
+        const atLast = this.trackIndex === this.slides.length - 1 && this.deltaX < 0
+        if (atFirst || atLast) dragPx = this.deltaX * 0.35
       }
-      const x = base + appliedDrag + this.settleOffsetPct
+      // settleOffsetPct 为相对视口的百分比补偿，换算为 px
+      const settlePx = w ? (this.settleOffsetPct / 100) * w : 0
+      const x = basePx + dragPx + settlePx
       return {
-        transform: `translate3d(${x}%, 0, 0)`,
-        transition: (this.dragging || this.suppressTransition)
+        transform: `translate3d(${x}px, 0, 0)`,
+        transition: (this.dragging || this.suppressTransition || !w)
           ? 'none'
           : 'transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1)'
       }
     }
   },
   watch: {
-    slides() {
-      this.resetToStart()
-      this.$nextTick(this.measure)
+    slides: {
+      handler() {
+        this.resetToStart()
+        this.$nextTick(() => {
+          this.measure()
+          this.resetTimer()
+        })
+      }
     },
     loop() {
       this.resetToStart()
@@ -262,9 +270,12 @@ export default {
     }
   },
   mounted() {
-    this.resetToStart()
-    this.measure()
-    this.resetTimer()
+    // 先量宽再复位，避免首帧 trackWidth=0 时 transform 停在错误位置出现白屏
+    this.$nextTick(() => {
+      this.measure()
+      this.resetToStart()
+      this.resetTimer()
+    })
     window.addEventListener('resize', this.measure)
   },
   beforeDestroy() {
@@ -285,7 +296,29 @@ export default {
     },
     measure() {
       const el = this.$el
-      this.trackWidth = el ? el.clientWidth : 0
+      const next = el ? el.clientWidth : 0
+      // 宽度从 0→有值时强制无动画对齐，消除首屏白块
+      const wasZero = !this.trackWidth && next > 0
+      this.trackWidth = next
+      if (wasZero) {
+        this.suppressTransition = true
+        this.$nextTick(() => {
+          requestAnimationFrame(() => {
+            this.suppressTransition = false
+          })
+        })
+      }
+    },
+    /** 图片加载失败时用本地占位，避免灰底白屏 */
+    onImgError(e) {
+      const img = e && e.target
+      if (!img || img.dataset.fallback === '1') return
+      img.dataset.fallback = '1'
+      try {
+        img.src = require('@/assets/images/cover1.jpeg')
+      } catch (err) {
+        img.style.background = '#2a2f38'
+      }
     },
     clearTimer() {
       if (this.timer) {
@@ -411,9 +444,10 @@ export default {
       this.syncCurrentFromTrack()
       if (syncDom) {
         const track = this.$refs.track
-        if (track) {
+        const w = this.trackWidth || 0
+        if (track && w) {
           track.style.transition = 'none'
-          track.style.transform = `translate3d(${-target * 100}%, 0, 0)`
+          track.style.transform = `translate3d(${-target * w}px, 0, 0)`
           // eslint-disable-next-line no-unused-expressions
           track.offsetWidth
           track.style.transition = ''
@@ -673,6 +707,8 @@ export default {
 
 .plus-carousel__track {
   display: flex;
+  /* 限定为视口宽：子项 flex-basis:100% 以此为基准；位移改用 px 后仍需此约束 */
+  width: 100%;
   height: 100%;
   will-change: transform;
   touch-action: pan-y;
@@ -680,11 +716,13 @@ export default {
 
 .plus-carousel__slide {
   flex: 0 0 100%;
+  width: 100%;
   height: 100%;
   position: relative;
   /* 防止 flex 子项被内容撑破导致跟手错位 */
   min-width: 0;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .plus-carousel__link {

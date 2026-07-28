@@ -1,76 +1,81 @@
 <template>
   <div class="appointment-page">
-    <el-card>
-      <h2>预约管理</h2>
+    <!-- 预约表单区：去掉 el-card，改用 gp-surface-card 统一页面卡片样式 -->
+    <div class="gp-surface-card">
+      <div class="gp-surface-card__body">
+        <h2>预约管理</h2>
 
-      <!-- 新建预约表单 -->
-      <el-form :inline="true" :model="form">
-        <el-form-item label="用户ID">
-          <el-input v-model="form.userId" placeholder="请输入用户ID" />
-        </el-form-item>
-        <el-form-item label="任务内容">
-          <el-input v-model="form.payload" placeholder="任务描述" />
-        </el-form-item>
-        <el-form-item label="执行时间">
-          <el-date-picker
-            v-model="form.scheduleAt"
-            type="datetime"
-            placeholder="选择执行时间"
-            value-format="yyyy-MM-dd'T'HH:mm:ss"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="createAppointment">创建预约</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+        <!-- 新建预约表单 -->
+        <el-form :inline="true" :model="form">
+          <el-form-item label="用户ID">
+            <el-input v-model="form.userId" placeholder="请输入用户ID" />
+          </el-form-item>
+          <el-form-item label="任务内容">
+            <el-input v-model="form.payload" placeholder="任务描述" />
+          </el-form-item>
+          <el-form-item label="执行时间">
+            <el-date-picker
+              v-model="form.scheduleAt"
+              type="datetime"
+              placeholder="选择执行时间"
+              value-format="yyyy-MM-dd'T'HH:mm:ss"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="createAppointment">创建预约</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+    </div>
 
     <!-- 任务列表 -->
-    <el-card style="margin-top: 20px;">
-      <h3>任务列表</h3>
-      <el-table :data="appointments" border style="width: 100%">
-        <el-table-column prop="id" label="ID" width="60" />
-        <el-table-column prop="userId" label="用户ID" width="100" />
-        <el-table-column prop="payload" label="任务内容" />
-        <el-table-column prop="scheduleAt" label="执行时间" width="180" />
-        <el-table-column prop="status" label="状态" width="100" />
-        <el-table-column label="操作" width="380">
-          <template slot-scope="scope">
-            <el-button
-              size="mini"
-              type="warning"
-              @click="pause(scope.row.id)"
-              :disabled="scope.row.status !== 'SCHEDULED'"
-            >
-              暂停
-            </el-button>
-            <el-button
-              size="mini"
-              type="success"
-              @click="resume(scope.row.id)"
-              :disabled="scope.row.status !== 'PAUSED'"
-            >
-              恢复
-            </el-button>
-            <el-button
-              size="mini"
-              type="info"
-              @click="cancel(scope.row.id)"
-              :disabled="scope.row.status === 'DONE' || scope.row.status === 'CANCELLED'"
-            >
-              取消
-            </el-button>
-            <el-button
-              size="mini"
-              type="danger"
-              @click="remove(scope.row.id)"
-            >
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+    <div class="gp-surface-card" style="margin-top: 20px;">
+      <div class="gp-surface-card__body">
+        <h3>任务列表</h3>
+        <el-table :data="appointments" border style="width: 100%">
+          <el-table-column prop="id" label="ID" width="60" />
+          <el-table-column prop="userId" label="用户ID" width="100" />
+          <el-table-column prop="payload" label="任务内容" />
+          <el-table-column prop="scheduleAt" label="执行时间" width="180" />
+          <el-table-column prop="status" label="状态" width="100" />
+          <el-table-column label="操作" width="380">
+            <template slot-scope="scope">
+              <el-button
+                size="mini"
+                type="warning"
+                @click="pause(scope.row.id)"
+                :disabled="scope.row.status !== 'SCHEDULED'"
+              >
+                暂停
+              </el-button>
+              <el-button
+                size="mini"
+                type="success"
+                @click="resume(scope.row.id)"
+                :disabled="scope.row.status !== 'PAUSED'"
+              >
+                恢复
+              </el-button>
+              <el-button
+                size="mini"
+                type="info"
+                @click="cancel(scope.row.id)"
+                :disabled="scope.row.status === 'DONE' || scope.row.status === 'CANCELLED'"
+              >
+                取消
+              </el-button>
+              <el-button
+                size="mini"
+                type="danger"
+                @click="remove(scope.row.id)"
+              >
+                删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
   </div>
 </template>
 
