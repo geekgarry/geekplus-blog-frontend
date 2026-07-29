@@ -120,33 +120,45 @@
             <div class="section-header">
               <i v-show="tagName" class="el-icon-collection-tag"></i>
               <i v-show="keyWords" class="el-icon-reading"></i>
-              <span v-if="tagName || keyWords" class="section-content">
+              <span v-if="hasSearchQuery" class="section-content">
                 {{ tagName ? "#" + tagName : "“" + keyWords + "” 的搜索结果" }}
               </span>
-              <div v-else style="margin: 0px auto;">
+              <div v-else class="search-idle">
                 <div class="search-container" style="max-width: 360px;">
                   <div class="gp-input-group">
-                    <input class="gp-input" placeholder="搜索文章" v-model="searchQuery" @keyup.enter="searchArticles">
-                    <button type="button" class="gp-btn gp-btn--append" @click="searchArticles"><i class="el-icon-search"></i></button>
+                    <input
+                      class="gp-input"
+                      placeholder="输入关键词搜索文章"
+                      v-model="searchQuery"
+                      @keyup.enter="searchArticles"
+                    >
+                    <button type="button" class="gp-btn gp-btn--append" @click="searchArticles">
+                      <i class="el-icon-search"></i>
+                    </button>
                   </div>
                 </div>
+                <p class="search-idle__tip">输入关键词或从标签页进入，即可查看结果</p>
               </div>
             </div>
 
-            <div class="article-list">
-              <div class="archive-empty" v-if="(!loading && total <= 0)">
+            <div class="article-list" v-if="hasSearchQuery">
+              <template v-if="loading">
+                <div
+                  v-for="n in 3"
+                  :key="'sk-' + n"
+                  class="article-card is-always-shadow skeleton-loading"
+                  style="min-height: 120px"
+                ></div>
+              </template>
+              <div class="archive-empty" v-else-if="total <= 0">
                 没有找到与「<span class="archive-empty-keywords">{{ keyWords || tagName }}</span>」相关的内容
-                <!-- <div class="archive-empty-tips">
-                  <p>请尝试以下建议：</p>
-                  <ul>
-                    <li>检查拼写是否正确</li>
-                    <li>使用更常见的词汇</li>
-                    <li>使用更具体的关键词</li>
-                  </ul>
-                </div> -->
               </div>
-              <div v-else v-for="article in articlesList" :key="article.id" class="article-card is-always-shadow"
-                :class="{ 'skeleton-loading': loading }">
+              <template v-else>
+                <div
+                  v-for="article in articlesList"
+                  :key="article.id"
+                  class="article-card is-always-shadow"
+                >
                   <div class="article-content">
                     <div class="article-content-wrapper">
                       <h3 class="article-title">
@@ -169,37 +181,37 @@
                       </router-link>
                     </div>
                   </div>
-                <div class="article-footer">
-                  <a class="article-author-a" href="javascript:void(0);">
-                    <img class="author-avatar" :src="authorAvatar" :alt="article.authorName" />
-                  </a>
-                  <span class="author-name hidden-xs-only">{{ article.authorName }}</span>
-                  <span v-for="(tag, index) in article.tags" :key="index" class="article-tag">
-                    <router-link class="butt" :to="{ path: '/search', query: { tagName: tag.tagName } }">#{{ tag.tagName
-                      }}</router-link>
-                  </span>
-                  <span class="view-count">
-                    <i class="el-icon-view"></i> {{ article.viewCount }}
-                  </span>
-                  <span class="time-ago">
-                    <i class="el-icon-time"></i>
-                    {{ dateTimeAgo(article.createTime) }}
-                  </span>
-                  <!-- <span class="collect-count">
-                          <i class="el-icon-star-off"></i> {{ article.collectCount }}
-                      </span> -->
-                  <span class="like-count hidden-xs-only" v-show="article.likeCount">
-                    <i class="el-icon-thumb"></i> {{ article.likeCount }}
-                  </span>
-                  <!-- <span class="comment-count">
-                          <i class="el-icon-chat-line-round"></i> {{ article.commentCount }}
-                      </span> -->
+                  <div class="article-footer">
+                    <a class="article-author-a" href="javascript:void(0);">
+                      <img class="author-avatar" :src="authorAvatar" :alt="article.authorName" />
+                    </a>
+                    <span class="author-name hidden-xs-only">{{ article.authorName }}</span>
+                    <span v-for="(tag, index) in article.tags" :key="index" class="article-tag">
+                      <router-link class="butt" :to="{ path: '/search', query: { tagName: tag.tagName } }">#{{ tag.tagName
+                        }}</router-link>
+                    </span>
+                    <span class="view-count">
+                      <i class="el-icon-view"></i> {{ article.viewCount }}
+                    </span>
+                    <span class="time-ago">
+                      <i class="el-icon-time"></i>
+                      {{ dateTimeAgo(article.createTime) }}
+                    </span>
+                    <span class="like-count hidden-xs-only" v-show="article.likeCount">
+                      <i class="el-icon-thumb"></i> {{ article.likeCount }}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </template>
             </div>
 
-            <plus-pager @pagination="generalArticleList" :total="total" :page.sync="queryParams.pageNum"
-              :limit="queryParams.pageSize"></plus-pager>
+            <plus-pager
+              v-if="hasSearchQuery"
+              @pagination="generalArticleList"
+              :total="total"
+              :page.sync="queryParams.pageNum"
+              :limit="queryParams.pageSize"
+            ></plus-pager>
             <!-- <el-button type="text" class="more-button"> > MORE</el-button> -->
             <div class="ads-container">
               <Adsense data-ad-client="ca-pub-7291512442295477" data-ad-slot="3158275447">
@@ -232,90 +244,18 @@ export default {
   },
   data() {
     return {
-      loading: true,
+      loading: false,
       otherLoading: true,
-      userAvatar: require("@/assets/mai.png"), // Replace with your avatar image path
+      userAvatar: require("@/assets/mai.png"),
       userName: "麦壳儿",
       userDescription: "青衫烟雨间，挽风踏清歌",
       categoryCount: 14,
       articleCount: 29,
       commentCount: 6,
       searchQuery: "",
-      authorAvatar: require("@/assets/logo.png"), // Replace with actual avatar path
-      articlesList: [
-        {
-          id: 1,
-          articleTitle: "在 ubuntu20.04上安装 docker",
-          abstractText:
-            "1、替换清华源 替换sources.list里面的内容 sudovim/etc/apt/sources.list #默认注释了源码镜像以\n提高aptupdate速度,如有需要可自行取消注释\ndebhttps://mirrors.tuna.tsinghua.edu.cn/ubuntu/focalmainrestricteduniversemultiverse #deb-srcht...",
-          authorAvatar: require("@/assets/mai.png"), // Replace with actual avatar path
-          authorName: "RisunJan",
-          tags: [{ tagName: "学习笔记1" }, { tagName: "学习笔记2" }],
-          viewCount: 87,
-          createTime: "3周前",
-          likeCount: 3,
-          commentCount: 0,
-        },
-        {
-          id: 2,
-          articleTitle: "PVE虚拟机扩展磁盘空间",
-          abstractText:
-            "在PVE操作界面上调整虚拟机节点的磁盘大小。使用命令lsblk查看一下服务器上的分区情况。使用fdisk-i查看分区信息,可以看到我这边sda1和sda2加起来才用了100G,剩下的900G是需要手动挂载上去。使用parted/dev/sda磁盘分区...",
-          authorAvatar: require("@/assets/mai.png"), // Replace with actual avatar path
-          authorName: "陌溪",
-          tags: [{ tagName: "学习笔记" }, { tagName: "小主机" }],
-          viewCount: 23,
-          createTime: "1周前",
-          likeCount: 3,
-          commentCount: 0,
-        },
-        {
-          id: 3,
-          articleTitle: "支付宝网站支付DEMO",
-          abstractText:
-            "支付宝网页支付的DEMO加上沙箱环境实现支付宝手机网站支付DEMO的试用测试。",
-          authorAvatar: require("@/assets/mai.png"), // Replace with actual avatar path
-          authorName: "蓝胖子",
-          tags: [{ tagName: "后端开发" }, { tagName: "Java" }],
-          viewCount: 124,
-          createTime: "1月前",
-          likeCount: 3,
-          commentCount: 0,
-          indexPicture: require("@/assets/images/cover1.jpeg"), // Replace with actual image path
-        },
-        {
-          id: 4,
-          articleTitle: "监控公网IP变动:利用Shell脚本自动化检测与邮件通知",
-          abstractText:
-            "本大爷使用的是AlmaLinux系统,最近跟着陌溪大佬的脚步一步一步的搭建了自己的小主机用来做服务器,成功的申请到了公网IP,有一个问题就是:公网会随时变动...",
-          authorAvatar: require("@/assets/mai.png"), // Replace with actual avatar path
-          authorName: "佚名",
-          tags: [{ tagName: "Shell" }, { tagName: "Linux" }],
-          viewCount: 56,
-          createTime: "2月前",
-          likeCount: 1,
-          commentCount: 2,
-          indexPicture: require("@/assets/images/cover1.jpeg"), // Replace with actual image path
-        },
-      ],
-      //推荐文章
-      recommendedArticles: [
-        {
-          id: 1,
-          articleTitle: "Vue.js Best Practices",
-          indexPicture: "/path/to/image1.jpg",
-        },
-        {
-          id: 2,
-          articleTitle: "Building a Blog with Element UI",
-          indexPicture: require("@/assets/images/cover1.jpeg"),
-        },
-        {
-          id: 3,
-          articleTitle: "Responsive Design Tips",
-          indexPicture: require("@/assets/images/cover1.jpeg"),
-        },
-      ],
+      authorAvatar: require("@/assets/logo.png"),
+      articlesList: [],
+      recommendedArticles: [],
       hotArticles: [],
       recommendArticles: [],
       total: 0,
@@ -329,68 +269,77 @@ export default {
     };
   },
   created() {
-    // this.$router.onReady(() => {});
-    if (this.tagName) {
-      window.document.title =
-        this.tagName + " 标签文章列表 | 极客普拉斯&梦极客园" ||
-        "极客普拉斯&梦极客园-GeekPlus";
-      this.getArticleListByTagName();
-    }
-    if (this.keyWords) {
-      window.document.title =
-        this.keyWords + " 搜索文章列表 | 极客普拉斯&梦极客园" ||
-        "极客普拉斯&梦极客园-GeekPlus";
-      this.searchAllArticlesList();
-    }
+    this.bootstrapFromRoute();
     this.otherLoading = false;
   },
-  // beforeRouteUpdate(to, from, next) {
-  //   //复用同一页面中，根据更新的路由to.path为要去往的页面
-  //   next();
-  //   if(to.fullPath !== from.fullPath) {
-  //     if (this.tagName) {
-  //       window.document.title =
-  //         this.tagName + "标签文章列表 | 极客普拉斯&梦极客园" ||
-  //         "极客普拉斯&梦极客园-GeekPlus";
-  //       this.getArticleListByTagName();
-  //     }
-  //     if (this.keyWords) {
-  //       window.document.title =
-  //         this.keyWords + "搜索文章列表 | 极客普拉斯&梦极客园" ||
-  //         "极客普拉斯&梦极客园-GeekPlus";
-  //       this.searchAllArticlesList();
-  //     }
-  //   }
-  // },
+  activated() {
+    // keep-alive 场景下再次进入搜索页时同步 URL 查询条件
+    this.bootstrapFromRoute();
+  },
   watch: {
-    $route(to, from) {}
+    // 同页改 query（搜索框提交）需重新拉数据；无参数时清空列表，避免骨架假数据
+    "$route.query": {
+      handler() {
+        this.bootstrapFromRoute();
+      },
+      deep: true,
+    },
   },
   computed: {
     tagName() {
-      return this.$route.query.tagName;
+      const t = this.$route.query.tagName;
+      return t != null && String(t).trim() !== "" ? String(t).trim() : "";
     },
     keyWords() {
-      return this.$route.query.keyWords;
+      const k = this.$route.query.keyWords;
+      return k != null && String(k).trim() !== "" ? String(k).trim() : "";
+    },
+    hasSearchQuery() {
+      return !!(this.tagName || this.keyWords);
     },
     hotArticleList() {
       return this.$store.getters.hotArticleList;
     },
     isMobile() {
-      //根据用户吧浏览设备的用户信息判断是否是移动设备
       return this.$common.isMobile();
     },
   },
   methods: {
+    bootstrapFromRoute() {
+      if (this.tagName) {
+        window.document.title =
+          this.tagName + " 标签文章列表 | 极客普拉斯&梦极客园";
+        this.queryParams.pageNum = 1;
+        this.getArticleListByTagName();
+        return;
+      }
+      if (this.keyWords) {
+        window.document.title =
+          this.keyWords + " 搜索文章列表 | 极客普拉斯&梦极客园";
+        this.searchQuery = this.keyWords;
+        this.queryParams.pageNum = 1;
+        this.searchAllArticlesList();
+        return;
+      }
+      // 无搜索条件：不请求、不展示骨架列表
+      this.loading = false;
+      this.articlesList = [];
+      this.total = 0;
+      window.document.title = "搜索文章 | 极客普拉斯&梦极客园";
+    },
     searchArticles() {
-      this.$router.push(
-        { path: "/search", query: { keyWords: this.searchQuery } },
-        (onComplete) => { },
-        (onAbort) => { }
-      );
-      this.searchQuery = "";
+      const q = (this.searchQuery || "").trim();
+      if (!q) {
+        this.$message && this.$message.warning("请输入搜索关键词");
+        return;
+      }
+      // 已在搜索页时也必须触发查询（靠 $route.query watch）
+      this.$router
+        .push({ path: "/search", query: { keyWords: q } })
+        .catch(() => {});
     },
     navToArticle(id) {
-      this.$router.push({ path: `/article/${id}` }, (onComplete) => { }, (onAbort) => { });
+      this.$router.push({ path: `/article/${id}` }, () => {}, () => {});
     },
     generalArticleList() {
       if (this.tagName) {
@@ -399,20 +348,21 @@ export default {
         this.searchAllArticlesList();
       }
     },
-    //根据标签查询文章分页
     getArticleListByTagName() {
       this.queryParams.articleTitle = null;
       this.queryParams.tagName = this.tagName;
       this.loading = true;
       selectArticleListForTag(this.queryParams)
         .then((response) => {
-          this.articlesList = response.rows;
-          this.total = response.total;
-          this.articleCount = response.total;
+          this.articlesList = response.rows || [];
+          this.total = response.total || 0;
+          this.articleCount = this.total;
           this.loading = false;
-          // this.backToTop();
         })
         .catch((error) => {
+          this.loading = false;
+          this.articlesList = [];
+          this.total = 0;
           this.$message({
             message: error.msg || error,
             duration: 3000,
@@ -420,20 +370,21 @@ export default {
           });
         });
     },
-    //正常搜索分页加载
     searchAllArticlesList() {
       this.queryParams.tagName = null;
       this.queryParams.articleTitle = this.keyWords;
       this.loading = true;
       selectGpArticlesListByKeyWords(this.queryParams)
         .then((response) => {
-          this.articlesList = response.rows;
-          this.total = response.total;
-          this.articleCount = response.total;
+          this.articlesList = response.rows || [];
+          this.total = response.total || 0;
+          this.articleCount = this.total;
           this.loading = false;
-          // this.backToTop();
         })
         .catch((error) => {
+          this.loading = false;
+          this.articlesList = [];
+          this.total = 0;
           this.$message({
             message: error.msg || error,
             duration: 3000,
@@ -540,6 +491,21 @@ export default {
   color: var(--font-color, #777);
   background: var(--background-1, #f8f9fa);
   border-radius: var(--border-radius, 8px);
+}
+
+.search-idle {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0 8px;
+}
+
+.search-idle__tip {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted-1-color, #8a8580);
 }
 
 .archive-empty-keywords {
