@@ -183,10 +183,12 @@
 
 <script>
 import { listWeb, getWeb, delWeb, addWeb, updateWeb, exportWeb } from "@/api/geekplus/webinfo";
+import QuillEditor from "@/components/QuillEditor";
 
 export default {
   name: "Web",
   components: {
+    QuillEditor
   },
   data() {
     return {
