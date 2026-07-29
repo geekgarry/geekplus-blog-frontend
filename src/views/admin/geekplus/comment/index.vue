@@ -452,10 +452,12 @@ import {
 } from "@/api/geekplus/comment";
 import { listArticles } from "@/api/geekplus/articles"
 import { listSubParentCategory, listSubCategory, } from "@/api/geekplus/category";
+import QuillEditor from "@/components/QuillEditor";
 
 export default {
   name: "Comment",
   components: {
+    QuillEditor
   },
   data() {
     return {

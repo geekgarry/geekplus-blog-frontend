@@ -134,10 +134,12 @@
 import { listLog, getLog, delLog, addLog, updateLog, exportLog } from "@/api/geekplus/chatAILog";
 import { getAllHistoryMessage, deleteOneRedisChat, refreshRedisChat } from "@/api/chatbot/chatbot"
 import { mapGetters, mapState } from 'vuex'
+import QuillEditor from "@/components/QuillEditor";
 
 export default {
   name: "ChatGPTLog",
   components: {
+    QuillEditor
   },
   data() {
     return {
