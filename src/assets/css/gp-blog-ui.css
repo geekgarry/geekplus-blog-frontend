@@ -226,7 +226,7 @@
 .gp-input:focus {
   outline: none;
   border-color: var(--theme-color, #6e8b8e);
-  box-shadow: 0 0 0 3px var(--theme-color-muted, rgba(110, 139, 142, 0.14));
+  /* box-shadow: 0 0 0 3px var(--theme-color-muted, rgba(110, 139, 142, 0.14)); */
 }
 
 .gp-btn {
@@ -277,7 +277,7 @@
 
 .gp-btn--append {
   border-radius: 0 10px 10px 0;
-  margin-left: -1px;
+  /* margin-left: -1px; */
 }
 
 .gp-input-group {

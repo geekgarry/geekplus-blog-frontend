@@ -18,7 +18,9 @@
           <img :src="iLogo" alt="GeekPlus" />
           <span class="gp-side-layout__brand-text">{{ siteTitle }}</span>
         </router-link>
-        <button type="button" class="gp-side-layout__close" v-if="isMobile" aria-label="关闭菜单" @click="closeDrawer">×</button>
+        <button type="button" class="gp-side-layout__close" v-if="isMobile" aria-label="关闭菜单" @click="closeDrawer">
+          <i class="el-icon-close"></i>
+        </button>
         <!-- <button
           type="button"
           class="gp-side-collapse-btn"
@@ -134,9 +136,17 @@
             @click.native="closeDrawer"
           >登录</router-link>
         </div>
-        <button type="button" class="gp-side-theme" @click="changeColor" :title="isDark ? '浅色' : '深色'">
-          <i :class="isDark ? 'el-icon-sunny' : 'el-icon-moon'"></i>
+        <button
+            type="button"
+            class="gp-icon-btn"
+            @click="toggleBlogLayout"
+            :title="blogLayoutToggleTitle"
+          >
+          <i :class="blogLayout === 'side' ? 'el-icon-s-unfold' : 'el-icon-s-fold'"></i>
         </button>
+        <!-- <button type="button" class="gp-side-theme" @click="changeColor" :title="isDark ? '浅色' : '深色'">
+          <i :class="isDark ? 'el-icon-sunny' : 'el-icon-moon'"></i>
+        </button> -->
       </div>
     </div>
 
@@ -177,8 +187,10 @@
           </button>
           <nav class="gp-side-crumb" v-if="!isMobile">
             <router-link to="/">首页</router-link>
-            <span class="sep">/</span>
-            <span>{{ pageTitle }}</span>
+            <span v-show="pageTitle !== '首页'">
+              <span class="sep">/</span>
+              <span>{{ pageTitle }}</span>
+            </span>
           </nav>
           <span class="gp-side-top-title" v-else>{{ pageTitle }}</span>
         </div>
@@ -204,11 +216,13 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import blogLayoutMixin from '@/layout/blog/blogLayoutMixin'
 
 const COLLAPSE_KEY = 'gp-side-collapsed'
 
 export default {
   name: 'HorizontalBlogLayout',
+  mixins: [blogLayoutMixin],
   data() {
     return {
       isDrawerOpen: false,
@@ -254,7 +268,18 @@ export default {
       return info.gpWebName || info.webTitle || 'GeekPlus'
     },
     pageTitle() {
-      return (this.$route.meta && this.$route.meta.title) || '内容'
+      // 文章页面标题由路径
+      const title = this.$route.meta && this.$route.meta.title
+      // 如果路径包含 /article/，则返回文章标题, 否则返回路由元信息中的标题
+      if(this.$route.path.includes('/article/')) {
+        return this.$route.meta.title || this.$route.params.title
+      }
+      if (title) return title
+      const categoryName = this.$route.params.categoryName
+      if (categoryName) return categoryName
+      const name = this.$route.name
+      if (name) return name
+      // return (this.$route.meta && this.$route.meta.title) || '内容'
     },
     keyMenuPath() {
       return this.$route.path

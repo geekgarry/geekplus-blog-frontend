@@ -13,9 +13,14 @@ module.exports = {
   showSettings: false,
 
   /**
-   * 切换顶部导航菜单布局
+   * 切换顶部导航菜单布局（后台管理）
    */
   leftMenuBar: true,
+
+  /**
+   * 博客前台布局：top = 顶部导航，side = 侧栏导航（BlogShell）
+   */
+  blogLayout: 'top',
 
   /**
    * 是否显示 tagsView

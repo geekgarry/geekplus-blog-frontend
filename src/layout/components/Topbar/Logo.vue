@@ -57,7 +57,7 @@ export default {
   width: 200px;
   height: 50px;
   line-height: 50px;
-  background: #f0f0f0;
+  background: var(--gp-surface-bg, #f0f0f0);
   text-align: center;
   overflow: hidden;
 
@@ -75,7 +75,7 @@ export default {
     & .topbar-title {
       display: inline-block;
       margin: 0;
-      color: #252525;
+      color: var(--fontColor, #252525);
       font-weight: 600;
       line-height: 50px;
       font-size: 14px;

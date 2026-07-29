@@ -102,44 +102,6 @@
             </div>
           </div>
         </section>
-      </div>
-
-      <div class="w-1/2 flex flex-col gap-6 pr-4">
-        <section v-if="data.education.length">
-          <h2 class="text-xl font-bold text-teal-400 mb-3 flex items-center gap-2 uppercase tracking-widest">
-            <span class="w-8 h-1 bg-teal-500 rounded"></span> Education
-          </h2>
-          <div class="space-y-3">
-            <div
-              v-for="edu in data.education"
-              :key="edu.id"
-              class="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/10"
-            >
-              <div>
-                <div class="font-bold text-white">{{ edu.school }}</div>
-                <div class="text-teal-300 text-sm">{{ edu.degree }}</div>
-              </div>
-              <span class="text-xs text-gray-400">{{ edu.year }}</span>
-            </div>
-          </div>
-        </section>
-
-        <section v-if="visibleProjects.length">
-          <h2 class="text-xl font-bold text-purple-400 mb-3 flex items-center gap-2 uppercase tracking-widest">
-            <span class="w-8 h-1 bg-purple-500 rounded"></span> Projects
-          </h2>
-          <div class="space-y-3">
-            <div
-              v-for="p in visibleProjects"
-              :key="p.id"
-              class="bg-white/5 p-3 rounded-lg border border-white/10 border-l-4 border-l-purple-500"
-            >
-              <div class="font-bold text-white mb-1">{{ p.name }}</div>
-              <div class="text-xs text-purple-300 mb-1">{{ p.technologies }}</div>
-              <p class="text-xs text-gray-300 h-auto">{{ p.description }}</p>
-            </div>
-          </div>
-        </section>
 
         <section v-if="visibleCertifications.length">
           <h2 class="text-xl font-bold text-green-400 mb-3 flex items-center gap-2 uppercase tracking-widest">
@@ -177,6 +139,44 @@
                 class="text-pink-300 text-sm hover:underline break-all"
               >{{ p.link }}</a>
               <p v-if="p.description" class="text-xs text-gray-400 line-clamp-3 mt-1">{{ p.description }}</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="w-1/2 flex flex-col gap-6 pr-4">
+        <section v-if="data.education.length">
+          <h2 class="text-xl font-bold text-teal-400 mb-3 flex items-center gap-2 uppercase tracking-widest">
+            <span class="w-8 h-1 bg-teal-500 rounded"></span> Education
+          </h2>
+          <div class="space-y-3">
+            <div
+              v-for="edu in data.education"
+              :key="edu.id"
+              class="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/10"
+            >
+              <div>
+                <div class="font-bold text-white">{{ edu.school }}</div>
+                <div class="text-teal-300 text-sm">{{ edu.degree }}</div>
+              </div>
+              <span class="text-xs text-gray-400">{{ edu.year }}</span>
+            </div>
+          </div>
+        </section>
+
+        <section v-if="visibleProjects.length">
+          <h2 class="text-xl font-bold text-purple-400 mb-3 flex items-center gap-2 uppercase tracking-widest">
+            <span class="w-8 h-1 bg-purple-500 rounded"></span> Projects
+          </h2>
+          <div class="space-y-3">
+            <div
+              v-for="p in visibleProjects"
+              :key="p.id"
+              class="bg-white/5 p-3 rounded-lg border border-white/10 border-l-4 border-l-purple-500"
+            >
+              <div class="font-bold text-white mb-1">{{ p.name }}</div>
+              <div class="text-xs text-purple-300 mb-1">{{ p.technologies }}</div>
+              <p class="text-xs text-gray-300 h-auto">{{ p.description }}</p>
             </div>
           </div>
         </section>

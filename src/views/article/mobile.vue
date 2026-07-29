@@ -602,7 +602,11 @@ export default {
           this.articleInfo = res.data;
           this.prevArticle = res.prevRow;
           this.nextArticle = res.nextRow;
+          // 更新页面标题,更新路由元信息中的标题,路径参数中的标题和分类名称
           window.document.title = (res.data.articleTitle || this.$route.meta.title) + " - 极客普拉斯,拾光梦集,极客普拉斯&拾光梦集 - GeekPlus";
+          this.$route.meta.title = res.data.articleTitle;
+          this.$route.params.title = res.data.articleTitle;
+          this.$route.params.categoryName = res.data.articleCategory.categoryName;
           // 乐观更新本地展示；真实上报走延后+会话去重
           if (this.articleInfo.viewCount == null) this.articleInfo.viewCount = 0;
           this.articleInfo.viewCount = Number(this.articleInfo.viewCount) + 1;

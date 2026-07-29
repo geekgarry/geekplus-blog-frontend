@@ -147,6 +147,13 @@
             <!-- 月亮按钮 -->
             <i v-else class="el-icon-moon" aria-hidden="true" @click="changeColor()"></i>
           </div>
+          <div :title="blogLayoutToggleTitle">
+            <i
+              :class="blogLayout === 'side' ? 'el-icon-s-unfold' : 'el-icon-s-fold'"
+              aria-hidden="true"
+              @click="toggleBlogLayout()"
+            ></i>
+          </div>
           <div :title="mouseAnimation ? '关闭点击飘字' : '开启点击飘字'">
             <i class="el-icon-magic-stick" aria-hidden="true" @click="changeMouseAnimation()"></i>
           </div>
@@ -185,10 +192,12 @@ import BlogUserMenu from '@/components/BlogUserMenu/index'
 import { getGpWebTitleInfo, selectGpArticlesListByKeyWords, getMostViewedArticle, getClickTextWords } from '@/api/geekplus/geekplus'
 import { enableClickFloat, disableClickFloat, setClickFloatWords } from '@/utils/clickFloat'
 import { runWhenIdle, cancelIdle } from '@/utils/deferRequest'
+import blogLayoutMixin from '@/layout/blog/blogLayoutMixin'
 // import '@/utils/TweenMax.min.js';
 // import '@/utils/paopaoScript.js';
 
 export default {
+  mixins: [blogLayoutMixin],
   components: {
     LoginSignup,
     BlogNavMenu,

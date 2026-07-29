@@ -1,16 +1,131 @@
 /**
  * 静态路由表（constantRoutes）
- * 博客栏目（/timeEssay/... 等）不在此表，由 navMenu + permission.js 运行时 addRoute 到 name:'sideApp'。
- * 首页用 VerticalBlog，其余前台页用 HorizontalBlog（侧栏布局）。
+ * 博客栏目（/timeEssay/... 等）不在此表，由 navMenu + permission.js 运行时 addRoute 到 name:'webApp'。
+ * 前台统一走 BlogShell：按 settings.blogLayout 切换顶部导航 / 侧栏，子路由共享。
  */
 import Vue from "vue";
 import VueRouter from "vue-router";
-import VerticalBlog from '@/layout/blog/vertical/index';
-import HorizontalBlog from '@/layout/blog/horizontal/index'
+import BlogShell from '@/layout/blog/BlogShell'
 /* 管理端 Layout 异步加载，避免整壳打进博客首屏包 */
 const Layout = () => import(/* webpackChunkName: "layout-admin" */ '@/layout')
 
 Vue.use(VueRouter);
+
+/** 博客前台子路由（挂在 BlogShell / webApp 下，两套布局共用） */
+export const blogChildrenRoutes = [
+  {
+    path: '/',
+    name: 'index',
+    meta: { title: '首页', icon: '' },
+    component: () => import("@/views/IndexView.vue")
+  },
+  {
+    path: '/ai-search',
+    name: 'AI 聚合搜索',
+    meta: { title: '聚合搜索首页', icon: '' },
+    component: () => import('@/views/HomeView.vue')
+  },
+  {
+    path: '/resumeGenerator',
+    name: 'ResumeEditor',
+    meta: { title: '简历生成器', icon: '' },
+    component: () => import('@/views/tool/ResumeEditor.vue'),
+  },
+  {
+    path: '/search',
+    name: 'search',
+    meta: { title: '搜索文章', icon: '' },
+    component: () => import("../views/article-list/search.vue")
+  },
+  {
+    path: '/categories',
+    name: 'categories',
+    meta: { title: '分类浏览', icon: '' },
+    component: () => import(/* webpackChunkName: "blog-categories" */ '@/views/blog/CategoriesView.vue')
+  },
+  {
+    path: '/tags',
+    name: 'tags',
+    meta: { title: '热门标签', icon: '' },
+    component: () => import(/* webpackChunkName: "blog-tags" */ '@/views/blog/TagsView.vue')
+  },
+  {
+    path: '/user/center',
+    name: 'userCenter',
+    meta: { title: '个人中心', icon: '' },
+    component: () => import(/* webpackChunkName: "blog-user-center" */ '@/views/blog/UserCenter.vue')
+  },
+  {
+    path: '/article/:id',
+    name: 'indexArticle',
+    meta: { title: '文章', icon: '' },
+    component: () => import("../views/article/mobile.vue")
+  },
+  {
+    path: '/article1',
+    name: 'article',
+    meta: { title: '文章', icon: '' },
+    component: () => import('@/views/article/index.vue'),
+  },
+  {
+    path: '/article2',
+    name: 'primaryArticle',
+    meta: { title: '文章', icon: '' },
+    component: () => import('@/views/article/primary.vue'),
+  },
+  {
+    path: '/e-sign',
+    name: 'eSign',
+    meta: { title: '电子签名', icon: '' },
+    component: () => import(/* webpackChunkName: "e-sign" */ '@/components/vue-esign'),
+  },
+  {
+    path: '/leave-word',
+    name: 'leaveWord',
+    meta: { title: '网站留言', icon: '' },
+    component: () => import("../views/leave-word/index.vue")
+  },
+  {
+    path: '/file-transfer',
+    name: 'fileTransfer',
+    meta: { title: '文件中转', icon: '' },
+    component: () => import(/* webpackChunkName: "file-transfer" */ '@/views/file-transfer/index.vue')
+  },
+  {
+    path: '/file-transfer/d/:code',
+    name: 'fileTransferDownload',
+    meta: { title: '文件下载', icon: '' },
+    component: () => import(/* webpackChunkName: "file-transfer-dl" */ '@/views/file-transfer/download.vue')
+  },
+  {
+    path: '/about',
+    name: 'about',
+    meta: { title: '关于', icon: 'fa-home' },
+    component: () => import("../views/AboutView.vue")
+  },
+  {
+    path: '/write',
+    name: 'WriteArticleUnlogin',
+    meta: { title: '投稿文章', icon: '' },
+    component: () => import('@/views/write/index.vue'),
+  },
+  {
+    path: '/403',
+    name: '403',
+    meta: { title: '403', icon: '' },
+    type: 'error',
+    component: () =>
+      import( /* webpackChunkName: "error-403" */ "../views/error/Error403.vue")
+  },
+  {
+    path: '/404',
+    name: '404',
+    meta: { title: '404', icon: '' },
+    type: 'error',
+    component: () =>
+      import( /* webpackChunkName: "error-404" */ "../views/error/Error404.vue")
+  }
+]
 
 export const constantRoutes = [
   {
@@ -57,12 +172,6 @@ export const constantRoutes = [
     type: 'admin',
     meta: { title: '简历工具' },
     children: [
-      // {
-      //   path: 'template',
-      //   name: 'ResumeTemplateManager',
-      //   component: () => import('@/views/admin/tool/resume/ResumeTemplateManager'),
-      //   meta: { title: '简历模板管理', noCache: true }
-      // },
       {
         path: 'template-builder',
         name: 'ResumeTemplateBuilder',
@@ -70,12 +179,6 @@ export const constantRoutes = [
         component: () => import('@/views/admin/tool/resume/ResumeTemplateBuilder'),
         meta: { title: '可视化模板编辑', noCache: true }
       },
-      // {
-      //   path: 'data',
-      //   name: 'ResumeDataManager',
-      //   component: () => import('@/views/admin/tool/resume/ResumeDataManager'),
-      //   meta: { title: '简历数据管理', noCache: true }
-      // }
     ]
   },
   {
@@ -109,132 +212,11 @@ export const constantRoutes = [
   },
   {
     path: '/',
-    component: VerticalBlog,
+    component: BlogShell,
     redirect: '/',
     type: "webApp",
     name: "webApp",
-    children: [{
-      path: '/',
-      name: 'index',
-      meta: { title: '首页', icon: '' },
-      component: () => import("@/views/IndexView.vue")
-    }]
-  },
-  {
-    /* 侧栏布局：除首页外的博客前台页面 */
-    path: '/site',
-    component: HorizontalBlog,
-    type: "webApp",
-    name: "sideApp",
-    redirect: '/about',
-    children: [
-    {
-      path: '/ai-search',
-      name: 'AI 聚合搜索',
-      meta: { title: '聚合搜索首页', icon: '' },
-      component: () => import('@/views/HomeView.vue')
-    },
-    {
-      path: '/resumeGenerator',
-      name: 'ResumeEditor',
-      meta: { title: '简历生成器', icon: '' },
-      component: () => import('@/views/tool/ResumeEditor.vue'),
-    },
-    {
-      path: '/search',
-      name: 'search',
-      meta: { title: '搜索文章', icon: '' },
-      component: () => import("../views/article-list/search.vue")
-    },
-    {
-      path: '/categories',
-      name: 'categories',
-      meta: { title: '分类浏览', icon: '' },
-      component: () => import(/* webpackChunkName: "blog-categories" */ '@/views/blog/CategoriesView.vue')
-    },
-    {
-      path: '/tags',
-      name: 'tags',
-      meta: { title: '热门标签', icon: '' },
-      component: () => import(/* webpackChunkName: "blog-tags" */ '@/views/blog/TagsView.vue')
-    },
-    {
-      path: '/user/center',
-      name: 'userCenter',
-      meta: { title: '个人中心', icon: '' },
-      component: () => import(/* webpackChunkName: "blog-user-center" */ '@/views/blog/UserCenter.vue')
-    },
-    {
-      path: '/article/:id',
-      name: 'indexArticle',
-      meta: { title: '文章', icon: '' },
-      component: () => import("../views/article/mobile.vue")
-    },
-    {
-      path: '/article1',
-      name: 'article',
-      meta: { title: '文章', icon: '' },
-      component: () => import('@/views/article/index.vue'),
-    },
-    {
-      path: '/article2',
-      name: 'primaryArticle',
-      meta: { title: '文章', icon: '' },
-      component: () => import('@/views/article/primary.vue'),
-    },
-    {
-      path: '/e-sign',
-      name: 'eSign',
-      meta: { title: '电子签名', icon: '' },
-      component: () => import(/* webpackChunkName: "e-sign" */ '@/components/vue-esign'),
-    },
-    {
-      path: '/leave-word',
-      name: 'leaveWord',
-      meta: { title: '网站留言', icon: '' },
-      component: () => import("../views/leave-word/index.vue")
-    },
-    {
-      path: '/file-transfer',
-      name: 'fileTransfer',
-      meta: { title: '文件中转', icon: '' },
-      component: () => import(/* webpackChunkName: "file-transfer" */ '@/views/file-transfer/index.vue')
-    },
-    {
-      path: '/file-transfer/d/:code',
-      name: 'fileTransferDownload',
-      meta: { title: '文件下载', icon: '' },
-      component: () => import(/* webpackChunkName: "file-transfer-dl" */ '@/views/file-transfer/download.vue')
-    },
-    {
-      path: '/about',
-      name: 'about',
-      meta: { title: '关于', icon: 'fa-home' },
-      component: () => import("../views/AboutView.vue")
-    },
-    {
-      path: '/write',
-      name: 'WriteArticleUnlogin',
-      meta: { title: '投稿文章', icon: '' },
-      component: () => import('@/views/write/index.vue'),
-    },
-    {
-      path: '/403',
-      name: '403',
-      meta: { title: '403', icon: '' },
-      type: 'error',
-      component: () =>
-        import( /* webpackChunkName: "error-403" */ "../views/error/Error403.vue")
-    },
-    {
-      path: '/404',
-      name: '404',
-      meta: { title: '404', icon: '' },
-      type: 'error',
-      component: () =>
-        import( /* webpackChunkName: "error-404" */ "../views/error/Error404.vue")
-    }
-    ]
+    children: blogChildrenRoutes
   },
   {
     path: '/user',
@@ -254,34 +236,6 @@ export const constantRoutes = [
 
 // 动态路由，基于用户权限动态去加载
 export const dynamicRoutes = [
-  // {
-  //   path: "/system/user-auth",
-  //   component: Layout,
-  //   hidden: true,
-  //   permissions: ["system:user:edit"],
-  //   children: [
-  //     {
-  //       path: "role/:userId(\\d+)",
-  //       component: () => import("@/views/system/user/authRole"),
-  //       name: "AuthRole",
-  //       meta: { title: "分配角色", activeMenu: "/system/user" },
-  //     },
-  //   ],
-  // },
-  // {
-  //   path: "/system/role-auth",
-  //   component: Layout,
-  //   hidden: true,
-  //   permissions: ["system:role:edit"],
-  //   children: [
-  //     {
-  //       path: "user/:roleId(\\d+)",
-  //       component: () => import("@/views/system/role/authUser"),
-  //       name: "AuthUser",
-  //       meta: { title: "分配用户", activeMenu: "/system/role" },
-  //     },
-  //   ],
-  // },
   {
     path: "/admin/system/dict-data",
     component: Layout,
@@ -310,42 +264,11 @@ export const dynamicRoutes = [
       },
     ],
   }
-  // {
-  //   path: "/monitor/job-log",
-  //   component: Layout,
-  //   hidden: true,
-  //   permissions: ["monitor:job:list"],
-  //   children: [
-  //     {
-  //       path: "index",
-  //       component: () => import("@/views/monitor/job/log"),
-  //       name: "JobLog",
-  //       meta: { title: "调度日志", activeMenu: "/monitor/job" },
-  //     },
-  //   ],
-  // },
-  // {
-  //   path: "/tool/gen-edit",
-  //   component: Layout,
-  //   hidden: true,
-  //   permissions: ["tool:gen:edit"],
-  //   children: [
-  //     {
-  //       path: "index/:tableId(\\d+)",
-  //       component: () => import("@/views/tool/gen/editTable"),
-  //       name: "GenEdit",
-  //       meta: { title: "修改生成配置", activeMenu: "/tool/gen" },
-  //     },
-  //   ],
-  // },
 ];
 
 const createRouter = () => new VueRouter({
   mode: "history",
   scrollBehavior: () => ({ y: 0 }),
-  //代表着是基本的路由请求的路径。参考 ：如：base: ‘/app/’，那么所有的请求都会在url之后加上/app/，应用的基路径。
-  //例如，如果整个单页应用服务在 /app/ 下，然后 base 就应该设为 “/app/”
-  // base: process.env.BASE_URL,
   routes: constantRoutes,
 });
 

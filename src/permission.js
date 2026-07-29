@@ -71,7 +71,7 @@ function isAdminRoute(path) {
 const publicMenuPrefetch = store.dispatch("navMenu/getMenu").catch(() => null);
 
 /**
- * 注册博客前台动态菜单路由（挂到 sideApp 侧栏布局）
+ * 注册博客前台动态菜单路由（挂到 webApp / BlogShell）
  * @returns {{ ok: boolean, needRematch: boolean }}
  *   needRematch=true 表示本轮刚 addRoute，调用方必须 next({...to, replace:true})
  */
@@ -95,7 +95,7 @@ async function initPublicRoutes() {
 
     const accessRoutes = await store.dispatch("navMenu/generateRoutes", { routes });
     accessRoutes.forEach((item) => {
-      addChildRoute("sideApp", item);
+      addChildRoute("webApp", item);
     });
 
     // 404 必须在全部动态路由之后挂载，否则会抢先吞掉栏目路径

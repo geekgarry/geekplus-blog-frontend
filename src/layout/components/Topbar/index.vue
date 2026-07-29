@@ -5,8 +5,6 @@
     <div class="top-menu-wrapper">
       <el-menu
         :default-active="activeMenu"
-        background-color="#f7f7f7"
-        text-color="#393939"
         :unique-opened="false"
         :active-text-color="themeColor||variables.menuActiveText"
         :collapse-transition="false"
@@ -74,7 +72,9 @@ export default {
   height: 50px;
   line-height: 50px;
   border: none;
-  //background: #eeeeee;
+  background-color: var(--gp-surface-bg, #f7f7f7);
+  box-shadow: var(--gp-nav-shadow, 0 1px 4px rgba(15, 23, 42, 0.06));
+  color: var(--fontColor, #303133);
 }
 
 .top-menu-wrapper::-webkit-scrollbar {
