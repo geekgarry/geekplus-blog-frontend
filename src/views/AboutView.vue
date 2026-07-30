@@ -3,7 +3,7 @@
     <div class="gp-page__inner container">
       <div class="gp-page__main">
         <div class="gp-row">
-          <div class="gp-col-24 gp-col-lg-7 gp-col-md-7 gp-col-sm-7 gp-col-xs-7">
+          <div class="gp-col-24 gp-col-xl-7 gp-col-lg-7 gp-col-md-7 gp-col-sm-24 gp-col-xs-24">
             <div class="blog-side-container">
               <div class="gp-surface-card profile-card">
                 <div class="gp-surface-card__body">
@@ -75,7 +75,7 @@
             </div>
           </div>
 
-          <div class="gp-col-24 gp-col-lg-17 gp-col-md-17 gp-col-sm-17 gp-col-xs-17">
+          <div class="gp-col-24 gp-col-xl-17 gp-col-lg-17 gp-col-md-17 gp-col-sm-24 gp-col-xs-24">
             <div class="about-main" :class="{ 'skeleton-loading': loading }">
               <header class="about-hero">
                 <p class="about-hero__eyebrow">About</p>

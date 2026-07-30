@@ -291,7 +291,7 @@ export default {
     float: left;
   }
 
-  // 左侧菜单样式
+  // 左侧菜单样式：可收缩，配合 Topbar 溢出折叠到「更多」
   .left-menu{
     float: left;
     height: 100%;

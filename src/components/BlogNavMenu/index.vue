@@ -248,21 +248,25 @@ export default {
     menus: {
       deep: true,
       handler() {
-        this.$nextTick(() => this.recompute())
+        this.$nextTick(() => this.scheduleRecompute())
       }
     },
     allItems() {
-      this.$nextTick(() => this.recompute())
+      this.$nextTick(() => this.scheduleRecompute())
     }
   },
   mounted() {
     if (this.mode === 'desktop') {
-      this.$nextTick(() => this.recompute())
+      this.scheduleRecompute()
       window.addEventListener('resize', this.onResize)
       document.addEventListener('click', this.onDocClick)
       if (typeof ResizeObserver !== 'undefined') {
-        this._ro = new ResizeObserver(() => this.recompute())
+        this._ro = new ResizeObserver(() => this.scheduleRecompute())
+        if (this.$el) this._ro.observe(this.$el)
         if (this.$refs.root) this._ro.observe(this.$refs.root)
+      }
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => this.scheduleRecompute()).catch(() => {})
       }
     }
   },
@@ -270,11 +274,12 @@ export default {
     window.removeEventListener('resize', this.onResize)
     document.removeEventListener('click', this.onDocClick)
     if (this._ro) this._ro.disconnect()
+    if (this._recomputeRAF) cancelAnimationFrame(this._recomputeRAF)
   },
   methods: {
     onResize() {
       this.closeAll()
-      this.recompute()
+      this.scheduleRecompute()
     },
     onDocClick() {
       this.closeAll()
@@ -341,22 +346,50 @@ export default {
         this.$router.push(path, () => {}, () => {})
       }
     },
-    /** 按容器宽度决定可见项数；预留「更多」宽度，禁止换行挤压 */
-    recompute() {
-      if (this.mode !== 'desktop' || !this.$refs.root || !this.$refs.measure) return
-      const rootWidth = this.$refs.root.clientWidth
-      const measureItems = this.$refs.measure.querySelectorAll('.gp-nav-menu__item')
-      if (!measureItems.length) return
-
-      const widths = []
-      measureItems.forEach((el, i) => {
-        // 最后一项是「更多」按钮测量位
-        if (i === measureItems.length - 1) {
-          this.moreWidth = Math.ceil(el.getBoundingClientRect().width) || 72
-        } else {
-          widths.push(Math.ceil(el.getBoundingClientRect().width))
-        }
+    /** 含左右 margin 的占位宽度，避免只量 content 导致算出偏多 */
+    outerWidth(el) {
+      if (!el || !el.getBoundingClientRect) return 0
+      const rect = el.getBoundingClientRect()
+      const style = window.getComputedStyle(el)
+      return Math.ceil(
+        rect.width +
+          (parseFloat(style.marginLeft) || 0) +
+          (parseFloat(style.marginRight) || 0)
+      )
+    },
+    scheduleRecompute() {
+      if (this.mode !== 'desktop') return
+      if (this._recomputeRAF) cancelAnimationFrame(this._recomputeRAF)
+      this._recomputeRAF = requestAnimationFrame(() => {
+        this._recomputeRAF = requestAnimationFrame(() => {
+          this._recomputeRAF = 0
+          this.recompute()
+        })
       })
+    },
+    /**
+     * 按外层可用宽度决定可见项数；装不下时预留「更多」。
+     */
+    recompute() {
+      if (this.mode !== 'desktop' || !this.$refs.measure) return
+      const host = this.$el
+      const root = this.$refs.root
+      const avail = Math.floor(
+        (host && host.clientWidth) ||
+          (root && root.clientWidth) ||
+          0
+      )
+      if (avail <= 0) return
+
+      const SAFETY = 4
+      const budget = Math.max(0, avail - SAFETY)
+      const measureKids = Array.prototype.slice.call(this.$refs.measure.children || [])
+      if (!measureKids.length) return
+
+      const moreEl = measureKids[measureKids.length - 1]
+      const itemEls = measureKids.slice(0, -1)
+      this.moreWidth = this.outerWidth(moreEl) || 72
+      const widths = itemEls.map((el) => this.outerWidth(el))
       this.itemWidths = widths
 
       const total = widths.length
@@ -365,29 +398,55 @@ export default {
         return
       }
 
-      let sumAll = widths.reduce((a, b) => a + b, 0)
-      if (sumAll <= rootWidth) {
+      const sumAll = widths.reduce((a, b) => a + b, 0)
+      if (sumAll <= budget) {
         this.visibleCount = total
+        this.$nextTick(() => this.tightenUntilFits())
         return
       }
 
       let used = 0
       let count = 0
       for (let i = 0; i < total; i++) {
-        const needMore = this.moreWidth
-        if (used + widths[i] + needMore <= rootWidth) {
-          used += widths[i]
+        const next = used + widths[i]
+        // 后面还有溢出项时必须预留「更多」
+        if (next + this.moreWidth <= budget) {
+          used = next
           count++
         } else {
           break
         }
       }
-      // 至少保留首页；极端窄屏时首页也进「更多」由 count=0 处理
       this.visibleCount = Math.max(0, count)
       if (this.openKey && this.openKey !== 'more') {
         const stillVisible = this.primaryItems.some((it) => it.key === this.openKey)
         if (!stillVisible) this.openKey = null
       }
+      this.$nextTick(() => this.tightenUntilFits())
+    },
+    /**
+     * 仅在真实横向溢出时再收紧。
+     * 注意：list 常被拉成 width:100%，此时 scrollWidth≈clientWidth，
+     * 绝不能拿 scrollWidth 去和 (avail - SAFETY) 比，否则会误判并一路折到 0。
+     */
+    tightenUntilFits() {
+      if (this._tightening) return
+      this._tightening = true
+      const run = () => {
+        const list = this.$refs.list
+        if (!list) {
+          this._tightening = false
+          return
+        }
+        const overflowed = list.scrollWidth > list.clientWidth + 1
+        if (overflowed && this.visibleCount > 0) {
+          this.visibleCount -= 1
+          this.$nextTick(run)
+          return
+        }
+        this._tightening = false
+      }
+      this.$nextTick(run)
     }
   }
 }
@@ -395,10 +454,13 @@ export default {
 
 <style lang="scss" scoped>
 .gp-blog-nav.is-desktop {
-  flex: 1 1 auto;
+  /* flex:1 + basis 0：占满剩余空间且可被挤压，避免被菜单内容撑破 */
+  flex: 1 1 0;
   min-width: 0;
+  width: 0;
+  max-width: 100%;
   display: flex;
-  /* 允许子菜单溢出顶栏高度区域 */
+  /* 允许 fixed 子菜单面板溢出顶栏高度 */
   overflow: visible;
 }
 
@@ -414,10 +476,14 @@ export default {
   position: relative;
   flex: 1 1 auto;
   min-width: 0;
+  width: 100%;
+  max-width: 100%;
   height: 60px;
   display: flex;
   align-items: center;
-  overflow: visible;
+  box-sizing: border-box;
+  /* 面板为 position:fixed，此处 hidden 只裁切横排溢出项 */
+  overflow: hidden;
 }
 
 .gp-nav-menu__list {
@@ -426,12 +492,13 @@ export default {
   align-items: center;
   justify-content: flex-end;
   width: 100%;
+  max-width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
   list-style: none;
-  /* 可见项已由 JS 裁剪；此处 hidden 会裁掉子菜单下拉面板 */
-  overflow: visible;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .gp-nav-menu__item {
@@ -568,7 +635,7 @@ export default {
   color: var(--muted-1-color, #999);
 }
 
-/* 离屏测量，不影响布局 */
+/* 离屏测量，不影响布局；与正式项同 margin，保证 outerWidth 一致 */
 .gp-nav-menu__measure {
   position: absolute;
   left: -9999px;
@@ -577,15 +644,21 @@ export default {
   flex-wrap: nowrap;
   visibility: hidden;
   pointer-events: none;
-  height: 0;
-  overflow: hidden;
+  height: auto;
+  overflow: visible;
   margin: 0;
   padding: 0;
   list-style: none;
+  white-space: nowrap;
 }
 
 .gp-nav-menu__measure .gp-nav-menu__item {
   height: auto;
+}
+
+.gp-nav-menu__measure .gp-nav-menu__link {
+  /* 与按钮态同尺寸，避免 span/button 量宽偏差 */
+  box-sizing: border-box;
 }
 
 /* —— 抽屉模式 —— */

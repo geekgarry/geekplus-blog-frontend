@@ -4,7 +4,7 @@
     <div class="gp-page__inner container">
       <div class="gp-page__main">
         <div class="gp-row">
-          <div class="gp-col-24 gp-col-md-7">
+          <div class="gp-col-24 gp-col-xl-7 gp-col-lg-7 gp-col-md-7 gp-col-sm-24 gp-col-xs-24">
             <div class="blog-side-container">
               <!-- 侧边栏用户信息：gp-surface-card 替代 el-card -->
               <div class="gp-surface-card profile-card">
@@ -58,7 +58,7 @@
               </div>
             </div>
           </div>
-          <div class="gp-col-24 gp-col-md-17">
+          <div class="gp-col-24 gp-col-xl-17 gp-col-lg-17 gp-col-md-17 gp-col-sm-24 gp-col-xs-24">
             <div class="section-header"><i class="el-icon-menu"></i><plus-breadcrumb></plus-breadcrumb></div>
             <div class="blog-post-container">
               <div class="post-item item-list" v-for="(post, index) in blogPosts" :key="index"

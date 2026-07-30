@@ -7,7 +7,7 @@
   width: 100%;
   box-sizing: border-box;
   min-height: 60vh;
-  background: var(--gp-page-wash, var(--background));
+  /* background: var(--gp-page-wash, var(--background)); */
 }
 
 .gp-page__inner {
@@ -58,7 +58,6 @@
   .gp-col-xl-1 { width: 4.16666667%; }
   .gp-page__inner {
     width: 1300px;
-    padding: 0;
   }
   .gp-page__main {
     padding: 0;

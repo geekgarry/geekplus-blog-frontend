@@ -4,7 +4,7 @@
     <div class="gp-page__inner container">
       <div class="gp-page__main">
         <div class="gp-row">
-          <div class="gp-col-24 gp-col-md-7">
+          <div class="gp-col-24 gp-col-xl-7 gp-col-lg-7 gp-col-md-7 gp-col-sm-24 gp-col-xs-24">
             <!-- 侧边栏用户信息：gp-surface-card 替代 el-card -->
             <div class="gp-surface-card profile-card">
               <div class="gp-surface-card__body">
@@ -94,7 +94,7 @@
             </div>
           </div>
 
-          <div class="gp-col-24 gp-col-md-17">
+          <div class="gp-col-24 gp-col-xl-17 gp-col-lg-17 gp-col-md-17 gp-col-sm-24 gp-col-xs-24">
             <!-- <div class="welcome">
               <i class="el-icon-speaker"></i> 欢迎光临! 查看文章: <a
                 href="https://127.0.0.1/article/26">https://127.0.0.1/article/26</a>
