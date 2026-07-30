@@ -1,13 +1,33 @@
 /**
  * 网络请求调度：空闲/延后执行非关键请求，避免首屏瞬时并发打满导致失败。
- * 参考成熟站点做法：关键内容优先 → 浏览量延迟+会话去重 → 侧栏/推荐 idle 加载。
+ * 参考成熟站点做法：关键内容优先 → 浏览量延迟+会话去重 → 侧栏/推荐 idle 加载
+ * → 页面切到后台时延后任务暂停，回到前台再继续（与 request.js 的 resumeOnVisible 互补）。
  */
+
+import { isPageVisible, waitUntilPageVisible } from '@/utils/http/pageVisibility'
 
 /** requestIdleCallback 兜底 */
 export function runWhenIdle(fn, timeout = 2000) {
   if (typeof window === 'undefined') {
     fn()
     return 0
+  }
+  // 在后台时不要抢着跑侧栏请求：等回前台再 idle，减少被系统杀掉后的「加载失败」体感
+  if (!isPageVisible()) {
+    let cancelled = false
+    let idleId = 0
+    const handle = {
+      // cancelIdle 识别对象句柄（不能在 number 上挂属性）
+      __gpCancelVisibleIdle() {
+        cancelled = true
+        cancelIdle(idleId)
+      }
+    }
+    waitUntilPageVisible().then(() => {
+      if (cancelled) return
+      idleId = runWhenIdle(fn, timeout)
+    })
+    return handle
   }
   if (typeof window.requestIdleCallback === 'function') {
     return window.requestIdleCallback(() => { fn() }, { timeout })
@@ -23,10 +43,48 @@ export function runAfter(fn, ms = 1200) {
 
 export function cancelIdle(id) {
   if (id == null || typeof window === 'undefined') return
+  if (id && typeof id.__gpCancelVisibleIdle === 'function') {
+    id.__gpCancelVisibleIdle()
+  }
   if (typeof window.cancelIdleCallback === 'function') {
     try { window.cancelIdleCallback(id) } catch (e) { /* ignore */ }
   }
   window.clearTimeout(id)
+}
+
+/**
+ * 仅在页面可见时执行；若当前在后台（切标签/切 App），等回前台再跑。
+ * 适合：回到页面后刷新列表、补拉首屏失败的块。
+ * @returns {{ cancel: Function }}
+ */
+export function runWhenVisible(fn, opts = {}) {
+  const timeoutMs = opts.timeoutMs != null ? opts.timeoutMs : 180000
+  if (typeof fn !== 'function') return { cancel() {} }
+  if (typeof document === 'undefined') {
+    fn()
+    return { cancel() {} }
+  }
+  let cancelled = false
+  let timer = null
+  const run = () => {
+    if (cancelled) return
+    try { fn() } catch (e) { /* ignore */ }
+  }
+  if (isPageVisible()) {
+    run()
+    return { cancel() { cancelled = true } }
+  }
+  waitUntilPageVisible(timeoutMs).then(() => {
+    if (cancelled) return
+    // 与 request 续传同样给一点网络恢复时间
+    timer = window.setTimeout(run, 200)
+  })
+  return {
+    cancel() {
+      cancelled = true
+      if (timer) window.clearTimeout(timer)
+    }
+  }
 }
 
 /**
@@ -85,6 +143,7 @@ export function scheduleArticleViewCount(opts) {
   }, dwellMs)
 
   const onHide = () => {
+    // 切走前尽量补发一次（sendBeacon 友好场景可在 send 内自行处理）
     if (document.visibilityState === 'hidden') doSend()
   }
   const onPageHide = () => { doSend() }

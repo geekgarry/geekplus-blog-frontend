@@ -1,6 +1,7 @@
 /**
  * 前台布局切换：top = 顶部导航(Vertical)，side = 侧栏(Horizontal)
  * 状态在 settings.blogLayout，经 localStorage 持久化。
+ * 由 BlogShell 读取同名状态决定渲染哪套壳；本 mixin 挂在两套 layout 上提供切换按钮。
  */
 export default {
   computed: {

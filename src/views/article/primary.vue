@@ -17,7 +17,7 @@
       </div>
       <div class="gp-page__main">
         <div class="gp-row">
-          <div class="gp-col-24 gp-col-md-17">
+          <div class="gp-col-24 gp-col-xl-17 gp-col-lg-17 gp-col-md-17 gp-col-sm-24 gp-col-xs-24">
             <div class="article-container gp-article-panel" :class="{ 'skeleton-loading': loading }">
               <h1 v-if="!loading" class="gp-article-title">{{ articleInfo.articleTitle || '概率抽奖算法工具类'}}</h1>
               <div v-else class="skeleton-block article-skeleton-title"></div>
@@ -69,7 +69,7 @@
               </plus-pager>
             </div>
           </div>
-          <div class="gp-col-24 gp-col-md-7">
+          <div class="gp-col-24 gp-col-xl-7 gp-col-lg-7 gp-col-md-7 gp-col-sm-24 gp-col-xs-24">
             <div class="user-profile" v-if="!isMobile">
               <div class="user-image">
                 <img :src="userAvatar">

@@ -1,12 +1,20 @@
 /**
- * 全局路由守卫：前台博客动态菜单 + 后台权限路由
+ * 全局路由守卫：前台博客动态菜单 + 后台权限路由（双重动态路由的总闸门）
+ *
+ * 进站顺序（不要颠倒）：
+ *   1) initPublicRoutes —— 人人需要的前台栏目，挂到 webApp / BlogShell
+ *   2) needRematch 时 replace 重进 —— 修复「直链时 addRoute 后 matched 仍为空」白屏
+ *   3) 有 Token 再拉后台菜单 —— 与 navMenu 数据源隔离，避免游客逻辑和权限逻辑搅在一起
  *
  * 【直链空白页根因】
  * 博客栏目路由（如 /timeEssay/personalEssay）来自 navMenu/getMenu，不在 constantRoutes 里。
  * 从首页点菜单时路由已 addRoute，故能进；首次直接打开该 URL 时：
  *   1) 守卫里 await 拉菜单并 addRoute
  *   2) 若只 next() 而不重新进入，Vue Router 仍沿用「加路由之前」的匹配结果 → matched 为空 → 白屏
- * 正确做法：动态路由刚注册完后 next({ ...to, replace: true }) 强制再匹配一次。
+ * 正确做法：动态路由刚注册完后 next({ path: to.fullPath, replace: true }) 强制再匹配一次。
+ * （不要 next({ ...to }) 展开 Route 对象，可能带内部字段导致 path 读空。）
+ *
+ * 详见 docs/v2/00-双重动态路由与守卫.md
  */
 import router from "./router";
 import store from "./store";

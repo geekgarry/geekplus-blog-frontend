@@ -188,6 +188,12 @@
 /**
  * 前台博客导航菜单（桌面横排 + 抽屉）。
  * 独立组件：自定义下拉 / 溢出「更多」，与 gp-surface 风格一致，便于日后去掉 Element 顶栏依赖。
+ *
+ * 架构注意：
+ * - mode=desktop：离屏测量 + visibleCount；下拉用 fixed+placePanel（躲开顶栏 backdrop-filter 裁切）
+ * - mode=drawer：手风琴，不跑溢出算法
+ * - 菜单数据来自 props.menus（Vuex addMenuRoutes）+ 固定项（首页/中转/留言/关于）
+ * 溢出算法误区：勿用 scrollWidth 与 (avail-SAFETY) 比较，width:100% 时会误判全折叠（见 tightenUntilFits）
  */
 export default {
   name: 'BlogNavMenu',
@@ -232,7 +238,11 @@ export default {
       return [
         { key: 'home', label: '首页', path: '/', icon: 'home', children: null },
         ...dynamic,
-        { key: 'transfer', label: '文件中转', path: '/file-transfer', icon: 'upload', children: null },
+        { key: 'webTool', label: '在线工具', path: '', icon: 'tool', children: [
+          { key: 'transfer', label: '文件中转', path: '/file-transfer', icon: 'upload', children: null },
+          { key: 'resumeGenerator', label: '简历生成', path: '/resumeGenerator', icon: 'document', children: null },
+        ] },
+        { key: 'chat', label: 'AI 助手', path: '/chat', icon: 'ai', children: null },
         { key: 'leave', label: '给我留言', path: '/leave-word', icon: 'leave-word', children: null },
         { key: 'about', label: '关于本站', path: '/about', icon: 'cheers', children: null }
       ]

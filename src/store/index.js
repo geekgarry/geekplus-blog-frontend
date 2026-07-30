@@ -4,6 +4,15 @@ import getters from './getters'
 
 Vue.use(Vuex);
 
+/**
+ * Vuex 入口：自动扫描 modules/ 下各业务模块。
+ * 与博客相关的关键模块：
+ * - navMenu：前台栏目动态路由（游客也可）
+ * - user / permission：后台登录与权限菜单（需 Token）
+ * - settings：含 blogLayout 等前台偏好
+ * 切勿把前台栏目与后台 menus 塞进同一个数组用 type 区分——守卫和清登录态会互相踩。
+ */
+
 // https://webpack.js.org/guides/dependency-management/#requirecontext
 const modulesFiles = require.context('./modules', true, /\.js$/)
 

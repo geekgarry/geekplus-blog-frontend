@@ -46,7 +46,7 @@
             </div>
             <div class="welcome">
               <i class="el-icon-s-opportunity"></i>
-              <span class="welcome-message">欢迎光临! 体验AI助手: <a href="/chat" target="_blank">点击直达</a></span>
+              <span class="welcome-message">欢迎光临! 体验AI助手: <router-link to="/chat" target="_blank">点击直达</router-link></span>
             </div>
             <div class="special-recommend-container" v-if="sixSpecialArticles && sixSpecialArticles.length > 0">
               <div class="gp-row special-recommend-row">

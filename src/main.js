@@ -4,6 +4,10 @@
  * 1) polyfill 交给 babel useBuiltIns:'usage'，不要再 import 'core-js/stable'
  * 2) 重型插件（广告、v-viewer、html2canvas 等）延后或路由内 import()
  * 3) '@/permission' 会预取前台栏目菜单，保证直链动态路由可注册
+ *
+ * 请求体验约定（与 utils/request、deferRequest、pageVisibility 配合）：
+ * - GET 默认支持切标签/切 App 后回前台静默续传，避免「加载中离开再回来直接失败」
+ * - 侧栏类非关键请求用 runWhenIdle / runAfter 错峰，见 docs/v2/03
  */
 import Vue from "vue";
 import App from "./App.vue";

@@ -1,6 +1,6 @@
 <template>
   <div class="gp-page">
-    <div class="gp-page__inner">
+    <div class="gp-page__inner container">
       <div class="gp-page__main">
         <div class="write-container">
           <div class="write-heading">
@@ -8,13 +8,13 @@
           </div>
           <div class="write-body">
             <el-form ref="articleData" :model="articleData" label-width="60px">
-              <el-form-item label="标题">
-                <el-input type="text" v-model="articleData.name"></el-input>
+              <el-form-item label-width="0">
+                <el-input type="text" v-model="articleData.name" placeholder="请输入标题"></el-input>
               </el-form-item>
-              <el-form-item label="作者">
-                <el-input type="text" v-model="articleData.authorName"></el-input>
+              <el-form-item label-width="0">
+                <el-input type="text" v-model="articleData.authorName" placeholder="请输入作者"></el-input>
               </el-form-item>
-              <el-form-item label="分类">
+              <el-form-item label-width="0">
                 <el-select placeholder="请选择分类" v-model="articleData.articleCategory"
                   @change="getSelect(articleData.articleCategory)">
                   <el-option-group v-for="(item, index) in listCategory" :key="index" :label="item.categoryName">
@@ -23,8 +23,8 @@
                   </el-option-group>
                 </el-select>
               </el-form-item>
-              <el-form-item label="内容">
-                <quill-editor v-model="articleContent"></quill-editor>
+              <el-form-item label-width="0">
+                <quill-editor v-model="articleContent" placeholder="请输入内容"></quill-editor>
                 <!-- <quill-editor
                         class="gpeditor"
                         ref="gpTextEditor"
@@ -178,6 +178,8 @@ export default {
   color: var(--fontColor, #333333);
   padding: 6px;
   border-radius: 4px;
+  width: 100%;
+  max-width: 860px;
 }
 
 /** ::v-deep  */

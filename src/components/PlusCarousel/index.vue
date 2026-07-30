@@ -180,6 +180,8 @@ export default {
       // 窗口级鼠标监听（拖拽过程）
       _onMouseMove: null,
       _onMouseUp: null,
+      // 容器尺寸观察：侧栏收起/展开等不触发 window.resize 的布局变化
+      _resizeObserver: null,
       // 防止 transitionend 重复处理瞬移
       _snapping: false,
       /**
@@ -275,13 +277,32 @@ export default {
       this.measure()
       this.resetToStart()
       this.resetTimer()
+      this.bindResizeObserver()
     })
+    // 兜底：无 ResizeObserver 的环境；窗口缩放仍走这里
     window.addEventListener('resize', this.measure)
+    // 切标签 / 切 App / keep-alive 再进入：需重新量宽并恢复自动播
+    document.addEventListener('visibilitychange', this.onVisibilityChange)
+  },
+  // keep-alive 缓存页：离开后再进不会走 mounted，必须在此恢复
+  activated() {
+    this.$nextTick(() => {
+      this.bindResizeObserver()
+      this.measure(true)
+      this.recoverAfterHide()
+      this.resetTimer()
+    })
+  },
+  deactivated() {
+    // 离开路由时停表，避免后台空转；并避免 resize 把宽度测成 0 写坏状态
+    this.clearTimer()
   },
   beforeDestroy() {
     this.clearTimer()
     this.unbindWindowMouse()
+    this.unbindResizeObserver()
     window.removeEventListener('resize', this.measure)
+    document.removeEventListener('visibilitychange', this.onVisibilityChange)
   },
   methods: {
     /** 数据变化后回到第一张真实页 */
@@ -294,13 +315,54 @@ export default {
       this.deltaX = 0
       this.dragging = false
     },
-    measure() {
+    /**
+     * 观察轮播根节点宽高：侧栏收起、主栏 padding、栅格变化等都会触发，
+     * 而 window.resize 不会。
+     */
+    bindResizeObserver() {
+      if (typeof ResizeObserver === 'undefined' || !this.$el || !(this.$el instanceof Element)) {
+        return
+      }
+      if (this._resizeObserver) return
+      this._resizeObserver = new ResizeObserver(() => {
+        this.measure()
+      })
+      this._resizeObserver.observe(this.$el)
+    },
+    unbindResizeObserver() {
+      if (this._resizeObserver) {
+        this._resizeObserver.disconnect()
+        this._resizeObserver = null
+      }
+    },
+    /**
+     * 测量视口宽。
+     * @param {boolean} [force] 为 true 时允许在宽度短暂为 0 后再量（activated 场景）
+     * 注意：页面 hidden / keep-alive 卸 DOM 时 clientWidth 常为 0，
+     * 若此时写入 trackWidth=0，transform 全错 → 回来只剩空白且轮播停住。
+     */
+    measure(force) {
       const el = this.$el
-      const next = el ? el.clientWidth : 0
-      // 宽度从 0→有值时强制无动画对齐，消除首屏白块
+      if (!el || !el.getBoundingClientRect) return
+      // 不在文档里或不可见时，不要用 0 覆盖已有宽度
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden' && !force) {
+        return
+      }
+      const next = el.clientWidth || Math.round(el.getBoundingClientRect().width) || 0
+      if (next <= 0) {
+        // 保留上次有效宽度；force 时下一帧再试一次
+        if (force) {
+          this.$nextTick(() => {
+            requestAnimationFrame(() => this.measure(false))
+          })
+        }
+        return
+      }
       const wasZero = !this.trackWidth && next > 0
+      const changed = this.trackWidth !== next
       this.trackWidth = next
-      if (wasZero) {
+      // 宽度变化时关掉 transform 过渡，避免侧栏动画期间轨道用旧宽缓动错位
+      if ((wasZero || changed) && !this.dragging) {
         this.suppressTransition = true
         this.$nextTick(() => {
           requestAnimationFrame(() => {
@@ -308,6 +370,58 @@ export default {
           })
         })
       }
+    },
+    /** 文档从 hidden → visible：重新量宽、矫正克隆位、恢复自动播 */
+    onVisibilityChange() {
+      if (typeof document === 'undefined') return
+      if (document.visibilityState === 'hidden') {
+        this.clearTimer()
+        return
+      }
+      // 切走时若鼠标仍算 hover，回来后 hoverPause 可能卡死自动播
+      this.hoverPause = false
+      this.$nextTick(() => {
+        this.measure(true)
+        this.recoverAfterHide()
+        this.resetTimer()
+      })
+    },
+    /**
+     * 后台期间 transitionend 可能丢失，轨道停在克隆页或 settle 半态；
+     * 回前台时无动画对齐到当前逻辑页对应的真实轨道位。
+     */
+    recoverAfterHide() {
+      if (!this.slides.length) return
+      this.dragging = false
+      this.deltaX = 0
+      this.settleOffsetPct = 0
+      this._snapping = false
+      // 若停在克隆或非法下标，拉回真实页
+      if (this.useLoop) {
+        const n = this.slides.length
+        if (this.trackIndex <= 0) this.trackIndex = n
+        else if (this.trackIndex >= n + 1) this.trackIndex = 1
+      }
+      this.syncCurrentFromTrack()
+      // 用当前逻辑页强制对齐真实轨道（避免空白偏移）
+      const logical = this.current
+      this.suppressTransition = true
+      this.trackIndex = this.logicalToTrack(logical)
+      this.$nextTick(() => {
+        const track = this.$refs.track
+        const w = this.trackWidth || 0
+        if (track && w) {
+          track.style.transition = 'none'
+          track.style.transform = `translate3d(${-this.trackIndex * w}px, 0, 0)`
+        }
+        requestAnimationFrame(() => {
+          this.suppressTransition = false
+          if (track) {
+            track.style.transition = ''
+            track.style.transform = ''
+          }
+        })
+      })
     },
     /** 图片加载失败时用本地占位，避免灰底白屏 */
     onImgError(e) {
@@ -326,10 +440,11 @@ export default {
         this.timer = null
       }
     },
-    /** 重启自动播放；悬停/拖拽/瞬移中不启动 */
+    /** 重启自动播放；悬停/拖拽/瞬移中/页面在后台时不启动 */
     resetTimer() {
       this.clearTimer()
       if (!this.autoplay || this.slides.length < 2 || this.hoverPause || this.dragging) return
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return
       this.timer = setInterval(() => {
         this.next()
       }, Math.max(2000, this.interval || 4000))

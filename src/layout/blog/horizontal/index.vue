@@ -105,9 +105,10 @@
         <router-link class="gp-side-nav-item" to="/resumeGenerator" title="简历生成" @click.native="closeDrawer">
           <i class="el-icon-document"></i><span>简历生成</span>
         </router-link>
-        <a class="gp-side-nav-item" href="/chat" target="_blank" rel="noopener" title="AI 助手">
+        <router-link class="gp-side-nav-item" to="/chat" title="AI 助手" @click.native="closeDrawer">
           <i class="el-icon-cpu"></i><span>AI 助手</span>
-        </a>
+        </router-link>
+        <!-- <a class="gp-side-nav-item" href="/chat" target="_blank" rel="noopener" title="AI 助手"></a> -->
       </nav>
 
       <div class="gp-side-layout__foot">
@@ -215,6 +216,11 @@
 </template>
 
 <script>
+/**
+ * 博客侧栏布局（Horizontal）：桌面常驻侧栏 + 可折叠；移动端抽屉。
+ * 由 BlogShell 在 blogLayout==='side' 时挂载；与 Vertical 共享子路由。
+ * 收起态子菜单用 aside 外 fixed 浮层（flyout），避免 transform/overflow 裁切。
+ */
 import { mapGetters } from 'vuex'
 import blogLayoutMixin from '@/layout/blog/blogLayoutMixin'
 
