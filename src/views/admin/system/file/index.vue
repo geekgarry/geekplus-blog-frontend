@@ -1952,24 +1952,24 @@ export default {
 
 .upload-dropzone.active {
   border-color: var(--theme-color, #409EFF);
-  background: var(--color-background, #ecf5ff);
+  background: var(--background-color, #ecf5ff);
 }
 
 .upload-drop-content {
   text-align: center;
-  color: var(--fontColor, #606266);
+  color: var(--text-color-2, #606266);
 }
 
 .upload-drop-text {
   margin-top: 10px;
   font-size: 14px;
-  color: var(--font-color, #303133);
+  color: var(--text-color, #303133);
 }
 
 .upload-drop-hint {
   margin-top: 6px;
   font-size: 12px;
-  color: var(--fontColor, #909399);
+  color: var(--text-color-2, #909399);
 }
 
 .upload-queue {
@@ -1982,7 +1982,7 @@ export default {
 .queue-header {
   font-size: 14px;
   margin-bottom: 10px;
-  color: var(--font-color, #303133);
+  color: var(--text-color, #303133);
 }
 
 .upload-footer {

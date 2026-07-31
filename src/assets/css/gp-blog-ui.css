@@ -269,8 +269,8 @@
   padding: 0 12px;
   border-radius: 10px;
   border: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.1));
-  background: var(--gp-surface-bg, var(--background-1, #faf8f5));
-  color: var(--fontColor);
+  background: var(--gp-surface-bg, var(--background, #faf8f5));
+  color: var(--text-color-2);
   box-sizing: border-box;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -291,7 +291,7 @@
   border-radius: 10px;
   border: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.1));
   background: var(--gp-surface-bg, #faf8f5);
-  color: var(--fontColor);
+  color: var(--text-color-2);
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
@@ -360,7 +360,7 @@
 .gp-page .el-tag--info {
   background-color: var(--theme-color-muted) !important;
   border-color: transparent !important;
-  color: var(--font-color) !important;
+  color: var(--text-color) !important;
 }
 
 /* 侧栏布局内：md 以下隐藏页面自带右侧栏，避免与侧栏壳双栏重复；小屏仍保留页面侧栏内容 */

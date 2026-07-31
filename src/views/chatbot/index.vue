@@ -2254,7 +2254,7 @@ export default {
   background:
     radial-gradient(1200px 480px at 10% -10%, rgba(31, 111, 235, 0.08), transparent 55%),
     radial-gradient(900px 420px at 100% 0%, rgba(102, 206, 170, 0.1), transparent 50%),
-    var(--color-background, #f5f7fa);
+    var(--background-color, #f5f7fa);
 }
 
 .chat-shell {
@@ -2343,7 +2343,7 @@ export default {
 .list-chat-item-left .list-chat-item-content {
   margin-right: 40px;
   background-color: var(--background-2, #fff);
-  color: var(--fontColor, #1f2329);
+  color: var(--text-color-2, #1f2329);
   border: 1px solid rgba(20, 24, 32, 0.06);
   border-top-left-radius: 4px;
   overflow-x: auto;
@@ -2441,7 +2441,7 @@ export default {
 .list-chat-msg .chat-data-meta {
   width: auto;
   text-align: center;
-  color: var(--font-color, #000);
+  color: var(--text-color, #000);
 }
 
 .list-chat-msg .chat-date-time,
@@ -2450,7 +2450,7 @@ export default {
   text-align: center;
   font-size: 0.7em;
   margin: 2px auto;
-  color: var(--font-color, #889);
+  color: var(--text-color, #889);
 }
 
 .list-chat-msg .chat-reply-elapsedMs {
@@ -2787,8 +2787,8 @@ input:checked+.slider:before {
   resize: none;
   white-space: pre-wrap;
   overflow-wrap: break-word;
-  background: var(--color-background);
-  color: var(--fontColor);
+  background: var(--background-color);
+  color: var(--text-color-2);
 }
 
 .plus-form-control {
@@ -2811,13 +2811,13 @@ input:checked+.slider:before {
 
 .file-preview-send-footer .pdf-left-btn {
   flex: 1;
-  color: var(--font-color, #fefdfd);
+  color: var(--text-color, #fefdfd);
   text-align: center;
 }
 
 .file-preview-send-footer .pdf-right-btn {
   flex: 1;
-  color: var(--font-color, #fefdfd);
+  color: var(--text-color, #fefdfd);
   text-align: center;
 }
 
@@ -2830,7 +2830,7 @@ input:checked+.slider:before {
 .split-line {
   width: 1px;
   height: 35px;
-  background: var(--color-background, #999);
+  background: var(--background-color, #999);
 }
 
 /******************（没有用到的样式）********************/
@@ -2840,7 +2840,7 @@ input:checked+.slider:before {
   flex-wrap: nowrap;
   justify-content: space-between;
   /* background-color: #83a097; */
-  background: var(--color-background, #ffffff00);
+  background: var(--background-color, #ffffff00);
   font-family: auto;
 }
 

@@ -119,7 +119,7 @@ export default {
   margin: 0 0 6px;
   font-size: 1.15rem;
   font-weight: 600;
-  color: var(--fontColor);
+  color: var(--text-color-2);
   letter-spacing: 0.04em;
 }
 
@@ -137,7 +137,7 @@ export default {
   gap: 12px 16px;
   margin-bottom: 16px;
   font-size: 13px;
-  color: var(--font-color, #5c5854);
+  color: var(--text-color, #5c5854);
 }
 
 .mm__grid {

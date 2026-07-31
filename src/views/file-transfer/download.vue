@@ -164,7 +164,7 @@ export default {
   margin: 0 0 8px;
   font-size: 1.25rem;
   word-break: break-all;
-  color: var(--fontColor);
+  color: var(--text-color-2);
 }
 
 .meta {
@@ -203,7 +203,7 @@ export default {
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  color: var(--fontColor);
+  color: var(--text-color-2);
 }
 
 .gp-btn--primary {

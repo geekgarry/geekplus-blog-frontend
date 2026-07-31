@@ -238,7 +238,7 @@ export default {
       return [
         { key: 'home', label: '首页', path: '/', icon: 'home', children: null },
         ...dynamic,
-        { key: 'webTool', label: '在线工具', path: '', icon: 'tool', children: [
+        { key: 'webTool', label: '在线工具', path: '/tool', icon: 'tool', children: [
           { key: 'transfer', label: '文件中转', path: '/file-transfer', icon: 'upload', children: null },
           { key: 'resumeGenerator', label: '简历生成', path: '/resumeGenerator', icon: 'document', children: null },
         ] },
@@ -537,7 +537,7 @@ export default {
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--navbarFont, var(--fontColor));
+  color: var(--navbarFont, var(--text-color-2));
   font-size: 14px;
   font-weight: 500;
   line-height: 1;
@@ -585,7 +585,7 @@ export default {
   overflow: auto;
   padding: 8px;
   z-index: 3000;
-  background: var(--gp-surface-bg, var(--background-1, #fff));
+  background: var(--gp-surface-bg, var(--background, #fff));
   border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
   border-radius: var(--gp-surface-radius-sm, 10px);
   box-shadow: var(--gp-surface-shadow-hover, 0 6px 18px rgba(15, 23, 42, 0.06));
@@ -606,7 +606,7 @@ export default {
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--fontColor);
+  color: var(--text-color-2);
   font-size: 13px;
   font-weight: 500;
   text-align: left;
@@ -678,7 +678,7 @@ export default {
   padding: 8px 0 16px;
   flex: 1;
   overflow: auto;
-  color: var(--fontColor, #0a0a0a);
+  color: var(--text-color-2, #0a0a0a);
   -webkit-user-select: none;
   user-select: none;
   width: 100%;

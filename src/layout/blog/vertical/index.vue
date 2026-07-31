@@ -750,7 +750,7 @@ export default {
   left: 0;
   width: 225px;
   height: 100%;
-  background: var(--gp-surface-bg, var(--color-background));
+  background: var(--gp-surface-bg, var(--background-color));
   transform: translateX(-100%);
   transition: transform 0.4s ease;
   box-shadow: var(--gp-nav-shadow, 2px 0 8px rgba(0, 0, 0, 0.2));
@@ -832,7 +832,7 @@ export default {
   margin: 0;
   flex: 1;
   overflow: auto;
-  color: var(--fontColor, #0a0a0a);
+  color: var(--text-color-2, #0a0a0a);
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
@@ -888,7 +888,7 @@ export default {
 .submenu li {
   margin: 8px 0;
   padding: 0;
-  /* background: var(--color-background, #f1f1f0); */
+  /* background: var(--background-color, #f1f1f0); */
   height: 35px;
   line-height: 35px;
 }
@@ -1087,7 +1087,7 @@ export default {
   width: 35px;
   left: 0;
   height: 2px;
-  background: var(--color-background);
+  background: var(--background-color);
   content: "";
   border-radius: 1px;
   position: absolute;
@@ -1127,7 +1127,7 @@ export default {
   color: transparent;
   border: none;
   outline: none;
-  color: var(--fontColor);
+  color: var(--text-color-2);
   font-size: 15px;
   /* transform: translate(0, 0); */
   transition: width 0.3s ease-in-out;

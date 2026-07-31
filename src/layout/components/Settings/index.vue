@@ -164,13 +164,13 @@ export default {
 
   .drawer-title {
     margin-bottom: 12px;
-    color: var(--fontColor, rgba(0, 0, 0, .85));
+    color: var(--text-color-2, rgba(0, 0, 0, .85));
     font-size: 14px;
     line-height: 22px;
   }
 
   .drawer-item {
-    color: var(--fontColor, rgba(0, 0, 0, .65));
+    color: var(--text-color-2, rgba(0, 0, 0, .65));
     font-size: 14px;
     padding: 12px 0;
   }

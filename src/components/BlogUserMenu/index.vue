@@ -153,7 +153,7 @@ export default {
   min-width: 148px;
   padding: 8px;
   z-index: 3100;
-  background: var(--gp-surface-bg, var(--background-1, #fff));
+  background: var(--gp-surface-bg, var(--background, #fafafa));
   border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
   border-radius: var(--gp-surface-radius-sm, 10px);
   box-shadow: var(--gp-surface-shadow-hover, 0 6px 18px rgba(15, 23, 42, 0.06));
@@ -169,7 +169,7 @@ export default {
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--fontColor);
+  color: var(--text-color-2);
   font-size: 13px;
   font-weight: 500;
   text-align: left;

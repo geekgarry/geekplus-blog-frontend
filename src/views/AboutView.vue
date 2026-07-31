@@ -241,7 +241,7 @@ export default {
 .user-name {
   margin: 0;
   font-size: 1.35em;
-  color: var(--fontColor);
+  color: var(--text-color-2);
 }
 
 .user-description {
@@ -254,11 +254,11 @@ export default {
   display: flex;
   gap: 14px;
   font-size: 13px;
-  color: var(--font-color, #5c5854);
+  color: var(--text-color, #5c5854);
 }
 
 .about-main {
-  background: var(--gp-surface-bg, var(--background-1));
+  background: var(--gp-surface-bg, var(--background, #fafafa));
   border-radius: var(--gp-surface-radius, 14px);
   border: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.06));
   box-shadow: var(--gp-surface-shadow);
@@ -288,7 +288,7 @@ export default {
   font-size: clamp(1.5rem, 2.4vw, 1.9rem);
   font-weight: 650;
   letter-spacing: 0.02em;
-  color: var(--fontColor);
+  color: var(--text-color-2);
   line-height: 1.35;
 }
 
@@ -297,7 +297,7 @@ export default {
   max-width: 42em;
   font-size: 14px;
   line-height: 1.7;
-  color: var(--font-color, #5c5854);
+  color: var(--text-color, #5c5854);
 }
 
 .about-hero__meta {
@@ -315,7 +315,7 @@ export default {
 .article-content {
   line-height: 1.75;
   font-size: 15px;
-  color: var(--articleFontColor, var(--fontColor));
+  color: var(--articleFontColor, var(--text-color-2));
 }
 
 .about-quote {
@@ -328,7 +328,7 @@ export default {
 
 .about-quote p {
   margin: 0;
-  color: var(--font-color, #5c5854);
+  color: var(--text-color, #5c5854);
   font-size: 14px;
   line-height: 1.65;
 }
@@ -368,7 +368,7 @@ export default {
   margin: 0;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--font-color, #5c5854);
+  color: var(--text-color, #5c5854);
 }
 
 .about-contact {
@@ -381,13 +381,13 @@ export default {
 .about-contact h3 {
   margin: 0 0 8px;
   font-size: 15px;
-  color: var(--fontColor);
+  color: var(--text-color-2);
 }
 
 .about-contact p {
   margin: 0 0 14px;
   font-size: 13px;
-  color: var(--font-color);
+  color: var(--text-color);
   line-height: 1.6;
 }
 

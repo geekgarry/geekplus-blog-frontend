@@ -296,7 +296,7 @@ export default {
 .leave-word-container {
   overflow: hidden;
   border-radius: var(--gp-surface-radius, 14px);
-  background: var(--gp-surface-bg, var(--background-1));
+  background: var(--gp-surface-bg, var(--background));
   border: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.06));
   box-shadow: var(--gp-surface-shadow);
   margin-bottom: 16px;
@@ -323,7 +323,7 @@ export default {
   font-size: clamp(1.45rem, 2.2vw, 1.8rem);
   font-weight: 650;
   letter-spacing: 0.04em;
-  color: var(--fontColor);
+  color: var(--text-color-2);
 }
 
 .lw-hero__lead {
@@ -331,7 +331,7 @@ export default {
   max-width: 40em;
   font-size: 14px;
   line-height: 1.7;
-  color: var(--font-color, #5c5854);
+  color: var(--text-color, #5c5854);
 }
 
 .lw-body {
@@ -364,7 +364,7 @@ export default {
 .user-name {
   margin: 0;
   font-size: 1.35em;
-  color: var(--fontColor);
+  color: var(--text-color-2);
 }
 
 .user-description {
@@ -379,7 +379,7 @@ export default {
 }
 
 .stat {
-  color: var(--font-color, #5c5854);
+  color: var(--text-color, #5c5854);
   font-size: 13px;
 }
 
@@ -395,7 +395,7 @@ export default {
     margin-bottom: 8px;
 
     a {
-      color: var(--font-color, #5c5854);
+      color: var(--text-color, #5c5854);
       text-decoration: none;
 
       &:hover {

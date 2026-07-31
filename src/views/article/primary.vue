@@ -615,7 +615,7 @@ export default {
   left: auto;
   gap: 10px;
   padding: 10px 8px;
-  background: var(--background-1, #fff);
+  background: var(--gp-surface-bg, var(--background, #fff));
   border-radius: 28px;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
@@ -635,7 +635,7 @@ export default {
 }
 
 .right-content {
-  background-color: var(--background-1, #f5f7fa);
+  background-color: var(--gp-surface-bg, var(--background, #fafafa));
   position: fixed;
   top: 70px;
   left: auto;
@@ -648,7 +648,7 @@ export default {
 
 .gp-article-panel {
   /* 桌面文章主栏：简洁卡片阅读区（个人博客风格） */
-  background: var(--background-1, #fff);
+  background: var(--gp-surface-bg, var(--background, #fafafa));
   margin: 0 auto 14px;
   padding: 28px 32px 32px;
   border-radius: 14px;
@@ -661,7 +661,7 @@ export default {
   font-size: 28px;
   line-height: 1.35;
   font-weight: 700;
-  color: var(--fontColor, #1a1d21);
+  color: var(--text-color-2, #1a1d21);
   letter-spacing: 0.01em;
 }
 
@@ -702,7 +702,7 @@ export default {
 .gp-article-body {
   line-height: 1.8;
   font-size: 16px;
-  color: var(--fontColor, #2b2f36);
+  color: var(--text-color-2, #2b2f36);
 }
 
 /* 侧栏用户卡：对齐首页 post 列表表面 Token */
@@ -710,7 +710,7 @@ export default {
   text-align: center;
   margin-bottom: 14px;
   padding: 18px 14px;
-  background: var(--gp-surface-bg, var(--background-1));
+  background: var(--gp-surface-bg, var(--background, #f8f9fa));
   border-radius: var(--gp-surface-radius, 12px);
   border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
   box-shadow: var(--gp-surface-shadow, 0 2px 12px rgba(15, 23, 42, 0.04));
@@ -762,7 +762,7 @@ pre.code-block {
 }
 
 .related-articles {
-  background-color: var(--gp-surface-bg, var(--background-1));
+  background-color: var(--gp-surface-bg, var(--background, #f8f9fa));
   padding: var(--gp-surface-padding, 14px 16px);
   border-radius: var(--gp-surface-radius, 12px);
   margin-bottom: 12px;
@@ -794,7 +794,7 @@ pre.code-block {
 }
 
 .article-comments-container {
-  background: var(--background-1, #fff);
+  background: var(--gp-surface-bg, var(--background, #fff));
   border-radius: 14px;
   padding: 10px 12px;
   border: 1px solid rgba(15, 23, 42, 0.04);
@@ -825,7 +825,7 @@ pre.code-block {
 
 /* Like and Comment Section */
 .interaction-section {
-  background-color: var(--background-1, #fff);
+  background-color: var(--gp-surface-bg, var(--background, #fff));
   padding: 10px;
   border-radius: 4px;
   border: 1px solid var(--border-color, #ddd);

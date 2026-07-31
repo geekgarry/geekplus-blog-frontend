@@ -238,10 +238,10 @@ export default {
   width: 220px;
   height: 35px;
   border-radius: 35px;
-  background: var(--color-background);
+  background: var(--background-color);
   border: 1px solid var(--border-color);
   padding: 0 10px;
-  color: var(--fontColor);
+  color: var(--text-color-2);
   font-size: 15px;
 
   &:focus {

@@ -347,8 +347,8 @@ export default {
   align-items: center;
   font-family: 'Montserrat', sans-serif;
   font-size: 12px;
-  /* background-color: var(--color-background,#ecf0f3);
-  color: var(--fontColor,#a0a5a8);
+  /* background-color: var(--background-color,#ecf0f3);
+  color: var(--text-color-2,#a0a5a8);
   background: url("../../assets/images/bg1.jpeg") center center fixed no-repeat;
   background-size: cover; */
 }
@@ -361,9 +361,9 @@ export default {
   max-height: 500px;
   height: 100%;
   padding: 25px;
-  color: var(--fontColor);
+  color: var(--text-color-2);
   background-color: var(--background, #ecf0f3);
-  box-shadow: 10px 10px 10px var(--color-background, #d1d9e6), -10px -10px 10px var(--box-shadow, #f9f9f9);
+  box-shadow: 10px 10px 10px var(--background-color, #d1d9e6), -10px -10px 10px var(--box-shadow, #f9f9f9);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -420,11 +420,11 @@ export default {
   border: none;
   outline: none;
   font-family: 'Montserrat', sans-serif;
-  color: var(--fontColor);
-  background-color: var(--color-background, #ecf0f3);
+  color: var(--text-color-2);
+  background-color: var(--background-color, #ecf0f3);
   transition: .25s ease;
   border-radius: 5px;
-  box-shadow: inset 2px 2px 4px var(--color-background, #d1d9e6), inset -2px -2px 4px var(--box-shadow, #f9f9f9);
+  box-shadow: inset 2px 2px 4px var(--background-color, #d1d9e6), inset -2px -2px 4px var(--box-shadow, #f9f9f9);
 }
 
 .show-pwd {
@@ -471,7 +471,7 @@ export default {
 }
 
 .form__input:focus {
-  box-shadow: inset 4px 4px 4px var(--color-background, #d1d9e6), inset -4px -4px 4px var(--box-shadow, #f9f9f9);
+  box-shadow: inset 4px 4px 4px var(--background-color, #d1d9e6), inset -4px -4px 4px var(--box-shadow, #f9f9f9);
 }
 
 .form__span {
@@ -480,7 +480,7 @@ export default {
 }
 
 .form__link {
-  color: var(--fontColor, #181818);
+  color: var(--text-color-2, #181818);
   font-size: 15px;
   margin-top: 25px;
   border-bottom: 1px solid var(--borderColor, #a0a5a8);
@@ -492,7 +492,7 @@ export default {
   font-size: 24px;
   font-weight: 700;
   line-height: 1;
-  color: var(--fontColor, #181818);
+  color: var(--text-color-2, #181818);
 }
 
 .description {
@@ -512,7 +512,7 @@ export default {
   letter-spacing: 1.15px;
   background-color: var(--theme-color,#4B70E2);
   color: #f9f9f9;
-  box-shadow: 8px 8px 16px var(--color-background, #d1d9e6), -8px -8px 16px var(--box-shadow, #f9f9f9);
+  box-shadow: 8px 8px 16px var(--background-color, #d1d9e6), -8px -8px 16px var(--box-shadow, #f9f9f9);
   border: none;
   outline: none;
   padding: 0;
@@ -527,7 +527,7 @@ export default {
   letter-spacing: 1.15px;
   background-color: var(--theme-color,#4B70E2);
   color: #f9f9f9;
-  box-shadow: 8px 8px 16px var(--color-background, #d1d9e6), -8px -8px 16px var(--box-shadow, #f9f9f9);
+  box-shadow: 8px 8px 16px var(--background-color, #d1d9e6), -8px -8px 16px var(--box-shadow, #f9f9f9);
   border: none;
   outline: none;
   padding: 5px 10px;
@@ -565,7 +565,7 @@ export default {
   transition: 1.25s;
   background-color: var(--background, #ecf0f3);
   overflow: hidden;
-  box-shadow: 4px 4px 10px var(--color-background, #d1d9e6), -4px -4px 10px var(--box-shadow, #f9f9f9);
+  box-shadow: 4px 4px 10px var(--background-color, #d1d9e6), -4px -4px 10px var(--box-shadow, #f9f9f9);
 }
 
 .container__circle {
@@ -574,7 +574,7 @@ export default {
   height: 400px;
   border-radius: 50%;
   background-color: var(--background, #ecf0f3);
-  box-shadow: inset 8px 8px 12px var(--color-background, #d1d9e6), inset -8px -8px 12px var(--box-shadow, #f9f9f9);
+  box-shadow: inset 8px 8px 12px var(--background-color, #d1d9e6), inset -8px -8px 12px var(--box-shadow, #f9f9f9);
   bottom: -50%;
   left: -40%;
   transition: 1.25s;
@@ -614,7 +614,7 @@ export default {
   height: 500px;
   border-radius: 50%;
   background-color: var(--background, #ecf0f3);
-  box-shadow: inset 8px 8px 12px var(--color-background, #d1d9e6), inset -8px -8px 12px var(--box-shadow, #f9f9f9);
+  box-shadow: inset 8px 8px 12px var(--background-color, #d1d9e6), inset -8px -8px 12px var(--box-shadow, #f9f9f9);
   bottom: -60%;
   left: -60%;
   transition: 1.25s;
@@ -643,14 +643,14 @@ export default {
 }
 
 .switch__button:hover {
-  box-shadow: 6px 6px 10px var(--color-background, #d1d9e6), -6px -6px 10px var(--box-shadow, #f9f9f9);
+  box-shadow: 6px 6px 10px var(--background-color, #d1d9e6), -6px -6px 10px var(--box-shadow, #f9f9f9);
   transform: scale(0.985);
   transition: .25s;
 }
 
 .switch__button:active,
 .switch__button:focus {
-  box-shadow: 2px 2px 6px var(--color-background, #d1d9e6), -2px -2px 6px var(--box-shadow, #f9f9f9);
+  box-shadow: 2px 2px 6px var(--background-color, #d1d9e6), -2px -2px 6px var(--box-shadow, #f9f9f9);
   transform: scale(0.97);
   transition: .25s;
 }

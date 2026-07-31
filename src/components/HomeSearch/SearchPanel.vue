@@ -135,7 +135,7 @@ ul {
 }
 
 #app {
-  color: var(--fontColor, #2c3e50);
+  color: var(--text-color-2, #2c3e50);
   max-width: 800px;
   padding: 80px 10px 0;
   font-family: Source Sans Pro, Helvetica, sans-serif;

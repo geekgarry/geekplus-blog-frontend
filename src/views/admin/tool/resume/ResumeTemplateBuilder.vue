@@ -331,10 +331,10 @@ export default {
         mainBlocks: this.mainBlocks,
         sidebarBlocks: this.sidebarBlocks,
       };
-      const id = this.editingId || `custom_${Date.now()}`;
+      const id = this.editingId || `${Date.now()}`;
       const payload = {
         id,
-        key: id,
+        key: 'template_custom_'+id,
         name: this.form.name,
         description: this.form.description,
         isVip: this.form.isVip,

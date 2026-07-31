@@ -40,8 +40,8 @@ export default {
 </script>
 <style lang="scss" scoped>
 .footer {
-  background-color: var(--background-1);
-  color: var(--fontColor);
+  background-color: var(--gp-surface-bg, var(--background, #fafafa));
+  color: var(--text-color-2);
 }
 
 a {

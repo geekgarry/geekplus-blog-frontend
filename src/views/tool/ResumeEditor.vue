@@ -560,8 +560,9 @@ export default {
 <style scoped>
 .resume-editor-page {
   min-height: calc(100vh - 120px);
-  background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%);
+  background: linear-gradient(180deg, var(--background-origin, #f3f4f6) 0%, var(--background-color, #e5e7eb) 100%);
   padding: 12px 12px 32px;
+  background: var(--background-origin, #f3f4f6);
 }
 
 .resume-toolbar {
@@ -570,18 +571,18 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: #fff;
+  background: var(--background-origin, #fff);
   border-radius: 12px;
   padding: 12px 16px;
   margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--box-shadow, 0 1px 3px rgba(0, 0, 0, 0.06));
 }
 
 .page-title {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-color, #111827);
 }
 
 .toolbar-left {
@@ -592,10 +593,10 @@ export default {
 
 .save-hint {
   font-size: 12px;
-  color: #059669;
+  color: var(--success-color, #059669);
 }
 .save-hint.muted {
-  color: #9ca3af;
+  color: var(--muted-color, #9ca3af);
 }
 
 .toolbar-actions {
@@ -608,9 +609,9 @@ export default {
   display: flex;
   gap: 8px;
   align-items: flex-start;
-  background: #eff6ff;
+  background: var(--background-1, #eff6ff);
   border: 1px solid #bfdbfe;
-  color: #1e40af;
+  color: var(--primary-color, #1e40af);
   border-radius: 10px;
   padding: 10px 14px;
   margin-bottom: 12px;
@@ -620,10 +621,10 @@ export default {
 .current-resume-tip {
   margin-bottom: 12px;
   font-size: 13px;
-  color: #374151;
+  color: var(--text-color, #374151);
 }
 .current-resume-tip .muted {
-  color: #9ca3af;
+  color: var(--muted-color, #9ca3af);
   margin-left: 6px;
 }
 .my-resumes-toolbar {
@@ -633,12 +634,12 @@ export default {
 }
 .empty-resumes {
   margin: 16px 0 0;
-  color: #9ca3af;
+  color: var(--muted-color, #9ca3af);
   font-size: 13px;
   text-align: center;
 }
 ::v-deep .is-current-resume > td {
-  background: #ecfdf5 !important;
+  background: var(--background-1, #ecfdf5) !important;
 }
 
 .resume-split {
@@ -659,7 +660,7 @@ export default {
 }
 
 .resume-editor-pane {
-  background: #fff;
+  background: var(--background-color, #fff);
   border-radius: 12px;
   padding: 8px;
   max-height: none;
@@ -678,7 +679,7 @@ export default {
 }
 
 .resume-preview-pane {
-  background: #d1d5db;
+  background: var(--background-1, #d1d5db);
   border-radius: 12px;
   padding: 16px;
 }
@@ -691,19 +692,19 @@ export default {
 
 .template-card {
   text-align: left;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border-color, #e5e7eb);
   border-radius: 12px;
   padding: 14px;
-  background: #fff;
+  background: var(--background-color, #fff);
   cursor: pointer;
   transition: all 0.15s;
 }
 .template-card:hover:not(.disabled) {
-  border-color: #3b82f6;
-  background: #eff6ff;
+  border-color: var(--primary-color, #3b82f6);
+  background: var(--background-1, #eff6ff);
 }
 .template-card.active {
-  border-color: #2563eb;
+  border-color: var(--primary-color, #2563eb);
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 .template-card.disabled {
@@ -712,27 +713,27 @@ export default {
 }
 .template-card-name {
   font-weight: 700;
-  color: #111827;
+  color: var(--text-color, #111827);
   margin-bottom: 4px;
 }
 .template-card-desc {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--muted-color, #6b7280);
   line-height: 1.4;
 }
 .vip-badge {
   display: inline-block;
   margin-top: 8px;
   font-size: 10px;
-  background: #ffedd5;
-  color: #c2410c;
+  background: var(--warning-color-light, #ffedd5);
+  color: var(--warning-color, #c2410c);
   padding: 2px 8px;
   border-radius: 999px;
 }
 
 .download-hint {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--muted-color, #6b7280);
   margin: 0 0 16px;
   text-align: center;
 }
@@ -763,37 +764,37 @@ export default {
   justify-content: center;
   gap: 10px;
   padding: 24px 12px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border-color, #e5e7eb);
   border-radius: 14px;
-  background: #fff;
+  background: var(--background-origin, #fff);
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-color, #374151);
   transition: all 0.15s;
 }
 .download-card i {
   font-size: 28px;
 }
 .download-card.pdf:hover {
-  border-color: #f87171;
-  background: #fef2f2;
-  color: #dc2626;
+  border-color: var(--danger-color, #f87171);
+  background: var(--danger-color-light, #fef2f2);
+  color: var(--danger-color, #dc2626);
 }
 .download-card.html:hover {
-  border-color: #60a5fa;
-  background: #eff6ff;
-  color: #2563eb;
+  border-color: var(--primary-color, #60a5fa);
+  background: var(--background-1, #eff6ff);
+  color: var(--primary-color, #2563eb);
 }
 .download-card.word:hover {
-  border-color: #34d399;
-  background: #ecfdf5;
-  color: #059669;
+  border-color: var(--success-color, #34d399);
+  background: var(--background-1, #ecfdf5);
+  color: var(--success-color, #059669);
 }
 
 @media print {
   .resume-editor-page {
-    background: white !important;
+    background: var(--background-color, #fff) !important;
     padding: 0 !important;
   }
   .resume-split {
@@ -803,7 +804,7 @@ export default {
     width: 100% !important;
     max-height: none !important;
     overflow: visible !important;
-    background: white !important;
+    background: var(--background-color, #fff) !important;
     padding: 0 !important;
     border-radius: 0 !important;
   }

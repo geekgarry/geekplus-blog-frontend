@@ -1322,9 +1322,9 @@ export default {
 <style lang="scss" scoped>
 .app-container {
   display: flex;
-  background-color: var(--color-background, #27292b);
+  background-color: var(--background-color, #27292b);
   /* Dark background */
-  color: var(--fontColor, #fff);
+  color: var(--text-color-2, #fff);
   /* White text color */
   min-height: 100vh;
 }
@@ -1332,7 +1332,7 @@ export default {
 .left-sidebar {
   width: 200px;
   /* Adjust width as needed */
-  background-color: var(--color-background, #212121);
+  background-color: var(--background-color, #212121);
   padding: 10px;
 }
 
@@ -1353,7 +1353,7 @@ export default {
 
 .right-sidebar {
   width: 100%;
-  background-color: var(--color-background, #212121);
+  background-color: var(--background-color, #212121);
 }
 
 /* Responsive sidebar */
@@ -1382,7 +1382,7 @@ export default {
 .article-container {
   padding: 16px 14px 18px;
   margin-bottom: 12px;
-  background-color: var(--background-1, #fff);
+  background-color: var(--gp-surface-bg, var(--background, #fff));
   border-radius: 12px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
@@ -1390,7 +1390,7 @@ export default {
 .article-comments-container {
   overflow: hidden;
   border-radius: 12px;
-  background: var(--background-1, #fff);
+  background: var(--gp-surface-bg, var(--background, #fafafa));
   padding: 8px 4px 4px;
 }
 
@@ -1399,7 +1399,7 @@ export default {
   line-height: 1.4;
   font-weight: 700;
   margin: 4px 0 12px;
-  color: var(--fontColor, #1f2329);
+  color: var(--text-color-2, #1f2329);
   letter-spacing: 0.01em;
 }
 
@@ -1421,7 +1421,7 @@ export default {
 .article-content {
   line-height: 1.75;
   font-size: 15px;
-  color: var(--fontColor, #2b2f36);
+  color: var(--text-color-2, #2b2f36);
   word-break: break-word;
 }
 
@@ -1476,13 +1476,13 @@ export default {
 }
 
 .tips {
-  background-color: var(--color-background, #212121);
+  background-color: var(--background-color, #212121);
   padding: 10px;
   margin-bottom: 20px;
 }
 
 .more-info {
-  background-color: var(--color-background, #212121);
+  background-color: var(--background-color, #212121);
   padding: 10px;
 }
 
@@ -1499,7 +1499,7 @@ export default {
   text-align: center;
   margin-bottom: 14px;
   padding: 18px 14px;
-  background: var(--gp-surface-bg, var(--background-1));
+  background: var(--gp-surface-bg, var(--background, #faf1f5));
   border-radius: var(--gp-surface-radius, 12px);
   border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
   box-shadow: var(--gp-surface-shadow, 0 2px 12px rgba(15, 23, 42, 0.04));
@@ -1534,7 +1534,7 @@ export default {
 
 /* 相关文章块与 post 列表卡片同一表面语言 */
 .related-articles {
-  background-color: var(--gp-surface-bg, var(--background-1));
+  background-color: var(--gp-surface-bg, var(--background, #eef1f5));
   border-radius: var(--gp-surface-radius, 12px);
 }
 
@@ -1842,7 +1842,7 @@ export default {
   height: 180px;
   border-radius: 6px;
   overflow: hidden;
-  background: var(--background-1, #eef1f5);
+  background: var(--gp-surface-bg, var(--background, #eef1f5));
 }
 
 .share-container .share-cover-img {
@@ -1852,7 +1852,7 @@ export default {
   object-fit: cover;
   object-position: center;
   border-radius: 6px;
-  background: var(--background-1, #eef1f5);
+  background: var(--gp-surface-bg, var(--background, #eef1f5));
 }
 
 .share-container .share-title {
@@ -1869,7 +1869,7 @@ export default {
   -webkit-box-orient: vertical;
   box-orient: vertical;
   padding: 10px 2px 4px;
-  color: var(--fontColor, #1f2329);
+  color: var(--text-color-2, #1f2329);
   font-weight: 600;
   min-height: 44px;
 }
@@ -1888,7 +1888,7 @@ export default {
   -webkit-box-orient: vertical;
   box-orient: vertical;
   padding: 0 2px 4px;
-  color: var(--font-color, #646a73);
+  color: var(--text-color, #646a73);
   min-height: 52px;
 }
 
@@ -1919,7 +1919,7 @@ export default {
 
 .web-share-logo .web-share-title {
   font-size: 13px;
-  color: var(--fontColor, #1f2329);
+  color: var(--text-color-2, #1f2329);
   font-weight: 500;
   margin: 0;
   white-space: nowrap;
@@ -1939,7 +1939,7 @@ export default {
 
 .share-link {
   font-size: 10px;
-  color: var(--font-color, #8a919f);
+  color: var(--text-color, #8a919f);
   word-break: break-all;
   padding: 0 2px 2px;
   line-height: 1.35;

@@ -285,14 +285,14 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .comment__reply-container {
-  color: var(--fontColor);
+  color: var(--text-color-2);
   /* box-shadow: 0 0 10px var(--box-shadow, rgba(0, 0, 0, 0.2)); */
 }
 
 .first-comment-input {
   width: 100%;
   margin-bottom: 10px;
-  background: var(--background-1, #ffffff);
+  background: var(--gp-surface-bg, var(--background, #ffffff));
   padding: 6px;
 }
 
@@ -302,7 +302,7 @@ export default defineComponent({
   /* float: left;
   margin-bottom: 10px; */
   /* text-align: center; */
-  background: var(--background-1, #ffffff);
+  background: var(--gp-surface-bg, var(--background, #ffffff));
   /* border: 1px solid var(--color-border-1,s #dddedd); */
   padding: 6px;
   /* 顺势针安排上右下左 css里都是这样的*/
@@ -332,7 +332,7 @@ export default defineComponent({
 .bottom-divider {
   padding-bottom: 6px;
   margin-left: 1em;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--borderColor);
 }
 
 .main-message {
@@ -386,7 +386,7 @@ export default defineComponent({
 .message-wrapper .message-meta>a {
   text-decoration: none;
   padding: 2px 5px 2px 0;
-  color: var(--font-color,#999);
+  color: var(--text-color,#999);
   font-weight: 400;
 }
 
@@ -436,7 +436,7 @@ export default defineComponent({
 
 .message-wrapper .message-footer a {
   text-decoration: none;
-  color: var(--fontColor, #bdbdbd);
+  color: var(--text-color-2, #bdbdbd);
 }
 
 .sub-comment-message {
@@ -444,7 +444,7 @@ export default defineComponent({
   margin-left: 16px;
   /* border-radius: 4px;
   border-top: 1px solid var(--border-color, #c0c9cbb3);
-  background-color: var(--color-background, #FDFCFF); */
+  background-color: var(--background-color, #FDFCFF); */
 }
 
 @media screen and (min-width: 768px){

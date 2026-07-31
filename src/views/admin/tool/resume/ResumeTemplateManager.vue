@@ -31,12 +31,12 @@
             <div class="tpl-title-row">
               <h3>{{ t.name }}</h3>
               <div>
-                <el-button type="text" icon="el-icon-edit" @click="goEdit(t)">编辑</el-button>
+                <el-button v-if="!t.readonly && !isSystemPreset(t.id)" type="text" icon="el-icon-edit" @click="goEdit(t)">编辑</el-button>
                 <el-button
                   type="text"
                   icon="el-icon-delete"
                   class="danger"
-                  :disabled="t.readonly && isSystemPreset(t.id)"
+                  v-if="!t.readonly && !isSystemPreset(t.id)"
                   @click="removeTemplate(t.id)"
                 >删除</el-button>
               </div>
@@ -67,8 +67,8 @@ export default {
     this.loadTemplates();
   },
   methods: {
-    isSystemPreset(id) {
-      return DEFAULT_TEMPLATES.some((t) => t.id === id);
+    isSystemPreset(key) {
+      return DEFAULT_TEMPLATES.some((t) => t.key === key);
     },
     thumbBg(t) {
       const c = t.layoutData && t.layoutData.themeColor;
@@ -161,7 +161,8 @@ export default {
   align-items: center;
   justify-content: center;
   position: relative;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--border-color, #f3f4f6);
+  background-color: var(--background-origin, #fff);
 }
 .tpl-thumb i {
   font-size: 40px;
@@ -189,6 +190,8 @@ export default {
   justify-content: space-between;
   align-items: flex-start;
   gap: 8px;
+  height: 36px;
+  line-height: 36px;
 }
 .tpl-title-row h3 {
   margin: 0;
@@ -198,8 +201,11 @@ export default {
   margin: 8px 0;
   font-size: 13px;
   color: #6b7280;
-  min-height: 36px;
-  line-height: 1.4;
+  height: 40px;
+  line-height: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .tpl-id {
   font-size: 11px;

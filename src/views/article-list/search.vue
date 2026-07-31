@@ -488,8 +488,8 @@ export default {
   text-align: center;
   padding: 60px 0;
   font-size: 14px;
-  color: var(--font-color, #777);
-  background: var(--background-1, #f8f9fa);
+  color: var(--text-color, #777);
+  background: var(--gp-surface-bg, var(--background, #f8f9fa));
   border-radius: var(--border-radius, 8px);
 }
 
@@ -517,15 +517,15 @@ export default {
   text-align: center;
   padding: 10px 0;
   font-size: 14px;
-  color: var(--font-color, #777);
-  background: var(--background-1, #f8f9fa);
+  color: var(--text-color, #777);
+  background: var(--gp-surface-bg, var(--background, #f8f9fa));
   border-radius: var(--border-radius, 8px);
 }
 
 .archive-empty-tips p {
   margin: 0;
   font-size: 14px;
-  color: var(--font-color, #777);
+  color: var(--text-color, #777);
 }
 
 .archive-empty-tips ul {
@@ -542,8 +542,8 @@ export default {
   border-radius: 10px;
   padding: 12px 14px;
   margin-bottom: 0;
-  background: var(--background-1);
-  color: var(--fontColor);
+  background: var(--gp-surface-bg, var(--background, #f8f9fa));
+  color: var(--text-color-2);
   display: block;
   width: 100%;
   box-sizing: border-box;

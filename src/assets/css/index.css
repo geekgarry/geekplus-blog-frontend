@@ -17,8 +17,8 @@ body{
 }
 
 body {
-  color: var(--fontColor, #252525) !important;
-  background: var(--color-background, #F4F4F4) !important;
+  color: var(--text-color-2, #252525) !important;
+  background: var(--background-color, #F4F4F4) !important;
   transition: all 0.3s ease;
   /* font-family: var(--globalFont), serif; */
   word-break: break-word;
@@ -109,7 +109,7 @@ a {
 /* 网站悬浮圆形工具按钮 */
 
 .float__circle-button {
-  background: var(--background-1);
+  background: var(--background);
   border-radius: 50%;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 0 5px 20px rgba(0, 0, 0, 0.2);
 }
@@ -123,7 +123,7 @@ a {
 .special-article-wrapper {
   margin-bottom: 10px;
   border-radius: 4px;
-  background: var(--background-1);
+  background: var(--background);
 }
 
 .special-article-content {
@@ -239,7 +239,7 @@ a {
   line-height: 32px;
   font-size: 14px;
   width: 5%;
-  color: var(--font-color, #303133);
+  color: var(--text-color, #303133);
 }
 
 .el-date-editor .el-range-input {
@@ -255,15 +255,15 @@ a {
   width: 39%;
   text-align: center;
   font-size: 14px;
-  color: var(--fontColor, #606266);
+  color: var(--text-color-2, #606266);
 }
 
 .el-range-input {
-  background-color: var(--background, #FFFFFF);
+  background-color: var(--background-origin, #FFFFFF);
 }
 
 .el-picker-panel {
-  color: var(--fontColor, #606266);
+  color: var(--text-color-2, #606266);
   border: 1px solid var(--border-color, #dfe4ed);
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
   background: var(--background, #fff);
@@ -274,23 +274,23 @@ a {
 
 .el-date-table th {
   padding: 5px;
-  color: var(--font-color, #606266);
+  color: var(--text-color, #606266);
   font-weight: 400;
   border-bottom: 1px solid var(--border-color, #e6ebf5);
 }
 
 .el-date-range-picker__content.is-left {
-  border-right: 1px solid var(--color-background, #e4e4e4);
+  border-right: 1px solid var(--background-color, #e4e4e4);
 }
 
 .el-date-table td.in-range div,
 .el-date-table td.in-range div:hover {
-  background-color: var(--background-1, #f2f6fc);
+  background-color: var(--gp-surface-bg, var(--background, #f2f6fc));
 }
 
 .el-picker-panel__icon-btn {
   font-size: 12px;
-  color: var(--fontColor, #303133);
+  color: var(--text-color-2, #303133);
   border: 0;
   background: transparent;
   cursor: pointer;
@@ -350,12 +350,12 @@ a {
 
 .el-calendar {
   background: var(--background-origin);
-  color: var(--font-color);
+  color: var(--text-color);
 }
 
 /* el-badge提示红点*/
 .el-badge .redPoint:hover {
-  background: var(--background-1, transparent);
+  background: var(--gp-surface-bg, var(--background, transparent));
 }
 
 /* element UI轮播图 */
@@ -430,6 +430,7 @@ a {
   bottom: 30px;
   width: 100%;
   height: -webkit-fit-content;
+  height: -moz-fit-content;
   height: fit-content;
   text-align: center;
   display: flex;
@@ -497,7 +498,7 @@ a {
   padding: 5px 36px 5px 5px;
   border: 1px solid var(--background-2, #ececec);
   background: var(--background-2, #fefefe);
-  color: var(--fontColor, #242424);
+  color: var(--text-color-2, #242424);
   border-radius: 5px;
   resize: vertical;
   box-sizing: border-box;
@@ -558,7 +559,7 @@ a {
   border-radius: 5px;
   /* background-color: #4CAF50; */
   background-color: var(--background-2, #ccd0cc);
-  color: var(--font-color, #424242);
+  color: var(--text-color, #424242);
   margin: 0 auto;
   line-height: inherit;
 }
@@ -596,7 +597,7 @@ text-align: center; */
 
 .a-btn-1 {
   border: 1px solid var(--border-color);
-  background: var(--background-1);
+  background: var(--gp-surface-bg, var(--background, #fafafa));
   border-radius: 5px;
   height: 25px;
   font-size: 0.8rem;
@@ -745,8 +746,8 @@ audio {
   line-height: 30px;
   font-size: 0.9rem;
   border: none;
-  color: var(--font-color, #565656);
-  background-color: var(--color-background, #ededed);
+  color: var(--text-color, #565656);
+  background-color: var(--background-color, #ededed);
   cursor: pointer;
   border-radius: 3px;
 }
@@ -788,8 +789,8 @@ audio {
 
 .navigation-article-container {
   margin-bottom: 15px;
-  background: var(--color-background, #fefdfd);
-  /* color: var(--font-color, #333535); */
+  background: var(--background-color, #fefdfd);
+  /* color: var(--text-color, #333535); */
   border-radius: 4px;
   box-shadow: 1px 4px 5px 0px hsla(180, 6%, 44%, 0.32), 0 4px 8px 0 var(--box-shadow, hsla(180, 5%, 52%, 0.32));
 }
@@ -933,7 +934,7 @@ audio {
 /* .user-comment-info .comment-name {} */
 
 .comment-meta-info {
-  color: var(--font-color, #353535);
+  color: var(--text-color, #353535);
   display: flex;
   align-items: center;
   flex-direction: row;
@@ -1164,7 +1165,7 @@ code.hljs {
   width: 100%;
   height: 100%;
   display: block;
-  background: linear-gradient(125deg, transparent, var(--background-1), transparent, var(--color-background), transparent, var(--hover-background));
+  background: linear-gradient(125deg, transparent, var(--background), transparent, var(--background-color), transparent, var(--hover-background));
   /* 重复设置颜色，达到水波纹效果 */
   background-size: 300%;
   animation: bgAnimation 11s infinite;
@@ -1193,7 +1194,7 @@ code.hljs {
   /* 重复设置颜色，达到水波纹效果 */
   background-size: 300%;
   transition: opacity .5s .2s;
-  background: linear-gradient(to right, transparent, var(--color-background), transparent, var(--background-1));
+  background: linear-gradient(to right, transparent, var(--background-color), transparent, var(--background));
   animation: screen 1.6s infinite;
 }
 
@@ -1226,7 +1227,7 @@ code.hljs {
   transform: translateX(0);
   transition: opacity .5s .2s;
   /* 重复设置颜色，达到水波纹效果 */
-  background: linear-gradient(to right, transparent, var(--hover-background), transparent, var(--color-background), transparent, var(--background-1));
+  background: linear-gradient(to right, transparent, var(--hover-background), transparent, var(--background-color), transparent, var(--background));
   animation: screen 1.6s infinite;
   z-index: 3;
 }
@@ -1485,14 +1486,14 @@ code.hljs {
 }
 
 .el-collapse-item__header {
-  background-color: var(--background-1, #fff);
-  color: var(--font-color, #303133);
+  background-color: var(--background-origin, #fff);
+  color: var(--text-color, #303133);
   border-bottom: 1px solid var(--border-color, #e6ebf5);
 }
 
 .el-collapse-item__wrap {
   will-change: height;
-  background-color: var(--background-1, #fff);
+  background-color: var(--background-origin, #fff);
   overflow: hidden;
   box-sizing: border-box;
   border-bottom: 1px solid var(--border-color, #e6ebf5);
@@ -1501,7 +1502,7 @@ code.hljs {
 .el-collapse-item__content {
   padding-bottom: 25px;
   font-size: 13px;
-  color: var(--font-color, #303133);
+  color: var(--text-color, #303133);
 }
 
 /* tab切换卡 */
@@ -1515,7 +1516,7 @@ code.hljs {
   height: 40px;
   box-sizing: border-box;
   line-height: 40px;
-  color: var(--font-color, #303133);
+  color: var(--text-color, #303133);
 }
 
 .my-tabs-plus .el-tabs__nav-scroll {
@@ -1598,7 +1599,7 @@ code.hljs {
   padding: 0 17px;
   margin: 0 !important;
   line-height: 30px;
-  color: var(--fontColor);
+  color: var(--text-color-2);
 }
 
 /* 自定义首页导航下拉菜单样式 */
@@ -1626,16 +1627,16 @@ code.hljs {
   text-align: center;
   margin: 5px 0;
   background-color: hsla(0, 0%, 100%, .3764705882352941);
-  /* background-color: var(--background-1); */
+  /* background-color: var(--gp-surface-bg, var(--background, #fafafa)); */
   transition: background-color .3s;
 }
 
 .el-dropdown-menu__item--divided {
-  border-top: 1px solid var(--background, #e6ebf5);
+  border-top: 1px solid var(--border-color, #e6ebf5);
 }
 
 .el-dropdown-menu__item--divided:before {
-  background-color: var(--background-1, #504d4d);
+  background-color: var(--gp-surface-bg, var(--background, #fafafa));
 }
 
 .el-dropdown-menu__item:hover div {
@@ -1654,11 +1655,11 @@ code.hljs {
 }
 
 .el-dropdown-menu.el-popper {
-  background-color: var(--background-1);
+  background-color: var(--gp-surface-bg, var(--background, #fafafa));
   /* background-color: hsla(0, 0%, 100%, .3137254901960784);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px); */
-  border-color: var(--background-1);
+  border-color: var(--border-color, #e6ebf5);
   transition: transform .3s cubic-bezier(.23, 1, .32, 1), opacity .3s cubic-bezier(.23, 1, .32, 1);
   transform-origin: center top;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 0 2px 12px 0 rgba(0, 0, 0, .1);
@@ -1666,11 +1667,11 @@ code.hljs {
 }
 
 .el-dropdown-menu.el-popper .popper__arrow {
-  border-bottom-color: var(--background-1) !important;
+  border-bottom-color: var(--border-color, var(--border-color, #fafafa)) !important;
 }
 
 .el-dropdown-menu.el-popper .popper__arrow::after {
-  border-bottom-color: var(--background-1) !important;
+  border-bottom-color: var(--gp-surface-bg, var(--background, #fafafa)) !important;
 }
 
 /*管理端表格，分页和其他输入框样式*/
@@ -1696,7 +1697,7 @@ code.hljs {
   max-width: 100%;
   background-color: var(--background-origin, #FFFFFF);
   font-size: 14px;
-  color: var(--font-color, #606266);
+  color: var(--text-color, #606266);
 }
 
 .el-table--group,
@@ -1712,8 +1713,8 @@ code.hljs {
 
 .el-table__body tr.hover-row>td.el-table__cell,
 .el-table__body tr.hover-row.current-row>td.el-table__cell {
-  background-color: var(--background-1, #F5F7FA);
-  color: var(--font-color, #606266);
+  background-color: var(--gp-surface-bg, var(--background, #f5f7fa));
+  color: var(--text-color, #606266);
 }
 
 .el-table::before,
@@ -1721,15 +1722,15 @@ code.hljs {
 .el-table--border::after {
   content: "";
   position: absolute;
-  background-color: var(--background-1, #e6ebf5);
+  background-color: var(--gp-surface-bg, var(--background, #e6ebf5));
   z-index: 1;
 }
 
 .el-table .el-table__header-wrapper th,
 .el-table .el-table__fixed-header-wrapper th {
   word-break: break-word;
-  background-color: var(--background-1, #f8f8f9);
-  color: var(--font-color, #515a6e);
+  background-color: var(--gp-surface-bg, var(--background, #f8f8f9));
+  color: var(--text-color, #515a6e);
   height: 40px;
   font-size: 13px;
 }
@@ -1760,7 +1761,7 @@ code.hljs {
   bottom: 0;
   width: 100%;
   height: 1px;
-  background-color: var(--background-1, #e6ebf5);
+  background-color: var(--gp-surface-bg, var(--background, #e6ebf5));
   z-index: 4;
 }
 
@@ -1783,26 +1784,26 @@ code.hljs {
 }
 
 .pagination-container {
-  background: var(--color-background, #fff);
+  background: var(--background-color, #fff);
 }
 
 .el-pagination {
   white-space: nowrap;
   padding: 2px 5px;
-  color: var(--font-color, #303133);
+  color: var(--text-color, #303133);
   font-weight: bold;
 }
 
 .el-pagination__total {
   margin-right: 10px;
   font-weight: normal;
-  color: var(--font-color, #606266);
+  color: var(--text-color, #606266);
 }
 
 .el-pagination__jump {
   margin-left: 24px;
   font-weight: normal;
-  color: var(--font-color, #606266);
+  color: var(--text-color, #606266);
 }
 
 /******管理端侧边手风琴折叠菜单样式，管理端侧边菜单*******/
@@ -1812,16 +1813,16 @@ code.hljs {
 }
 
 .el-submenu__title {
-  color: var(--fontColor, #303133);
+  color: var(--text-color-2, #303133);
 }
 
 .el-menu-item {
-  color: var(--fontColor, #303133);
+  color: var(--text-color-2, #303133);
 }
 
 /* element UI面包屑导航样式 */
 .el-breadcrumb__inner {
-  color: var(--font-color, #606266);
+  color: var(--text-color, #606266);
 }
 
 .el-breadcrumb__inner.is-link,
@@ -1829,7 +1830,7 @@ code.hljs {
   font-weight: bold;
   text-decoration: none;
   transition: color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
-  color: var(--fontColor, #303133);
+  color: var(--text-color-2, #303133);
 }
 
 /******管理端侧边折叠菜单样式*******/
@@ -1838,7 +1839,7 @@ code.hljs {
   z-index: 1001;
   border: solid 1px var(--borderColor, #dfe4ed);
   border-radius: 4px;
-  background-color: var(--background-origin, #FFFFFF);
+  background-color: var(--background, #FFFFFF);
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
   margin: 5px 0;
@@ -1846,11 +1847,11 @@ code.hljs {
 
 .el-select-dropdown__item.hover,
 .el-select-dropdown__item:hover {
-  background-color: var(--color-background, #F5F7FA);
+  background-color: var(--background-color, #F5F7FA);
 }
 
 .el-table--enable-row-hover .el-table__body tr:hover>td.el-table__cell {
-  background-color: var(--color-background, #f5f7fa) !important;
+  background-color: var(--background-color, #f5f7fa) !important;
 }
 
 .el-select-dropdown__item {
@@ -1860,7 +1861,7 @@ code.hljs {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--font-color, #606266);
+  color: var(--text-color, #606266);
   height: 34px;
   line-height: 34px;
   box-sizing: border-box;
@@ -1883,7 +1884,7 @@ code.hljs {
 .el-radio-button__inner {
   background: var(--background-origin, #FFFFFF);
   border: 1px solid var(--border-color, #DCDFE6);
-  color: var(--font-color, #606266);
+  color: var(--text-color, #606266);
 }
 
 .el-radio-button:first-child .el-radio-button__inner {
@@ -1899,7 +1900,7 @@ code.hljs {
 }
 
 .vue-treeselect__single-value {
-  color: var(--fontColor, #333) !important;
+  color: var(--text-color-2, #333) !important;
 }
 
 .vue-treeselect--open-below .vue-treeselect__menu {
@@ -1912,15 +1913,15 @@ code.hljs {
 }
 
 .vue-treeselect__option:hover, .vue-treeselect__option:focus {
-  background: var(--color-background);
+  background: var(--background-color);
 }
 
 .vue-treeselect__option.vue-treeselect__option--selected {
-  background: var(--color-background) !important;
+  background: var(--background-color) !important;
 }
 
 .vue-treeselect__option.vue-treeselect__option--highlight {
-  background: var(--color-background);
+  background: var(--background-color);
 }
 
 /* Element UI tree树形选择菜单样式 */
@@ -1928,7 +1929,7 @@ code.hljs {
   position: relative;
   cursor: default;
   background: var(--background-origin, #FFFFFF);
-  color: var(--font-color, #606266);
+  color: var(--text-color, #606266);
 }
 
 .tree-border {
@@ -1961,8 +1962,8 @@ code.hljs {
 /* 搜索框样式 */
 .el-input-number__increase,
 .el-input-number__decrease {
-  background: var(--background-1, #F5F7FA);
-  color: var(--font-color, #606266);
+  background: var(--gp-surface-bg, var(--background, #fafafa));
+  color: var(--text-color, #606266);
 }
 
 .el-input-number.is-controls-right .el-input-number__increase {
@@ -1984,12 +1985,12 @@ code.hljs {
 .el-input__inner {
   -webkit-appearance: none;
   appearance: none;
-  background-color: var(--hover-background, #ffffff);
+  background-color: var(--background-origin, #ffffff);
   background-image: none;
   border-radius: 4px;
   border: 1px solid var(--borderColor, #dcdfe6);
   box-sizing: border-box;
-  color: var(--fontColor, #606266);
+  color: var(--text-color-2, #606266);
   display: inline-block;
   font-size: inherit;
   height: 40px;
@@ -2008,7 +2009,7 @@ code.hljs {
 .el-input-group__append,
 .el-input-group__prepend {
   background-color: var(--default-button-bg, #f5f7fa);
-  color: var(--fontColor, #909399);
+  color: var(--text-color-2, #909399);
   vertical-align: middle;
   display: table-cell;
   position: relative;
@@ -2024,7 +2025,7 @@ code.hljs {
   border-radius: 4px;
   border: 1px solid var(--borderColor, #dcdfe6);
   background-color: var(--background-2, #ffffff);
-  color: var(--fontColor, #606266);
+  color: var(--text-color-2, #606266);
   transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
@@ -2041,8 +2042,8 @@ code.hljs {
   -webkit-appearance: none;
   appearance: none;
   border-radius: 4px;
-  color: var(--fontColor, #606266);
-  background-color: var(--hover-background, #ffffff);
+  color: var(--text-color-2, #606266);
+  background-color: var(--background-origin, #ffffff);
   border: 1px solid var(--borderColor, #dcdfe6);
   transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
@@ -2075,8 +2076,8 @@ code.hljs {
  * 用法：class="gp-surface-card"；header/body 对应原 el-card 结构，便于前台去 Element
  */
 .gp-surface-card {
-  background: var(--gp-surface-bg, var(--background-1));
-  color: var(--fontColor);
+  background: var(--gp-surface-bg, var(--background, #fafafa));
+  color: var(--text-color-2);
   border-radius: var(--gp-surface-radius, 12px);
   border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
   box-shadow: var(--gp-surface-shadow, 0 2px 12px rgba(15, 23, 42, 0.04));
@@ -2140,8 +2141,8 @@ code.hljs {
 .user-profile,
 .related-articles,
 .profile-card {
-  background: var(--gp-surface-bg, var(--background-1)) !important;
-  color: var(--fontColor);
+  background: var(--gp-surface-bg, var(--background, #fafafa)) !important;
+  color: var(--text-color-2);
   border-radius: var(--gp-surface-radius, 12px) !important;
   border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05)) !important;
   box-shadow: var(--gp-surface-shadow, 0 2px 12px rgba(15, 23, 42, 0.04)) !important;
@@ -2150,8 +2151,8 @@ code.hljs {
 
 .el-card {
   margin-bottom: 14px;
-  background-color: var(--gp-surface-bg, var(--background-1));
-  color: var(--fontColor);
+  background-color: var(--gp-surface-bg, var(--background, #fafafa));
+  color: var(--text-color-2);
   border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
   border-radius: var(--gp-surface-radius, 12px);
   box-shadow: var(--gp-surface-shadow, 0 2px 12px rgba(15, 23, 42, 0.04));
@@ -2237,8 +2238,8 @@ code.hljs {
 .el-pagination.is-background .btn-next,
 .el-pagination.is-background .el-pager li {
   margin: 0 5px;
-  background-color: var(--background-1, rgb(244, 244, 245));
-  color: var(--font-color, #606266);
+  background-color: var(--gp-surface-bg, var(--background, #f4f4f5));
+  color: var(--text-color, #606266);
   min-width: 30px;
   border-radius: 2px;
 }
@@ -2254,7 +2255,7 @@ code.hljs {
   border: 1px solid var(--border-color, #e6ebf5);
   /* padding: 12px;
     z-index: 2000; */
-  color: var(--fontColor, #606266);
+  color: var(--text-color-2, #606266);
   /* line-height: 1.4;
     text-align: justify;
     font-size: 14px; */
@@ -2267,7 +2268,7 @@ code.hljs {
 }
 
 .el-popper[x-placement^="left"] .popper__arrow::after {
-  border-left-color: var(--background-origin, #e6ebf5);
+  border-left-color: var(--background, #e6ebf5);
 }
 
 .el-popper[x-placement^="top"] .popper__arrow {
@@ -2275,7 +2276,7 @@ code.hljs {
 }
 
 .el-popper[x-placement^="top"] .popper__arrow::after {
-  border-top-color: var(--background-origin, #e6ebf5);
+  border-top-color: var(--background, #e6ebf5);
 }
 
 .el-popper[x-placement^="right"] .popper__arrow {
@@ -2283,7 +2284,7 @@ code.hljs {
 }
 
 .el-popper[x-placement^="right"] .popper__arrow::after {
-  border-right-color: var(--background-origin, #e6ebf5);
+  border-right-color: var(--background, #e6ebf5);
 }
 
 .el-popper[x-placement^="bottom"] .popper__arrow {
@@ -2291,7 +2292,7 @@ code.hljs {
 }
 
 .el-popper[x-placement^="bottom"] .popper__arrow::after {
-  border-bottom-color: var(--background-origin, #e6ebf5);
+  border-bottom-color: var(--background, #e6ebf5);
 }
 
 .el-drawer {
@@ -2299,7 +2300,7 @@ code.hljs {
 }
 
 .el-drawer__header {
-  color: var(--font-color, rgb(114, 118, 123));
+  color: var(--text-color, rgb(114, 118, 123));
 }
 
 .el-dialog {
@@ -2313,15 +2314,15 @@ code.hljs {
 }
 
 .el-dialog__title {
-  color: var(--fontColor, #606266);
+  color: var(--text-color-2, #606266);
 }
 
 .el-dialog__headerbtn .el-dialog__close {
-  color: var(--fontColor, #606266);
+  color: var(--text-color-2, #606266);
 }
 
 .el-dialog__body {
-  color: var(--fontColor, #606266);
+  color: var(--text-color-2, #606266);
 }
 
 .el-message-box {
@@ -2331,21 +2332,21 @@ code.hljs {
 }
 
 .el-message-box__headerbtn .el-message-box__close {
-  color: var(--fontColor, #333333);
+  color: var(--text-color-2, #333333);
 }
 
 .el-message-box__title {
-  color: var(--fontColor, #313130);
+  color: var(--text-color-2, #313130);
 }
 
 .el-message-box__content {
-  color: var(--fontColor, #333333);
+  color: var(--text-color-2, #333333);
 }
 
 .el-button.el-button--default {
   background: var(--background, #000000);
   border: 1px solid var(--borderColor, #373737);
-  color: var(--fontColor, #ffffff);
+  color: var(--text-color-2, #ffffff);
 }
 
 
@@ -2392,7 +2393,7 @@ code.hljs {
 aside {
   padding: 0 10px;
   background: transparent;
-  color: var(--fontColor);
+  color: var(--text-color-2);
 }
 
 @media screen and (max-width: 767px) {

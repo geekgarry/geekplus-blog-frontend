@@ -74,7 +74,7 @@
 
     .el-menu-item,
     .el-submenu__title {
-      color: var(--fontColor, #303133) !important;
+      color: var(--text-color-2, #303133) !important;
       border-radius: 8px;
       margin: 2px 8px;
       height: 44px;
@@ -183,7 +183,7 @@
     .el-menu-item,
     .el-submenu__title {
       background-color: var(--gp-surface-bg, #f7f7f7) !important;
-      color: var(--fontColor, #303133) !important;
+      color: var(--text-color-2, #303133) !important;
       &:hover {
         background-color: var(--hover-background, $menuHover) !important;
       }
@@ -325,14 +325,14 @@
   >.el-menu--popup {
     max-height: 100vh;
     overflow-y: auto;
-    background-color: var(--gp-surface-bg, var(--background-1, #fff)) !important;
+    background-color: var(--gp-surface-bg, var(--background, #fff)) !important;
     border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
     border-radius: var(--gp-surface-radius-sm, 10px);
     box-shadow: var(--gp-surface-shadow-hover, 0 6px 18px rgba(15, 23, 42, 0.06));
     padding: 6px 0;
 
     .el-menu-item {
-      color: var(--fontColor, #303133) !important;
+      color: var(--text-color-2, #303133) !important;
       border-radius: 6px;
       margin: 2px 6px;
 
@@ -371,14 +371,14 @@
 
     .el-menu-item {
       background-color: var(--gp-surface-bg, #f7f7f7) !important;
-      color: var(--fontColor, #303133) !important;
+      color: var(--text-color-2, #303133) !important;
       &:hover {
         background-color: var(--hover-background, $menuHover) !important;
       }
     }
     .el-submenu__title {
       background-color: var(--gp-surface-bg, #f7f7f7) !important;
-      color: var(--fontColor, #303133) !important;
+      color: var(--text-color-2, #303133) !important;
       &:hover {
         background-color: var(--hover-background, $menuHover) !important;
       }

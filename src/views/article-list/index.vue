@@ -462,8 +462,8 @@ export default {
 .article-card {
   margin-bottom: 0;
   border-radius: 10px;
-  background: var(--background-1);
-  color: var(--fontColor);
+  background: var(--gp-surface-bg, var(--background, #f8f9fa));
+  color: var(--text-color-2);
   display: block;
   width: 100%;
   padding: 12px 14px;

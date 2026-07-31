@@ -239,7 +239,7 @@ export default defineComponent({
   justify-content: center;
   align-items: center;
   background: var(--background-origin);
-  color: var(--font-color);
+  color: var(--text-color);
 }
 
 ul {
@@ -269,7 +269,7 @@ ul {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--font-color);
+  color: var(--text-color);
   cursor: pointer;
 }
 
@@ -290,7 +290,7 @@ ul {
 .item p {
   font-size: 1.2rem;
   margin-top: 1rem;
-  color: var(--fontColor);
+  color: var(--text-color-2);
 }
 
 .page {
@@ -300,7 +300,7 @@ ul {
   height: fit-content;
   margin: 10px;
   border-radius: 4px;
-  background: var(--color-background,#ffffff);
+  background: var(--background-color,#ffffff);
   box-shadow: 0 0.8rem 2rem rgba(90, 97, 129, 0.05);
   flex-direction: row;
   flex-wrap: wrap;
@@ -320,7 +320,7 @@ ul {
 .page__dots {
   width: 2rem;
   height: 2rem;
-  color: var(--fontColor);
+  color: var(--text-color-2);
   cursor: initial;
 }
 
@@ -342,12 +342,12 @@ ul {
 }
 
 .page__btn {
-  color: var(--fontColor);
+  color: var(--text-color-2);
   pointer-events: none;
 }
 
 .page__btn.active {
-  color: var(--fontColor);
+  color: var(--text-color-2);
   pointer-events: initial;
 }
 

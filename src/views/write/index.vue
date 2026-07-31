@@ -174,8 +174,8 @@ export default {
 <style lang="scss" scoped>
 .write-container {
   margin: 0 auto;
-  background: var(--background-1);
-  color: var(--fontColor, #333333);
+  background: var(--background);
+  color: var(--text-color-2, #333333);
   padding: 6px;
   border-radius: 4px;
   width: 100%;

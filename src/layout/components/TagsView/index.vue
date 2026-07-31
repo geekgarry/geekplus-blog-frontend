@@ -225,7 +225,7 @@ export default {
       line-height: 28px;
       //border: 1px solid #d8dce5;
       border-radius: 3px;
-      color: var(--font-color,#495060);
+      color: var(--text-color,#495060);
       background: var(--background,#fff);
       padding: 0 8px;
       font-size: 13px;

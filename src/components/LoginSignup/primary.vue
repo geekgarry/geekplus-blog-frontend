@@ -175,7 +175,7 @@ export default {
 }
 
 .form-structor .signup .form-title {
-    color: var(--fontColor,#fff);
+    color: var(--text-color-2,#fff);
     font-size: 1.3em;
     text-align: center;
 }
@@ -210,7 +210,7 @@ export default {
     padding: 3px 8px;
     border-bottom: 1px solid var(--borderColor,#eee);
     background: var(--background-2);
-    color: var(--fontColor);
+    color: var(--text-color-2);
     width: 100%;
     font-size: 12px;
 }
@@ -220,7 +220,7 @@ export default {
 }
 
 .form-structor .signup .form-holder .input::-webkit-input-placeholder {
-    color: var(--font-color,rgba(0, 0, 0, 0.4));
+    color: var(--text-color,rgba(0, 0, 0, 0.4));
 }
 
 .form-structor .signup .submit-btn {
@@ -288,7 +288,7 @@ export default {
 }
 
 .form-structor .login .center .form-title {
-    color: var(--fontColor, #000);
+    color: var(--text-color-2, #000);
     font-size: 1.3em;
     text-align: center;
 }
@@ -324,7 +324,7 @@ export default {
     padding: 3px 8px;
     border-bottom: 1px solid var(--borderColor,#eee);
     background: var(--background-2);
-    color: var(--fontColor);
+    color: var(--text-color-2);
     width: 100%;
     font-size: 12px;
 }
@@ -334,7 +334,7 @@ export default {
 }
 
 .form-structor .login .center .form-holder .input::-webkit-input-placeholder {
-    color: var(--font-color,rgba(0, 0, 0, 0.4));
+    color: var(--text-color,rgba(0, 0, 0, 0.4));
 }
 
 .form-structor .login .center .submit-btn {

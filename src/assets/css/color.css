@@ -40,18 +40,18 @@
     --themeBackground: #6e8b8e;
     --gradualRed: linear-gradient(to right, #c49a7c, #b56a6a);
     /* 暖灰纸感背景 */
-    --background: #f0ece7;
-    --background-1: #faf8f5;
+    --background: #fafafa;
+    --background-1: #f0f0f0;
     --background-2: #f7f4f0;
     --hover-background: #e9e4de;
-    --color-background: #efeae4;
-    --background-origin: #faf8f5;
+    --background-color: #efeae4;
+    --background-origin: #ffffff;
     --navbarBackground: rgba(250, 248, 245, 0.92);
-    --fontColor: #3a3835;
-    --font-color: #5c5854;
+    --text-color-2: #3a3835;
+    --text-color: #5c5854;
     --navbarFont: #3a3835;
-    --borderColor: #e2ddd6;
-    --border-color: #e2ddd6;
+    --borderColor: #DCDFE6;
+    --border-color: #f2efea;
     --borderHoverColor: #c9c3bb;
     --articleFontColor: #3a3835;
     --articleGreyFontColor: #6e6a65;
@@ -79,7 +79,7 @@
     --interactive-bg-secondary-hover: rgba(58, 56, 53, 0.06);
     --interactive-bg-secondary-press: rgba(58, 56, 53, 0.04);
     /* 表面卡片 */
-    --gp-surface-bg: var(--background-1);
+    --gp-surface-bg: var(--background);
     --gp-surface-radius: 14px;
     --gp-surface-radius-sm: 10px;
     --gp-surface-padding: 16px 18px;
@@ -97,18 +97,18 @@
 }
 
 :root body[theme-mode="dark"] {
-    --background: #2a2a2a;
+    --background: #222222;
     --background-1: #323230;
     --background-2: #3a3a38;
     --hover-background: #3f3f3c;
-    --color-background: #242422;
-    --background-origin: #2e2e2c;
+    --background-color: #1f1f1f;
+    --background-origin: #171716;
     --navbarBackground: rgba(50, 50, 48, 0.94);
-    --fontColor: #ebe8e3;
-    --font-color: #cfcbc5;
+    --text-color-2: #ebe8e3;
+    --text-color: #cfcbc5;
     --navbarFont: #ebe8e3;
-    --borderColor: #454540;
-    --border-color: #454540;
+    --borderColor: #2A2926;
+    --border-color: #3f3f3f;
     --borderHoverColor: #5a5a54;
     --articleFontColor: #ebe8e3;
     --articleGreyFontColor: #b8b3ac;
@@ -128,7 +128,7 @@
     --theme-color-soft: #6e8b8e;
     --theme-color-muted: rgba(143, 169, 171, 0.18);
     --themeBackground: #8fa9ab;
-    --gp-surface-bg: var(--background-1);
+    --gp-surface-bg: var(--background);
     --gp-surface-radius: 14px;
     --gp-surface-radius-sm: 10px;
     --gp-surface-padding: 16px 18px;

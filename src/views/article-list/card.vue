@@ -600,7 +600,7 @@ export default {
 }
 
 .header {
-  background-color: var(--background-1, #f5f7fa);
+  background-color: var(--gp-surface-bg, var(--background, #f5f7fa));
   /* Or another suitable color */
   padding: 30px 0;
   /* Add padding to the header */
@@ -612,8 +612,8 @@ export default {
 
 .post-item {
   border-radius: 10px;
-  background: var(--background-1);
-  color: var(--fontColor);
+  background: var(--gp-surface-bg, var(--background, #f8f9fa));
+  color: var(--text-color-2);
   display: flex;
   flex-direction: column;
   width: 100%;

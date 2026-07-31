@@ -258,7 +258,7 @@ export default {
   max-width: 820px;
   margin: 0 auto;
   padding: 24px 16px 48px;
-  color: var(--fontColor);
+  color: var(--text-color-2);
 }
 
 .gp-transfer__hero {
@@ -445,8 +445,8 @@ export default {
   padding: 0 12px;
   border-radius: 8px;
   border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.12));
-  background: var(--gp-surface-bg, var(--background-1, #fff));
-  color: var(--fontColor);
+  background: var(--gp-surface-bg, var(--background-origin, #fff));
+  color: var(--text-color-2);
   font-size: 14px;
 }
 

@@ -82,8 +82,8 @@ export default {
   text-transform: uppercase;
   color: var(--theme-color);
 }
-h1 { margin: 0 0 8px; font-size: 1.6rem; color: var(--fontColor); }
-.lead { margin: 0; color: var(--font-color); font-size: 14px; }
+h1 { margin: 0 0 8px; font-size: 1.6rem; color: var(--text-color-2); }
+.lead { margin: 0; color: var(--text-color); font-size: 14px; }
 .uc-card { margin-bottom: 14px; }
 .uc-head {
   display: flex;
@@ -112,7 +112,7 @@ h1 { margin: 0 0 8px; font-size: 1.6rem; color: var(--fontColor); }
     padding: 12px;
     border-radius: 10px;
     background: var(--background-2);
-    color: var(--font-color);
+    color: var(--text-color);
     text-decoration: none;
     text-align: center;
     &:hover { color: var(--theme-color); }

@@ -379,8 +379,8 @@ export default {
 }
 
 .post-item {
-  background-color: var(--background-1, #fff);
-  color: var(--fontColor);
+  background-color: var(--gp-surface-bg, var(--background, #fff));
+  color: var(--text-color-2);
   padding: 16px 18px;
   margin-bottom: 0;
   border-radius: 10px;

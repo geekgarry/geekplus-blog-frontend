@@ -26,7 +26,7 @@ export const blogChildrenRoutes = [
     component: () => import('@/views/HomeView.vue')
   },
   {
-    path: '/resumeGenerator',
+    path: '/tool/resumeGenerator',
     name: 'ResumeEditor',
     meta: { title: '简历生成器', icon: '' },
     component: () => import('@/views/tool/ResumeEditor.vue'),
@@ -86,7 +86,7 @@ export const blogChildrenRoutes = [
     component: () => import("../views/leave-word/index.vue")
   },
   {
-    path: '/file-transfer',
+    path: '/tool/file-transfer',
     name: 'fileTransfer',
     meta: { title: '文件中转', icon: '' },
     component: () => import(/* webpackChunkName: "file-transfer" */ '@/views/file-transfer/index.vue')

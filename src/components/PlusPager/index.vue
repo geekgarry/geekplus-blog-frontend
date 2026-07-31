@@ -7,28 +7,32 @@
           <i class="el-icon-arrow-left"></i>
         </a>
       </li>
-      <li v-for="(pageNumber, index) in totalPages" :key="index" class="page-number" @click="getCurrentPage(pageNumber)" :class="{ active: pageNum == pageNumber }" v-if="totalPages <= pagerLimit">
-        <a href="javascript:void(0);">
-          {{ pageNumber }}
-        </a>
-      </li>
+      <template v-if="totalPages <= pagerLimit">
+        <li v-for="(pageNumber, index) in totalPages" :key="index" class="page-number" @click="getCurrentPage(pageNumber)" :class="{ active: pageNum == pageNumber }">
+          <a href="javascript:void(0);">
+            {{ pageNumber }}
+          </a>
+        </li>
+      </template>
       <li class="page-number" @click="getCurrentPage(1)" :class="{ active: pageNum == 1 }" v-if="totalPages > pagerLimit && pageNum >= pagerLimit - 1">
         <a href="javascript:void(0);">
           1
         </a>
       </li>
-      <template v-if="totalPages > pagerLimit" v-for="(pageNumber, index) in totalPages">
-        <li class="page-number" :key="index" @click="getCurrentPage(pageNumber)" v-if="pageNum < pagerLimit-1 && pageNumber <= pagerLimit-1" :class="{ active: pageNum == pageNumber }">
-          <a href="javascript:void(0);">{{ pageNumber }}
-          </a>
-        </li>
-        <li class="page-number" :key="index" @click="getCurrentPage(pageNumber)" v-if="pageNum >= pagerLimit-1 && pageNum <= totalPages - pagerLimit + 2  && pageNumber >= pageNum - ((pagerLimit - 2) / 2) && pageNumber <= pageNum + (pagerLimit - 2) / 2" :class="{ active: pageNum == pageNumber }">
-          <a href="javascript:void(0);">{{ pageNumber }}
-          </a>
-        </li>
-        <li class="page-number" :key="index" @click="getCurrentPage(pageNumber)" v-if="pageNum <= totalPages && pageNum > totalPages - pagerLimit +2 && pageNumber > totalPages - (pagerLimit - 1) && pageNumber <= totalPages" :class="{ active: pageNum == pageNumber }">
-          <a href="javascript:void(0);">{{ pageNumber }}</a>
-        </li>
+      <template v-if="totalPages > pagerLimit">
+        <template v-for="(pageNumber, index) in totalPages">
+          <li class="page-number" :key="index" @click="getCurrentPage(pageNumber)" v-if="pageNum < pagerLimit-1 && pageNumber <= pagerLimit-1" :class="{ active: pageNum == pageNumber }">
+            <a href="javascript:void(0);">{{ pageNumber }}
+            </a>
+          </li>
+          <li class="page-number" :key="index" @click="getCurrentPage(pageNumber)" v-if="pageNum >= pagerLimit-1 && pageNum <= totalPages - pagerLimit + 2  && pageNumber >= pageNum - ((pagerLimit - 2) / 2) && pageNumber <= pageNum + (pagerLimit - 2) / 2" :class="{ active: pageNum == pageNumber }">
+            <a href="javascript:void(0);">{{ pageNumber }}
+            </a>
+          </li>
+          <li class="page-number" :key="index" @click="getCurrentPage(pageNumber)" v-if="pageNum <= totalPages && pageNum > totalPages - pagerLimit +2 && pageNumber > totalPages - (pagerLimit - 1) && pageNumber <= totalPages" :class="{ active: pageNum == pageNumber }">
+            <a href="javascript:void(0);">{{ pageNumber }}</a>
+          </li>
+        </template>
       </template>
       <li class="page-number" @click="getCurrentPage(totalPages)" :class="{ active: pageNum == totalPages }" v-if="totalPages > pagerLimit && pageNum + pagerLimit - 2 <= totalPages">
         <a href="javascript:void(0);">
@@ -148,7 +152,7 @@ export default {
   text-align: center;
   border-radius: 2px;
   overflow: hidden;
-  color: var(--fontColor, #333333);
+  color: var(--text-color-2, #333333);
   background: var(--background-2, #fefefe);
 }
 

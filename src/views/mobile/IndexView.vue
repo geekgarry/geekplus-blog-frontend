@@ -542,7 +542,7 @@ export default {
   flex: 0 0 auto;
   border: none;
   background: var(--background-2, #f7f4f0);
-  color: var(--font-color);
+  color: var(--text-color);
   border-radius: 999px;
   padding: 7px 14px;
   font-size: 13px;
@@ -580,7 +580,7 @@ export default {
 }
 
 .header {
-  background-color: var(--background-1, #f5f7fa);
+  background-color: var(--background, #f5f7fa);
   /* Or another suitable color */
   padding: 30px 0;
   /* Add padding to the header */
@@ -673,8 +673,8 @@ export default {
   border-radius: var(--gp-surface-radius-sm, 10px);
   padding: 12px;
   margin-bottom: 0;
-  background: var(--gp-surface-bg, var(--background-1));
-  color: var(--fontColor);
+  background: var(--gp-surface-bg, var(--background));
+  color: var(--text-color-2);
   display: block;
   width: 100%;
   font-size: 0.9rem;

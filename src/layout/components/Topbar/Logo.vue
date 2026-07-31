@@ -75,7 +75,7 @@ export default {
     & .topbar-title {
       display: inline-block;
       margin: 0;
-      color: var(--fontColor, #252525);
+      color: var(--text-color-2, #252525);
       font-weight: 600;
       line-height: 50px;
       font-size: 14px;

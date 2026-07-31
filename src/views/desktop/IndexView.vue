@@ -731,7 +731,7 @@ export default {
 }
 
 .header {
-  background-color: var(--background-1, #f5f7fa);
+  background-color: var(--gp-surface-bg, var(--background, #f5f7fa));
   /* Or another suitable color */
   padding: 30px 0;
   /* Add padding to the header */
@@ -816,8 +816,8 @@ export default {
   border-radius: var(--gp-surface-radius-sm, 10px);
   padding: var(--gp-surface-padding, 14px 16px);
   margin-bottom: 0;
-  background: var(--gp-surface-bg, var(--background-1));
-  color: var(--fontColor);
+  background: var(--gp-surface-bg, var(--background, #fafafa));
+  color: var(--text-color-2);
   display: block;
   width: 100%;
   font-size: 0.95rem;
@@ -987,7 +987,7 @@ export default {
   margin-bottom: 10px;
   border-radius: 10px;
   overflow: hidden;
-  background: var(--background-1);
+  background: var(--gp-surface-bg, var(--background, #fafafa));
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 
   &:hover {

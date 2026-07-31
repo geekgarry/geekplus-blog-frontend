@@ -49,7 +49,7 @@
         <router-link class="gp-side-nav-item" to="/leave-word" title="留言板" @click.native="closeDrawer">
           <i class="el-icon-chat-line-square"></i><span>留言板</span>
         </router-link>
-        <router-link class="gp-side-nav-item" to="/file-transfer" title="文件中转" @click.native="closeDrawer">
+        <router-link class="gp-side-nav-item" to="/tool/file-transfer" title="文件中转" @click.native="closeDrawer">
           <i class="el-icon-upload"></i><span>文件中转</span>
         </router-link>
 
@@ -102,7 +102,7 @@
         <router-link class="gp-side-nav-item" to="/write" title="投稿文章" @click.native="closeDrawer">
           <i class="el-icon-edit"></i><span>投稿文章</span>
         </router-link>
-        <router-link class="gp-side-nav-item" to="/resumeGenerator" title="简历生成" @click.native="closeDrawer">
+        <router-link class="gp-side-nav-item" to="/tool/resumeGenerator" title="简历生成" @click.native="closeDrawer">
           <i class="el-icon-document"></i><span>简历生成</span>
         </router-link>
         <router-link class="gp-side-nav-item" to="/chat" title="AI 助手" @click.native="closeDrawer">
@@ -466,7 +466,7 @@ export default {
   --gp-side-collapsed-width: 64px;
   min-height: 100vh;
   background: var(--gp-page-wash, var(--background));
-  color: var(--fontColor);
+  color: var(--text-color-2);
 }
 
 .gp-side-layout__mask {
@@ -484,8 +484,8 @@ export default {
   z-index: 1050;
   display: flex;
   flex-direction: column;
-  background: var(--gp-surface-bg, var(--background-1, #faf8f5));
-  color: var(--fontColor, #3a3835);
+  background: var(--gp-surface-bg, var(--background, #faf8f5));
+  color: var(--text-color-2, #3a3835);
   border-right: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.08));
   box-shadow: var(--gp-surface-shadow, 0 2px 14px rgba(58, 56, 53, 0.06));
   transform: translate3d(-105%, 0, 0);
@@ -525,7 +525,7 @@ export default {
   align-items: center;
   gap: 10px;
   min-width: 0;
-  color: var(--fontColor);
+  color: var(--text-color-2);
   text-decoration: none;
   font-weight: 700;
   img {
@@ -548,7 +548,7 @@ export default {
 .gp-side-collapse-btn {
   border: none;
   background: var(--theme-color-muted, rgba(110, 139, 142, 0.14));
-  color: var(--font-color);
+  color: var(--text-color);
   width: 32px;
   height: 32px;
   border-radius: 8px;
@@ -584,7 +584,7 @@ export default {
   padding: 10px 12px;
   margin-bottom: 2px;
   border-radius: 10px;
-  color: var(--font-color, #5c5854);
+  color: var(--text-color, #5c5854);
   text-decoration: none;
   font-size: 14px;
   box-sizing: border-box;
@@ -601,7 +601,7 @@ export default {
   }
   &:hover {
     background: var(--theme-color-muted, rgba(110, 139, 142, 0.14));
-    color: var(--fontColor);
+    color: var(--text-color-2);
   }
   &.router-link-active {
     background: var(--gp-menu-active-bg, var(--theme-color-muted));
@@ -633,10 +633,10 @@ export default {
   overflow-y: auto;
   padding: 8px;
   border-radius: 12px;
-  background: var(--gp-surface-bg, var(--background-1, #faf8f5));
+  background: var(--gp-surface-bg, var(--background, #fafafa));
   border: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.1));
   box-shadow: var(--gp-surface-shadow-hover, 0 10px 28px rgba(58, 56, 53, 0.12));
-  color: var(--fontColor);
+  color: var(--text-color-2);
 }
 
 .gp-side-nav-flyout__title {
@@ -656,7 +656,7 @@ export default {
   padding: 9px 10px;
   margin-bottom: 2px;
   border-radius: 8px;
-  color: var(--font-color, #5c5854);
+  color: var(--text-color, #5c5854);
   text-decoration: none;
   font-size: 13px;
   line-height: 1.35;
@@ -688,7 +688,7 @@ export default {
   gap: 8px;
   padding: 8px;
   border-radius: 12px;
-  background: var(--gp-surface-bg, var(--background-1));
+  background: var(--gp-surface-bg, var(--background, #fafbfa));
   border: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.06));
   img {
     width: 36px;
@@ -705,7 +705,7 @@ export default {
   p { margin: 0; height: 20px; line-height: 20px; }
   .name {
     font-size: 13px;
-    color: var(--fontColor);
+    color: var(--text-color-2);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -720,7 +720,7 @@ export default {
   border-radius: 8px;
   border: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.1));
   background: var(--background-2, #f7f4f0);
-  color: var(--font-color);
+  color: var(--text-color);
   font-size: 12px;
   line-height: 26px;
   text-decoration: none;
@@ -737,7 +737,7 @@ export default {
 .gp-side-menu-btn {
   border: none;
   background: transparent;
-  color: var(--fontColor);
+  color: var(--text-color-2);
   cursor: pointer;
   width: 36px;
   height: 36px;
@@ -825,7 +825,7 @@ export default {
 .gp-side-top-title {
   font-size: 15px;
   font-weight: 600;
-  color: var(--fontColor);
+  color: var(--text-color-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -840,7 +840,7 @@ export default {
     &:hover { color: var(--theme-color); }
   }
   .sep { margin: 0 6px; }
-  span:last-child { color: var(--fontColor); }
+  span:last-child { color: var(--text-color-2); }
 }
 
 .gp-side-search {
@@ -860,13 +860,13 @@ export default {
     height: 34px;
     padding: 0 12px 0 32px;
     border-radius: 10px;
-    border: 1px solid transparent;
+    border: 1px solid var(--border-color, transparent);
     background: var(--background-2, #f7f4f0);
-    color: var(--fontColor);
+    color: var(--text-color-2);
     outline: none;
     &:focus {
       border-color: var(--theme-color-soft);
-      background: var(--background-1);
+      background: var(--gp-surface-bg, var(--background, #fafbfa));
     }
     @media (min-width: 1200px) { width: 240px; }
   }

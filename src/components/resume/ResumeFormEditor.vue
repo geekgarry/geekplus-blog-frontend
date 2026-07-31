@@ -1193,6 +1193,7 @@ export default {
 <style scoped>
 .resume-form-editor {
   max-width: 100%;
+  background: var(--background-origin, #fff);
 }
 
 .resume-form-editor /deep/ .el-collapse-item__header {
@@ -1207,7 +1208,7 @@ export default {
 .section-title {
   font-size: 15px;
   font-weight: 700;
-  color: #303133;
+  color: var(--text-color, #303133);
 }
 
 .section-title--ai {
@@ -1221,29 +1222,29 @@ export default {
 .section-sub {
   font-size: 11px;
   font-weight: 400;
-  color: #909399;
+  color: var(--muted-color, #909399);
   margin-left: 8px;
 }
 
 .section-body--ai {
-  border-top: 1px solid #f3e8ff;
+  border-top: 1px solid var(--primary-color-light, #f3e8ff);
 }
 
 .ai-generate-btn {
-  background-color: #7c3aed;
-  border-color: #7c3aed;
+  background-color: #7c3aed !important;
+  border-color: #7c3aed !important;
 }
 
 .field-label {
   display: block;
   font-size: 13px;
-  color: #606266;
+  color: var(--muted-color, #606266);
   margin-bottom: 6px;
 }
 
 .field-label .optional,
 .optional {
-  color: #c0c4cc;
+  color: var(--muted-color, #c0c4cc);
   font-weight: 400;
 }
 
@@ -1260,7 +1261,7 @@ export default {
 .avatar-box {
   width: 96px;
   height: 128px;
-  border: 2px dashed #dcdfe6;
+  border: 2px dashed var(--border-color, #dcdfe6);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -1269,11 +1270,11 @@ export default {
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  background: #f5f7fa;
+  background: var(--gp-surface-bg, var(--background, #f5f7fa));
 }
 
 .avatar-box:hover {
-  background: #eef1f6;
+  background: var(--gp-surface-bg, var(--background, #eef1f6));
 }
 
 .avatar-img {
@@ -1284,18 +1285,18 @@ export default {
 
 .avatar-placeholder-icon {
   font-size: 28px;
-  color: #c0c4cc;
+  color: var(--muted-color, #c0c4cc);
   margin-bottom: 4px;
 }
 
 .avatar-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--overlay-color, rgba(0, 0, 0, 0.45));
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--font-color, #fff);
   font-size: 20px;
   opacity: 0;
   transition: opacity 0.2s;
@@ -1321,7 +1322,7 @@ export default {
 .list-toolbar {
   display: flex;
   justify-content: flex-end;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--border-color, #ebeef5);
   padding-bottom: 8px;
   margin-bottom: 12px;
 }
@@ -1330,15 +1331,15 @@ export default {
   position: relative;
   margin-bottom: 16px;
   padding: 12px 12px 12px 8px;
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--border-color, #ebeef5);
   border-radius: 8px;
-  background: #fafafa;
+  background: var(--background, #fafafa);
   transition: opacity 0.2s, border-color 0.2s;
 }
 
 .list-item-card.is-hidden {
   opacity: 0.65;
-  background: #f0f0f0;
+  background: var(--gp-surface-bg, var(--background, #fafafa));
 }
 
 .list-item-actions {
@@ -1352,7 +1353,7 @@ export default {
 
 .drag-handle {
   cursor: grab;
-  color: #909399;
+  color: var(--muted-color, #909399);
   margin-right: auto;
   padding: 4px 8px;
   font-size: 16px;
@@ -1367,12 +1368,12 @@ export default {
 }
 
 .text-red {
-  color: #f56c6c;
+  color: var(--danger-color, #f56c6c);
 }
 
 .uploaded-file-name {
   font-size: 13px;
-  color: #606266;
+  color: var(--muted-color, #606266);
 }
 
 .mt-3 {
@@ -1404,7 +1405,7 @@ export default {
 }
 
 .text-gray-500 {
-  color: #909399;
+  color: var(--muted-color, #909399);
 }
 
 .flip-list-move {

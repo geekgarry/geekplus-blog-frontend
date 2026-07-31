@@ -277,7 +277,7 @@ export default {
   box-sizing: border-box;
   background-color: var(--gp-surface-bg, #f7f7f7);
   box-shadow: var(--gp-nav-shadow, 0 1px 4px rgba(15, 23, 42, 0.06));
-  color: var(--fontColor, #303133);
+  color: var(--text-color-2, #303133);
 }
 
 .top-menu {

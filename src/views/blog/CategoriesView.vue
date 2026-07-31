@@ -63,11 +63,11 @@ export default {
 h1 {
   margin: 0 0 8px;
   font-size: 1.6rem;
-  color: var(--fontColor);
+  color: var(--text-color-2);
 }
 .lead {
   margin: 0;
-  color: var(--font-color);
+  color: var(--text-color);
   font-size: 14px;
 }
 .cat-grid {
@@ -81,7 +81,7 @@ h1 {
   padding: 6px 10px;
   border-radius: 8px;
   background: var(--theme-color-muted);
-  color: var(--font-color);
+  color: var(--text-color);
   text-decoration: none;
   font-size: 13px;
   &:hover { color: var(--theme-color); }

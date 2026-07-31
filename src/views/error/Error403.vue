@@ -67,7 +67,7 @@ export default {
 
 .errorWords {
   text-align: center;
-  color: var(--fontColor, #333535);
+  color: var(--text-color-2, #333535);
 }
 
 .errorWords a {
