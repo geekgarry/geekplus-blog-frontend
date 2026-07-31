@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- header -->
+    <!-- header：个人信息头不受「模块表头」样式约束，仍跟主题色 -->
     <div v-if="block.type === 'header'">
       <div
         v-if="isTwoColumn && isSidebar"
@@ -63,19 +63,33 @@
     </div>
 
     <!-- summary -->
-    <section v-else-if="block.type === 'summary' && data.basics.summary" :key="block.id" class="mb-6">
-      <h2 class="text-lg font-bold mb-2 flex items-center gap-2" :style="{ color: themeColor }">
-        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: themeColor }" /> 个人总结
+    <section
+      v-else-if="block.type === 'summary' && data.basics.summary"
+      :key="block.id"
+      class="resume-dyn-section mb-6"
+      :style="sectionWrapStyle"
+    >
+      <h2 class="resume-dyn-title" :class="titleClass" :style="titleStyle">
+        <span v-if="headerStyle === 'dot'" class="resume-dyn-dot" :style="{ backgroundColor: titleAccent }" />
+        个人总结
       </h2>
-      <p class="leading-relaxed text-sm" :style="{ opacity: 0.9 }">{{ data.basics.summary }}</p>
+      <div class="resume-dyn-body" :style="bodyStyle">
+        <p class="leading-relaxed text-sm" :style="{ opacity: 0.9 }">{{ data.basics.summary }}</p>
+      </div>
     </section>
 
     <!-- work -->
-    <section v-else-if="block.type === 'work' && visibleWork.length" :key="block.id" class="mb-6">
-      <h2 class="text-lg font-bold mb-3 flex items-center gap-2" :style="{ color: themeColor }">
-        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: themeColor }" /> 工作经历
+    <section
+      v-else-if="block.type === 'work' && visibleWork.length"
+      :key="block.id"
+      class="resume-dyn-section mb-6"
+      :style="sectionWrapStyle"
+    >
+      <h2 class="resume-dyn-title" :class="titleClass" :style="titleStyle">
+        <span v-if="headerStyle === 'dot'" class="resume-dyn-dot" :style="{ backgroundColor: titleAccent }" />
+        工作经历
       </h2>
-      <div class="space-y-4">
+      <div class="resume-dyn-body space-y-4" :style="bodyStyle">
         <div v-for="w in visibleWork" :key="w.id" class="text-sm">
           <div class="flex justify-between font-bold" :style="{ opacity: 0.95 }">
             <span>{{ w.company }} - {{ w.position }}</span>
@@ -87,11 +101,17 @@
     </section>
 
     <!-- projects -->
-    <section v-else-if="block.type === 'projects' && visibleProjects.length" :key="block.id" class="mb-6">
-      <h2 class="text-lg font-bold mb-3 flex items-center gap-2" :style="{ color: themeColor }">
-        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: themeColor }" /> 项目经验
+    <section
+      v-else-if="block.type === 'projects' && visibleProjects.length"
+      :key="block.id"
+      class="resume-dyn-section mb-6"
+      :style="sectionWrapStyle"
+    >
+      <h2 class="resume-dyn-title" :class="titleClass" :style="titleStyle">
+        <span v-if="headerStyle === 'dot'" class="resume-dyn-dot" :style="{ backgroundColor: titleAccent }" />
+        项目经验
       </h2>
-      <div class="space-y-4">
+      <div class="resume-dyn-body space-y-4" :style="bodyStyle">
         <div v-for="p in visibleProjects" :key="p.id" class="text-sm">
           <div class="flex justify-between font-bold" :style="{ opacity: 0.95 }">
             <span>{{ p.name }}</span>
@@ -104,11 +124,17 @@
     </section>
 
     <!-- education -->
-    <section v-else-if="block.type === 'education' && data.education.length" :key="block.id" class="mb-6">
-      <h2 class="text-lg font-bold mb-3 flex items-center gap-2" :style="{ color: themeColor }">
-        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: themeColor }" /> 教育经历
+    <section
+      v-else-if="block.type === 'education' && data.education.length"
+      :key="block.id"
+      class="resume-dyn-section mb-6"
+      :style="sectionWrapStyle"
+    >
+      <h2 class="resume-dyn-title" :class="titleClass" :style="titleStyle">
+        <span v-if="headerStyle === 'dot'" class="resume-dyn-dot" :style="{ backgroundColor: titleAccent }" />
+        教育经历
       </h2>
-      <div class="space-y-2">
+      <div class="resume-dyn-body space-y-2" :style="bodyStyle">
         <div v-for="e in data.education" :key="e.id" class="flex justify-between text-sm">
           <span class="font-bold" :style="{ opacity: 0.95 }">{{ e.school }}</span>
           <span :style="{ opacity: 0.9 }">{{ e.degree }}</span>
@@ -118,22 +144,34 @@
     </section>
 
     <!-- skills -->
-    <section v-else-if="block.type === 'skills' && (data.skills || data.hobbies)" :key="block.id" class="mb-6">
-      <h2 class="text-lg font-bold mb-3 flex items-center gap-2" :style="{ color: themeColor }">
-        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: themeColor }" /> 技能与爱好
+    <section
+      v-else-if="block.type === 'skills' && (data.skills || data.hobbies)"
+      :key="block.id"
+      class="resume-dyn-section mb-6"
+      :style="sectionWrapStyle"
+    >
+      <h2 class="resume-dyn-title" :class="titleClass" :style="titleStyle">
+        <span v-if="headerStyle === 'dot'" class="resume-dyn-dot" :style="{ backgroundColor: titleAccent }" />
+        技能与爱好
       </h2>
-      <div class="text-sm space-y-2" :style="{ opacity: 0.9 }">
+      <div class="resume-dyn-body text-sm space-y-2" :style="[bodyStyle, { opacity: 0.9 }]">
         <div v-if="data.skills"><strong :style="{ opacity: 1 }">技能：</strong><span class="whitespace-pre-wrap">{{ data.skills }}</span></div>
         <div v-if="data.hobbies"><strong :style="{ opacity: 1 }">爱好：</strong>{{ data.hobbies }}</div>
       </div>
     </section>
 
     <!-- jobIntention -->
-    <section v-else-if="block.type === 'jobIntention' && hasJobIntention" :key="block.id" class="mb-6">
-      <h2 class="text-lg font-bold mb-3 flex items-center gap-2" :style="{ color: themeColor }">
-        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: themeColor }" /> 求职意向
+    <section
+      v-else-if="block.type === 'jobIntention' && hasJobIntention"
+      :key="block.id"
+      class="resume-dyn-section mb-6"
+      :style="sectionWrapStyle"
+    >
+      <h2 class="resume-dyn-title" :class="titleClass" :style="titleStyle">
+        <span v-if="headerStyle === 'dot'" class="resume-dyn-dot" :style="{ backgroundColor: titleAccent }" />
+        求职意向
       </h2>
-      <div class="flex flex-wrap gap-4 text-sm" :style="{ opacity: 0.9 }">
+      <div class="resume-dyn-body flex flex-wrap gap-4 text-sm" :style="[bodyStyle, { opacity: 0.9 }]">
         <div v-if="data.jobIntention.targetJob"><strong :style="{ opacity: 1 }">目标职业：</strong>{{ data.jobIntention.targetJob }}</div>
         <div v-if="data.jobIntention.targetCity"><strong :style="{ opacity: 1 }">意向城市：</strong>{{ data.jobIntention.targetCity }}</div>
         <div v-if="data.jobIntention.expectedSalary"><strong :style="{ opacity: 1 }">期望薪资：</strong>{{ data.jobIntention.expectedSalary }}</div>
@@ -141,11 +179,17 @@
     </section>
 
     <!-- awards -->
-    <section v-else-if="block.type === 'awards' && visibleAwards.length" :key="block.id" class="mb-6">
-      <h2 class="text-lg font-bold mb-3 flex items-center gap-2" :style="{ color: themeColor }">
-        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: themeColor }" /> 获奖情况
+    <section
+      v-else-if="block.type === 'awards' && visibleAwards.length"
+      :key="block.id"
+      class="resume-dyn-section mb-6"
+      :style="sectionWrapStyle"
+    >
+      <h2 class="resume-dyn-title" :class="titleClass" :style="titleStyle">
+        <span v-if="headerStyle === 'dot'" class="resume-dyn-dot" :style="{ backgroundColor: titleAccent }" />
+        获奖情况
       </h2>
-      <div class="space-y-3">
+      <div class="resume-dyn-body space-y-3" :style="bodyStyle">
         <div v-for="a in visibleAwards" :key="a.id" class="text-sm resume-item">
           <div class="flex justify-between mb-1">
             <span class="font-bold" :style="{ opacity: 0.95 }">{{ a.name }}</span>
@@ -157,11 +201,17 @@
     </section>
 
     <!-- certifications -->
-    <section v-else-if="block.type === 'certifications' && visibleCertifications.length" :key="block.id" class="mb-6">
-      <h2 class="text-lg font-bold mb-3 flex items-center gap-2" :style="{ color: themeColor }">
-        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: themeColor }" /> 资格证书
+    <section
+      v-else-if="block.type === 'certifications' && visibleCertifications.length"
+      :key="block.id"
+      class="resume-dyn-section mb-6"
+      :style="sectionWrapStyle"
+    >
+      <h2 class="resume-dyn-title" :class="titleClass" :style="titleStyle">
+        <span v-if="headerStyle === 'dot'" class="resume-dyn-dot" :style="{ backgroundColor: titleAccent }" />
+        资格证书
       </h2>
-      <div class="space-y-3">
+      <div class="resume-dyn-body space-y-3" :style="bodyStyle">
         <div v-for="c in visibleCertifications" :key="c.id" class="text-sm resume-item">
           <div class="flex justify-between mb-1">
             <span class="font-bold" :style="{ opacity: 0.95 }">{{ c.name }}</span>
@@ -173,11 +223,17 @@
     </section>
 
     <!-- portfolio -->
-    <section v-else-if="block.type === 'portfolio' && visiblePortfolio.length" :key="block.id" class="mb-6">
-      <h2 class="text-lg font-bold mb-3 flex items-center gap-2" :style="{ color: themeColor }">
-        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: themeColor }" /> 作品集
+    <section
+      v-else-if="block.type === 'portfolio' && visiblePortfolio.length"
+      :key="block.id"
+      class="resume-dyn-section mb-6"
+      :style="sectionWrapStyle"
+    >
+      <h2 class="resume-dyn-title" :class="titleClass" :style="titleStyle">
+        <span v-if="headerStyle === 'dot'" class="resume-dyn-dot" :style="{ backgroundColor: titleAccent }" />
+        作品集
       </h2>
-      <div class="space-y-3">
+      <div class="resume-dyn-body space-y-3" :style="bodyStyle">
         <div v-for="p in visiblePortfolio" :key="p.id" class="text-sm resume-item">
           <div class="flex justify-between mb-1">
             <span class="font-bold" :style="{ opacity: 0.95 }">{{ p.title }}</span>
@@ -220,6 +276,10 @@ export default {
       type: Array,
       default: () => [],
     },
+    styleConfig: {
+      type: Object,
+      default: () => ({}),
+    },
   },
   computed: {
     isTwoColumn() {
@@ -250,6 +310,101 @@ export default {
       const j = this.data.jobIntention;
       return j && (j.targetJob || j.targetCity || j.expectedSalary);
     },
+    headerStyle() {
+      return (this.styleConfig && this.styleConfig.headerStyle) || 'dot';
+    },
+    titleAccent() {
+      return (this.styleConfig && this.styleConfig.sectionHeaderColor) || this.themeColor;
+    },
+    titleClass() {
+      return ['hs-' + this.headerStyle];
+    },
+    titleStyle() {
+      const cfg = this.styleConfig || {};
+      const style = {
+        color: cfg.sectionHeaderColor || this.themeColor,
+        backgroundColor: cfg.sectionHeaderBg || 'transparent',
+      };
+      if (this.headerStyle === 'bar') {
+        style.borderLeftColor = this.titleAccent;
+      }
+      if (this.headerStyle === 'underline') {
+        style.borderBottomColor = this.titleAccent;
+      }
+      return style;
+    },
+    sectionWrapStyle() {
+      const cfg = this.styleConfig || {};
+      const radius = typeof cfg.sectionRadius === 'number' ? cfg.sectionRadius : 0;
+      const border = cfg.sectionBorderColor && cfg.sectionBorderColor !== 'transparent'
+        ? `1px solid ${cfg.sectionBorderColor}`
+        : 'none';
+      return {
+        borderRadius: radius + 'px',
+        border,
+        overflow: 'hidden',
+      };
+    },
+    bodyStyle() {
+      const cfg = this.styleConfig || {};
+      const pad = typeof cfg.sectionPadding === 'number' ? cfg.sectionPadding : 0;
+      return {
+        backgroundColor: cfg.sectionBodyBg || 'transparent',
+        padding: pad ? pad + 'px' : undefined,
+      };
+    },
   },
 };
 </script>
+
+<style scoped>
+.resume-dyn-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  padding: 6px 10px;
+  line-height: 1.3;
+}
+
+.resume-dyn-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.resume-dyn-title.hs-bar {
+  border-left: 4px solid currentColor;
+  padding-left: 10px;
+}
+
+.resume-dyn-title.hs-underline {
+  border-bottom: 2px solid currentColor;
+  border-radius: 0;
+  padding-bottom: 6px;
+}
+
+.resume-dyn-title.hs-pill {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 4px 14px;
+  margin-bottom: 0.75rem;
+}
+
+.resume-dyn-title.hs-block {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.resume-dyn-title.hs-slash {
+  clip-path: polygon(0 0, 100% 0, 94% 100%, 0 100%);
+  padding-right: 18px;
+}
+
+.resume-dyn-body {
+  box-sizing: border-box;
+}
+</style>

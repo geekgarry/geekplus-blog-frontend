@@ -182,7 +182,7 @@ export default {
 }
 
 .mm__face--back {
-  background: var(--background-1, #faf8f5);
+  background: var(--gp-surface-bg, var(--background, #fafafa));
   border: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.08));
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 }

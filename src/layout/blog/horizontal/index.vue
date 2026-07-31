@@ -877,14 +877,14 @@ export default {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 16px 16px 40px;
+  padding: 0;
   box-sizing: border-box;
 }
 
 @media (min-width: 1920px) {
   .gp-side-layout__body {
     max-width: 1480px;
-    padding: 24px 28px 48px;
+    padding: 10px 0 0;
   }
 }
 </style>

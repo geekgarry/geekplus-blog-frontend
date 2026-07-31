@@ -76,11 +76,11 @@
         <div class="template-grid">
           <button
             v-for="t in templates"
-            :key="t.id"
+            :key="t.key"
             type="button"
             class="template-card"
             :class="{
-              active: currentTemplateId === t.id,
+              active: currentTemplateId === t.key,
               disabled: t.isVip && !isLoggedIn,
             }"
             :disabled="t.isVip && !isLoggedIn"
@@ -244,7 +244,7 @@ export default {
     },
     currentTemplateMeta() {
       return (
-        this.templates.find((t) => t.id === this.currentTemplateId) ||
+        this.templates.find((t) => t.key === this.currentTemplateId) ||
         DEFAULT_TEMPLATES[0]
       );
     },
@@ -427,7 +427,7 @@ export default {
         const list = (res && (res.data || res.rows || res)) || [];
         if (Array.isArray(list) && list.length) {
           const mapped = list.map((t) => ({
-            id: t.id || t.key || t.templateKey,
+            key: t.key || t.templateKey,
             name: t.name || t.templateName,
             description: t.description || '',
             isVip: !!(t.isVip || t.vip),
@@ -443,10 +443,10 @@ export default {
           // Merge system presets with remote (remote overrides same id)
           const map = {};
           DEFAULT_TEMPLATES.forEach((t) => {
-            map[t.id] = t;
+            map[t.key] = t;
           });
           mapped.forEach((t) => {
-            if (t.id) map[t.id] = { ...map[t.id], ...t };
+            if (t.key) map[t.key] = { ...map[t.key], ...t };
           });
           this.templates = Object.values(map);
         }
@@ -462,7 +462,7 @@ export default {
         this.$message.warning('该模板为 VIP，请先登录');
         return;
       }
-      this.currentTemplateId = t.id;
+      this.currentTemplateId = t.key;
       this.templateDialogVisible = false;
       this.persistCache();
     },

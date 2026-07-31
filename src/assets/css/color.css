@@ -93,7 +93,7 @@
     /* 页面氛围 */
     --gp-page-wash: radial-gradient(1200px 480px at 12% -10%, rgba(154, 175, 177, 0.18), transparent 55%),
       radial-gradient(900px 420px at 90% 0%, rgba(196, 184, 174, 0.22), transparent 50%),
-      var(--background);
+      var(--background-color);
 }
 
 :root body[theme-mode="dark"] {
@@ -140,5 +140,5 @@
     --gp-nav-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
     --gp-menu-active-bg: var(--theme-color-muted);
     --gp-page-wash: radial-gradient(1000px 420px at 10% -8%, rgba(110, 139, 142, 0.16), transparent 55%),
-      var(--background);
+      var(--background-color);
 }

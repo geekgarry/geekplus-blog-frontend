@@ -4,7 +4,7 @@
     <div class="gp-page__inner container">
       <div class="gp-page__main">
         <div class="gp-row">
-          <div class="gp-col-24 gp-col-xs-24 gp-col-sm-17 gp-col-md-17 gp-col-lg-17 gp-col-xl-17">
+          <div class="gp-col-24 gp-col-xs-24 gp-col-sm-24 gp-col-md-17 gp-col-lg-17 gp-col-xl-17">
             <div class="main-article-content">
               <div class="top-ads" v-if="showTopAds">
                 <div class="ad-item" v-for="ad in topAds" :key="ad.title">
@@ -159,7 +159,7 @@
 
             </div>
           </div>
-          <div class="gp-col-24 gp-col-xs-24 gp-col-sm-7 gp-col-md-7 gp-col-lg-7 gp-col-xl-7">
+          <div class="gp-col-24 gp-col-xs-24 gp-col-sm-24 gp-col-md-7 gp-col-lg-7 gp-col-xl-7">
             <!-- <div class="left-sidebar">
                           <el-menu default-active="more" class="el-menu-vertical-demo" background-color="#27292b"
                               text-color="#fff" active-text-color="#ffd04b">
@@ -1461,8 +1461,6 @@ export default {
   .article-container {
     padding: 14px 12px 16px;
     border-radius: 10px;
-    margin-left: -2px;
-    margin-right: -2px;
   }
 
   .article-header .article-title {
@@ -1624,8 +1622,8 @@ export default {
 
 .mobile-view {
   box-shadow: none;
-  margin-right: -8px;
-  margin-left: -8px;
+  margin-right: -15px;
+  margin-left: -15px;
   border-radius: 0;
 }
 

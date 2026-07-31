@@ -105,11 +105,26 @@
  */
 
 /**
+ * @typedef {'solid'|'gradient'|'diagonal'|'blobs'} BackgroundStyle
+ * @typedef {'dot'|'bar'|'underline'|'pill'|'block'|'slash'} HeaderStyle
+ */
+
+/**
  * @typedef {Object} TemplateLayout
  * @property {string} themeColor
  * @property {string} fontColor
  * @property {string} backgroundColor
  * @property {string} [sidebarBackgroundColor]
+ * @property {BackgroundStyle} [backgroundStyle]
+ * @property {string} [backgroundAccentA]
+ * @property {string} [backgroundAccentB]
+ * @property {HeaderStyle} [headerStyle]
+ * @property {string} [sectionHeaderColor]
+ * @property {string} [sectionHeaderBg]
+ * @property {string} [sectionBodyBg]
+ * @property {string} [sectionBorderColor]
+ * @property {number} [sectionRadius]
+ * @property {number} [sectionPadding]
  * @property {LayoutType} layoutType
  * @property {'left'|'right'} [sidebarPosition]
  * @property {TemplateBlock[]} mainBlocks

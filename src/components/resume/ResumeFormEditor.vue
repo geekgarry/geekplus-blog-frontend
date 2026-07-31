@@ -934,15 +934,12 @@ export default {
         ],
       });
     },
-    hasBlock(blockType) {
-      const tpl = this.template;
-      if (!tpl || !tpl.layoutData) return true;
-      const layout = tpl.layoutData;
-      const mainBlocks = layout.mainBlocks || [];
-      const sidebarBlocks = layout.sidebarBlocks || [];
-      const blocks = layout.blocks || [];
-      const match = (b) => b.type === blockType;
-      return mainBlocks.some(match) || sidebarBlocks.some(match) || blocks.some(match);
+    /**
+     * 编辑区始终展示全部模块（不随所选模板裁剪）。
+     * 预览/导出仍只渲染模板 layout 中的块；此处保证数据可完整录入。
+     */
+    hasBlock() {
+      return true;
     },
     onAvatarBoxClick() {
       if (!this.resumeData.basics.avatar && this.$refs.avatarInput) {
