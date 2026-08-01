@@ -185,10 +185,6 @@
   .gp-side-layout .gp-col-xs-17 {
     width: 100% !important;
   }
-
-  .gp-side-layout .gp-page__inner.container {
-    padding: 10px !important;
-  }
 }
 
 @media screen and (max-width: 576px) {
@@ -221,10 +217,6 @@
 
   .gp-side-layout .gp-col-xs-17 {
     width: 100% !important;
-  }
-
-  .gp-side-layout .gp-page__inner.container {
-    padding: 10px !important;
   }
 }
 
