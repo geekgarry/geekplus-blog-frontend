@@ -24,7 +24,7 @@
                 </div>
               </div>
 
-              <div class="article-container is-always-shadow" :class="{ 'mobile-view': isMobile }">
+              <div class="article-container is-always-shadow">
                 <!-- Meta：作者 + 时间 + 数据 -->
                 <div class="article-meta-bar" :class="{ 'skeleton-loading': loading }">
                   <div class="article-meta-bar__author">
@@ -117,7 +117,7 @@
                 <button type="button" class="author-card__follow" @click="onFollowAuthor">关注</button>
               </div>
 
-              <div class="article-comments-container is-always-shadow" :class="{ 'mobile-view': isMobile }">
+              <div class="article-comments-container is-always-shadow">
                 <comment-reply
                   ref="commentReply"
                   v-show="articleInfo.articleContent"
@@ -159,7 +159,7 @@
           </div>
 
           <div class="gp-col-24 gp-col-xs-24 gp-col-sm-24 gp-col-md-7 gp-col-lg-7 gp-col-xl-7">
-            <aside class="right-sidebar">
+            <div class="right-sidebar">
               <!-- 目录 TOC -->
               <div v-if="!isMobile && tocList.length" class="gp-surface-card box-card article-toc sticky-panel">
                 <div class="gp-surface-card__header">
@@ -253,7 +253,7 @@
                   </div>
                 </div>
               </div>
-            </aside>
+            </div>
           </div>
         </div>
       </div>
@@ -1463,6 +1463,11 @@ export default {
   line-height: 1.35;
   letter-spacing: 0.02em;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+}
+
+.article-body-row {
+  margin-left: -5px !important;
+  margin-right: -5px !important;
 }
 
 .article-meta-bar {

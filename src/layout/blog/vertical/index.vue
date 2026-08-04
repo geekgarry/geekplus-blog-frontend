@@ -141,18 +141,21 @@
           <svg-icon icon-class="settings" />
         </div>
         <div class="my-setting">
-          <div>
+          <div title="切换主题">
             <!-- 太阳按钮 -->
             <i v-if="isDarkMode" class="el-icon-sunny iconRotate" @click="changeColor()"></i>
             <!-- 月亮按钮 -->
             <i v-else class="el-icon-moon" aria-hidden="true" @click="changeColor()"></i>
           </div>
           <div :title="blogLayoutToggleTitle">
-            <i
+            <!-- <i
               :class="blogLayout === 'side' ? 'el-icon-s-unfold' : 'el-icon-s-fold'"
               aria-hidden="true"
               @click="toggleBlogLayout()"
-            ></i>
+            ></i> -->
+            <i>
+              <svg-icon aria-hidden="true" @click="toggleBlogLayout()" :icon-class="blogLayout === 'side' ? 'topbar' : 'sidebar'" />
+            </i>
           </div>
           <div :title="mouseAnimation ? '关闭点击飘字' : '开启点击飘字'">
             <i class="el-icon-magic-stick" aria-hidden="true" @click="changeMouseAnimation()"></i>

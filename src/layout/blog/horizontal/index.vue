@@ -143,7 +143,8 @@
             @click="toggleBlogLayout"
             :title="blogLayoutToggleTitle"
           >
-          <i :class="blogLayout === 'side' ? 'el-icon-s-unfold' : 'el-icon-s-fold'"></i>
+          <svg-icon :icon-class="blogLayout === 'side' ? 'topbar' : 'sidebar'" />
+          <!-- <i :class="blogLayout === 'side' ? 'el-icon-s-unfold' : 'el-icon-s-fold'"></i> -->
         </button>
         <!-- <button type="button" class="gp-side-theme" @click="changeColor" :title="isDark ? '浅色' : '深色'">
           <i :class="isDark ? 'el-icon-sunny' : 'el-icon-moon'"></i>
