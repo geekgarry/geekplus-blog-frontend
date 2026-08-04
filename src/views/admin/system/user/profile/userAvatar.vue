@@ -33,7 +33,7 @@
           </el-upload>
         </el-col>
         <el-col :lg="{span: 1, offset: 1}" :md="{span: 3, offset: 1}" :sm="{span: 3, offset: 1}" :xs="{span: 3, offset: 1}">
-          <el-button size="small" @click="getAvatarList">
+          <el-button v-if="isBlogSiteAdmin()" size="small" @click="getAvatarList">
             浏览
             <i class="el-icon-folder-opened"></i>
           </el-button>
@@ -103,6 +103,7 @@ import { checkRole } from "@/utils/permission";
 import { VueCropper } from "vue-cropper";
 import { uploadAvatar, getAvatarImageList, updateUserAvatar } from "@/api/system/user";
 import {deleteFile} from "@/api/common"
+import { isBlogSiteAdmin } from "@/utils/blogAdmin";
 
 export default {
   components: { VueCropper },
@@ -233,7 +234,11 @@ export default {
       this.$refs.cropper.getCropBlob(data => {
         let formData = new FormData();
         formData.append("avatarFile", data);
-        formData.append("fileFolder", store.getters.username);
+        // 如果是网站管理员，则上传到用户名对应的文件夹
+        // 否则就不携带fileFolder参数
+        if(this.isBlogSiteAdmin()){
+          formData.append("fileFolder", store.getters.username);
+        }
         uploadAvatar(formData).then(response => {
           this.open = false;
           this.options.img = process.env.VUE_APP_BASE_API + response.imgUrl;
