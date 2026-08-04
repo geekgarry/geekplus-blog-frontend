@@ -9,8 +9,10 @@
         </div>
         <div class="head-container" style="overflow-x: scroll;">
           <el-tree :data="deptOptions" :props="defaultProps" :expand-on-click-node="false"
-            :filter-node-method="filterNode" ref="tree" default-expand-all @node-click="handleNodeClick" />
+            :filter-node-method="filterNode" ref="tree" default-expand-all highlight-current
+            @node-click="handleNodeClick" />
         </div>
+        <p v-if="activeDeptName" class="dept-filter-hint">当前：{{ activeDeptName }}（含下级）</p>
         <br/>
       </el-col>
       <!--用户数据-->
@@ -114,7 +116,7 @@
             <template slot-scope="scope">
               <!-- <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status }}</el-tag> -->
               <!-- <span>{{ scope.row.status == 0 ? "正常使用" : "暂停禁用" }}</span> -->
-              <el-switch :disabled="scope.row.userId === 1 || scope.row.userId === loginUserId"
+              <el-switch :disabled="(!checkRole(['admin']) && !checkPermi(['system:user:update'])) || scope.row.userId === loginUserId"
                 v-model="scope.row.status" :active-value="1" :inactive-value="0"
                 @change="handleStatusChange(scope.row)"></el-switch>
             </template>
@@ -127,11 +129,12 @@
           </el-table-column>
           <el-table-column label="操作" align="center" width="200" class-name="small-padding fixed-width" fixed="right">
             <template slot-scope="scope">
-              <el-button v-if="scope.row.userId !== 1 || loginUserId === 1" size="mini" type="text" icon="el-icon-edit"
+              <el-button v-if="checkRole(['admin']) && checkPermi(['system:user:update'])" size="mini" type="text" icon="el-icon-edit"
                 @click="handleUpdate(scope.row)">修改</el-button>
-              <el-button v-if="scope.row.userId !== 1 && scope.row.userId !== loginUserId" size="mini" type="text"
+              <el-button v-if="checkRole(['admin']) && checkPermi(['system:user:resetPwd']) && scope.row.userId !== loginUserId" size="mini" type="text"
                 icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
-              <el-button v-if="scope.row.userId !== 1 || loginUserId === 1" size="mini" type="text" icon="el-icon-key"
+              <!-- 重置密码必须有管理员权限 -->
+              <el-button v-if="checkRole(['admin']) && checkPermi(['system:user:resetPwd'])" size="mini" type="text" icon="el-icon-key"
                 @click="handleResetPwd(scope.row)">重置</el-button>
             </template>
           </el-table-column>
@@ -347,8 +350,15 @@ export default {
         username: undefined,
         phoneNumber: undefined,
         status: undefined,
-        email: undefined
+        email: undefined,
+        deptId: undefined,
+        /** 本部门+子孙部门 id，逗号分隔；后端需支持 IN 查询 */
+        deptIds: undefined,
+        /** 为 true 时后端按 deptId 展开子树（与 deptIds 二选一或同时支持） */
+        includeChildren: undefined,
       },
+      /** 当前选中的部门名（列表提示） */
+      activeDeptName: "",
       form: {},
       listRole: [],//角色列表
       roleIds: [],
@@ -434,17 +444,40 @@ export default {
       if (!value) return true;
       return data.deptName.indexOf(value) !== -1;
     },
-    // 节点单击事件
+    // 节点单击：查本部门 + 全部子部门人员（后端优先按 deptIds / includeChildren 过滤）
     handleNodeClick(data) {
+      if (!data) return;
+      const deptIds = this.collectDeptAndChildrenIds(data);
       this.queryParams.deptId = data.deptId;
+      this.queryParams.deptIds = deptIds.join(",");
+      // 如果当前部门有子部门，则设置 includeChildren 为 true
+      if(data.children && data.children.length > 0){
+        this.queryParams.includeChildren = true;
+      } else {
+        this.queryParams.includeChildren = false;
+      }
+      this.activeDeptName = data.deptName || "";
       this.handleQuery();
+    },
+    /** 收集当前部门及全部子孙部门 id */
+    collectDeptAndChildrenIds(node) {
+      const ids = [];
+      const walk = (n) => {
+        if (!n || n.deptId == null) return;
+        ids.push(n.deptId);
+        const children = n.children || [];
+        children.forEach((c) => walk(c));
+      };
+      walk(node);
+      return ids;
     },
     getList() {
       this.listLoading = true;
       listUser(this.queryParams).then((response) => {
-        // console.log(response)
         this.list = response.rows;
         this.total = response.total;
+        this.listLoading = false;
+      }).catch(() => {
         this.listLoading = false;
       });
     },
@@ -495,7 +528,14 @@ export default {
     /** 重置按钮操作 */
     resetQuery() {
       this.dateRange = [];
-      this.queryParams = { pageNum: 1, pageSize: 10};
+      this.activeDeptName = "";
+      this.queryParams = {
+        pageNum: 1,
+        pageSize: 10,
+        deptId: undefined,
+        deptIds: undefined,
+        includeChildren: undefined,
+      };
       this.resetForm("queryForm");
       this.handleQuery();
     },
@@ -734,3 +774,12 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.dept-filter-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.4;
+}
+</style>

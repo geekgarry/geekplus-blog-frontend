@@ -203,7 +203,7 @@ ul {
 }
 
 .search-select li {
-  border: 1px solid var(--borderColor, #d4d4d4);
+  border: 1px solid var(--border-color-2, #d4d4d4);
   border-top: none;
   border-bottom: none;
   background-color: var(--background-origin, #fff);

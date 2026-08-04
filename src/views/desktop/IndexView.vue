@@ -157,7 +157,11 @@
                 <div class="stats">
                   <p>文章: {{ articleCount }}</p>
                   <p>分类: {{ categoryCount }}</p>
-                  <p>访问量: {{ abbreviateNumber(visitCount) }}</p>
+                  <div class="stats-visit">
+                    <p>总访问: {{ abbreviateNumber(visitCount) }}</p>
+                    <p v-if="visitToday != null" class="stats-sub">今 {{ abbreviateNumber(visitToday) }} / 月 {{ abbreviateNumber(visitMonth) }}</p>
+                    <p v-if="visitYear != null" class="stats-sub">季 {{ abbreviateNumber(visitQuarter) }} / 年 {{ abbreviateNumber(visitYear) }}</p>
+                  </div>
                 </div>
                 <div style="text-align: center;">
                   <button class="butt my-github" @click="goToExternalLink('https://github.com/geekgarry')"><svg-icon icon-class="github"></svg-icon></button>
@@ -328,6 +332,10 @@ export default {
       articleCount: 58,
       categoryCount: 14,
       visitCount: 1,
+      visitToday: null,
+      visitMonth: null,
+      visitQuarter: null,
+      visitYear: null,
       searchQuery: "",
       //右侧面板推荐区域，推荐文章列表
       recommendedArticles: [
@@ -519,17 +527,23 @@ export default {
     },
     getPageVisitInfo() {
       getVisitInfo().then((res) => {
-        this.visitCount = res.visitCount;
+        this.visitCount = res.visitCount != null ? res.visitCount : this.visitCount;
+        this.visitToday = res.today != null ? res.today : null;
+        this.visitMonth = res.month != null ? res.month : null;
+        this.visitQuarter = res.quarter != null ? res.quarter : null;
+        this.visitYear = res.year != null ? res.year : null;
       });
     },
     abbreviateNumber(value) {
+        if (value == null || value === '') return '0';
+        value = Number(value) || 0;
         const suffixes = ['', 'K', 'M', 'B', 'T']; // Thousand, Million, Billion, Trillion
         let suffixNum = 0;
         while (value >= 1000) {
             value /= 1000;
             suffixNum++;
         }
-        return value.toFixed(2) + suffixes[suffixNum];
+        return value.toFixed(suffixNum === 0 ? 0 : 2) + suffixes[suffixNum];
     },
     //获取网站热门留言
     getWebHotUserComments() {
@@ -788,8 +802,19 @@ export default {
   text-align: center;
   /* Center-align the stats */
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-evenly;
+}
+
+.stats-visit {
+  text-align: center;
+}
+
+.stats-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-color, #666);
+  line-height: 1.35;
 }
 
 .my-github {

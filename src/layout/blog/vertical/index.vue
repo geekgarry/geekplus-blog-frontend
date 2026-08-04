@@ -1143,7 +1143,7 @@ export default {
     padding: 0 10px;
     width: 220px;
     background: var(--background);
-    border: 1px solid var(--borderColor);
+    border: 1px solid var(--border-color-2);
     /* transform: translate(0, 0) scale(1, 1); */
     /* 其他动画样式 */
   }

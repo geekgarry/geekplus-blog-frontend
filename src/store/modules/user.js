@@ -15,6 +15,9 @@ const getDefaultState = () => {
     sysRole:{},
     sysRoles:[],
     menus:[],
+    roles:[],
+    roleNames:[],
+    permissions:[],
     sysOrg:'',
     dicts:{},
     notifyStatus:''
@@ -53,6 +56,18 @@ const mutations = {
   },
   SET_ROLES: (state, roles) => {
     state.sysRoles = roles
+    // 同步扁平 roleKey，供 checkRole / getters.roles 使用
+    if (Array.isArray(roles)) {
+      state.roles = roles.map((r) => (typeof r === 'string' ? r : (r && r.roleKey) || '')).filter(Boolean)
+    } else if (roles && typeof roles === 'object') {
+      // 后端偶发返回 Set 序列化后的类数组 / 纯对象
+      state.roles = Object.values(roles).map((r) => (typeof r === 'string' ? r : (r && r.roleKey) || '')).filter(Boolean)
+    } else {
+      state.roles = []
+    }
+  },
+  SET_ROLE_NAMES: (state, names) => {
+    state.roleNames = Array.isArray(names) ? names : (names ? Object.values(names) : [])
   },
   SET_PERMISSIONS: (state, permissions) => {
     state.permissions = permissions
@@ -121,6 +136,18 @@ const actions = {
         commit('SET_USERID', data.userId)
         commit('SET_AVATAR', avatar)
         commit('SET_ROLES', data.roles)
+        if (data.roleNames) {
+          commit('SET_ROLE_NAMES', data.roleNames)
+        }
+        // 后端若下发 userType，写入 sysUser 供看板权限判断
+        if (data.userType != null || data.sysUser) {
+          commit('SET_USER', data.sysUser || {
+            userId: data.userId,
+            username: data.username,
+            nickname: data.nickname,
+            userType: data.userType
+          })
+        }
         //let onlineUser = localStorage.getItem("onlineUser");
         //console.log(onlineUser)
         // if (onlineUser) {

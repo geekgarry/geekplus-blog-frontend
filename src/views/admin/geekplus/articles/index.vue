@@ -1,5 +1,12 @@
 <template>
   <div class="app-container">
+    <el-alert
+      :title="isBlogAdmin ? '管理员：可查询/修改/删除全部文章' : '普通用户：仅可查询/修改/删除自己发布的文章'"
+      :type="isBlogAdmin ? 'warning' : 'info'"
+      show-icon
+      :closable="false"
+      style="margin-bottom: 12px"
+    />
     <el-form
       :model="queryParams"
       ref="queryForm"
@@ -7,7 +14,7 @@
       v-show="showSearch"
       label-width="68px"
     >
-      <el-form-item label="作者/用户" label-width="120" prop="authorName">
+      <el-form-item v-if="isBlogAdmin" label="作者/用户" label-width="120" prop="authorName">
         <el-input
           v-model="queryParams.authorName"
           placeholder="请输入作者名称/用户名"
@@ -609,12 +616,18 @@ import {
 } from "@/api/geekplus/articles";
 import QuillEditor from "@/components/QuillEditor";
 import FileManager from "@/views/admin/system/file/index.vue";
+import { isBlogSiteAdmin } from "@/utils/blogAdmin";
 
 export default {
   name: "Articles",
   components: {
     QuillEditor,
     FileManager
+  },
+  computed: {
+    isBlogAdmin() {
+      return isBlogSiteAdmin();
+    }
   },
   data() {
     return {

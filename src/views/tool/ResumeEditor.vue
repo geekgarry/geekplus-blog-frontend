@@ -596,7 +596,7 @@ export default {
   color: var(--success-color, #059669);
 }
 .save-hint.muted {
-  color: var(--muted-color, #9ca3af);
+  color: var(--theme-color-muted, #9ca3af);
 }
 
 .toolbar-actions {
@@ -624,7 +624,7 @@ export default {
   color: var(--text-color, #374151);
 }
 .current-resume-tip .muted {
-  color: var(--muted-color, #9ca3af);
+  color: var(--theme-color-muted, #9ca3af);
   margin-left: 6px;
 }
 .my-resumes-toolbar {
@@ -634,7 +634,7 @@ export default {
 }
 .empty-resumes {
   margin: 16px 0 0;
-  color: var(--muted-color, #9ca3af);
+  color: var(--theme-color-muted, #9ca3af);
   font-size: 13px;
   text-align: center;
 }
@@ -718,7 +718,7 @@ export default {
 }
 .template-card-desc {
   font-size: 12px;
-  color: var(--muted-color, #6b7280);
+  color: var(--theme-color-muted, #6b7280);
   line-height: 1.4;
 }
 .vip-badge {
@@ -733,7 +733,7 @@ export default {
 
 .download-hint {
   font-size: 13px;
-  color: var(--muted-color, #6b7280);
+  color: var(--theme-color-muted, #6b7280);
   margin: 0 0 16px;
   text-align: center;
 }

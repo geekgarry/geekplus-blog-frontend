@@ -540,13 +540,13 @@ export default {
     padding: 10px 20px;
     margin: 0 0 20px;
     font-size: 17.5px;
-    border-left: 5px solid var(--borderColor, #eee);
+    border-left: 5px solid var(--border-color-2, #eee);
   }
   hr {
     margin-top: 20px;
     margin-bottom: 20px;
     border: 0;
-    border-top: 1px solid var(--borderColor, #eee);
+    border-top: 1px solid var(--border-color-2, #eee);
   }
   .col-item {
     margin-bottom: 20px;

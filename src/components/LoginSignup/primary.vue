@@ -208,7 +208,7 @@ export default {
     height: 36px;
     line-height: 30px;
     padding: 3px 8px;
-    border-bottom: 1px solid var(--borderColor,#eee);
+    border-bottom: 1px solid var(--border-color-2,#eee);
     background: var(--background-2);
     color: var(--text-color-2);
     width: 100%;
@@ -305,7 +305,7 @@ export default {
 .form-structor .login .center .form-holder {
     border-radius: 4px;
     background-color: var(--background-origin, #ffffff);
-    border: 1px solid var(--borderColor,#eee);
+    border: 1px solid var(--border-color-2,#eee);
     overflow: hidden;
     margin-top: 50px;
     opacity: 1;
@@ -322,7 +322,7 @@ export default {
     height: 36px;
     line-height: 30px;
     padding: 3px 8px;
-    border-bottom: 1px solid var(--borderColor,#eee);
+    border-bottom: 1px solid var(--border-color-2,#eee);
     background: var(--background-2);
     color: var(--text-color-2);
     width: 100%;

@@ -340,7 +340,7 @@ a {
 }
 
 .shadow-box {
-  box-shadow: 0 1px 20px -6px var(--borderColor);
+  box-shadow: 0 1px 20px -6px var(--border-color-2);
   transition: all 0.3s ease;
 }
 
@@ -1742,7 +1742,7 @@ code.hljs {
 
 .el-table th.el-table__cell.is-leaf,
 .el-table td.el-table__cell {
-  border-bottom: 1px solid var(--borderColor, #dfe6ec);
+  border-bottom: 1px solid var(--border-color-2, #dfe6ec);
 }
 
 .el-table tr {
@@ -1750,7 +1750,7 @@ code.hljs {
 }
 
 .el-table--border .el-table__cell {
-  border-right: 1px solid var(--borderColor, #dfe6ec);
+  border-right: 1px solid var(--border-color-2, #dfe6ec);
 }
 
 .el-table__fixed-right:before,
@@ -1768,7 +1768,7 @@ code.hljs {
 .el-checkbox__inner {
   display: inline-block;
   position: relative;
-  border: 1px solid var(--borderColor, #DCDFE6);
+  border: 1px solid var(--border-color-2, #DCDFE6);
   border-radius: 2px;
   box-sizing: border-box;
   width: 14px;
@@ -1837,7 +1837,7 @@ code.hljs {
 .el-select-dropdown {
   position: absolute;
   z-index: 1001;
-  border: solid 1px var(--borderColor, #dfe4ed);
+  border: solid 1px var(--border-color-2, #dfe4ed);
   border-radius: 4px;
   background-color: var(--background, #FFFFFF);
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
@@ -1988,7 +1988,7 @@ code.hljs {
   background-color: var(--background-origin, #ffffff);
   background-image: none;
   border-radius: 4px;
-  border: 1px solid var(--borderColor, #dcdfe6);
+  border: 1px solid var(--border-color-2, #dcdfe6);
   box-sizing: border-box;
   color: var(--text-color-2, #606266);
   display: inline-block;
@@ -2013,7 +2013,7 @@ code.hljs {
   vertical-align: middle;
   display: table-cell;
   position: relative;
-  border-color: var(--borderColor, #dcdfe6);
+  border-color: var(--border-color-2, #dcdfe6);
   padding: 0 20px;
   width: 1px;
   white-space: nowrap;
@@ -2023,7 +2023,7 @@ code.hljs {
   -webkit-appearance: none;
   appearance: none;
   border-radius: 4px;
-  border: 1px solid var(--borderColor, #dcdfe6);
+  border: 1px solid var(--border-color-2, #dcdfe6);
   background-color: var(--background-2, #ffffff);
   color: var(--text-color-2, #606266);
   transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
@@ -2044,7 +2044,7 @@ code.hljs {
   border-radius: 4px;
   color: var(--text-color-2, #606266);
   background-color: var(--background-origin, #ffffff);
-  border: 1px solid var(--borderColor, #dcdfe6);
+  border: 1px solid var(--border-color-2, #dcdfe6);
   transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
@@ -2268,7 +2268,7 @@ code.hljs {
 }
 
 .el-popper[x-placement^="left"] .popper__arrow::after {
-  border-left-color: var(--background, #e6ebf5);
+  border-left-color: var(--background-origin, #e6ebf5);
 }
 
 .el-popper[x-placement^="top"] .popper__arrow {
@@ -2276,7 +2276,7 @@ code.hljs {
 }
 
 .el-popper[x-placement^="top"] .popper__arrow::after {
-  border-top-color: var(--background, #e6ebf5);
+  border-top-color: var(--background-origin, #e6ebf5);
 }
 
 .el-popper[x-placement^="right"] .popper__arrow {
@@ -2284,7 +2284,7 @@ code.hljs {
 }
 
 .el-popper[x-placement^="right"] .popper__arrow::after {
-  border-right-color: var(--background, #e6ebf5);
+  border-right-color: var(--background-origin, #e6ebf5);
 }
 
 .el-popper[x-placement^="bottom"] .popper__arrow {
@@ -2292,7 +2292,7 @@ code.hljs {
 }
 
 .el-popper[x-placement^="bottom"] .popper__arrow::after {
-  border-bottom-color: var(--background, #e6ebf5);
+  border-bottom-color: var(--background-origin, #e6ebf5);
 }
 
 .el-drawer {
@@ -2345,7 +2345,7 @@ code.hljs {
 
 .el-button.el-button--default {
   background: var(--background, #000000);
-  border: 1px solid var(--borderColor, #373737);
+  border: 1px solid var(--border-color-2, #373737);
   color: var(--text-color-2, #ffffff);
 }
 

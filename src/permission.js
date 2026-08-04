@@ -3,18 +3,22 @@
  *
  * 进站顺序（不要颠倒）：
  *   1) initPublicRoutes —— 人人需要的前台栏目，挂到 webApp / BlogShell
- *   2) needRematch 时 replace 重进 —— 修复「直链时 addRoute 后 matched 仍为空」白屏
- *   3) 有 Token 再拉后台菜单 —— 与 navMenu 数据源隔离，避免游客逻辑和权限逻辑搅在一起
+ *   2) 若目标是「待加载的后台直链」，本轮不要挂 *、也不要立刻 rematch
+ *      （否则 * 会先把 /admin/... 解析成 /404，后台菜单永远加不上）
+ *   3) 有 Token 再拉后台菜单；全部动态路由加完后，再把 * 挂到最后
+ *   4) needRematch 时 replace 重进 —— 修复「直链时 addRoute 后 matched 仍为空」白屏
  *
  * 【直链空白页根因】
  * 博客栏目路由（如 /timeEssay/personalEssay）来自 navMenu/getMenu，不在 constantRoutes 里。
- * 从首页点菜单时路由已 addRoute，故能进；首次直接打开该 URL 时：
- *   1) 守卫里 await 拉菜单并 addRoute
- *   2) 若只 next() 而不重新进入，Vue Router 仍沿用「加路由之前」的匹配结果 → matched 为空 → 白屏
  * 正确做法：动态路由刚注册完后 next({ path: to.fullPath, replace: true }) 强制再匹配一次。
  * （不要 next({ ...to }) 展开 Route 对象，可能带内部字段导致 path 读空。）
  *
- * 详见 docs/v2/00-双重动态路由与守卫.md
+ * 【后台直链被 404 吞掉】
+ * 前台 init 后若立刻 ensureCatchAll404 + rematch，此时后台路由尚未 addRoute，
+ * Vue Router 会把 /admin/xxx 匹配到 * → redirect /404。因此：
+ *   - 后台待加载时：推迟挂 *、推迟 rematch，先加后台路由，最后再挂 * 并 rematch 一次
+ *
+ * 详见 docs/v2/00-双重动态路由与守卫.md 、docs/v2/07-前后台一体架构与脚手架拆分.md
  */
 import router from "./router";
 import store from "./store";
@@ -39,6 +43,8 @@ NProgress.configure({
   speed: 200,
 });
 
+const CATCH_ALL_NAME = "CatchAll404";
+
 /** 将路由挂到指定父级下（按 path 去重，避免 HMR / 重复守卫注册两次） */
 function addChildRoute(parent, route) {
   if (!route || route.path == null) return;
@@ -50,6 +56,7 @@ function addChildRoute(parent, route) {
 
 const whiteList = [
   "/article/**",
+  "/post/**",
   "/user",
   "/login",
   "/register",
@@ -62,6 +69,7 @@ const whiteList = [
   "/categories",
   "/tags",
   "/user/center",
+  "/user/comments",
   "/resumeGenerate",
   "/404",
   "/403",
@@ -69,7 +77,25 @@ const whiteList = [
 ];
 
 function isAdminRoute(path) {
-  return path.startsWith("/admin");
+  return path === "/admin" || path.startsWith("/admin/");
+}
+
+/** 已登录、目标是后台、且后台菜单尚未注入 → 本轮须推迟 * 与 rematch */
+function isPendingAdminBootstrap(to) {
+  if (!to || !isAdminRoute(to.path)) return false;
+  if (!getToken()) return false;
+  const menus = store.state.user && store.state.user.menus;
+  return !menus || menus.length === 0;
+}
+
+/**
+ * 后台相关 URL 在「管理端路由未就绪 / 未登录待跳转」时不要挂 *：
+ * 否则 rematch 会把 /admin/... 解析成 /404，登录重定向也来不及。
+ */
+function shouldDeferCatchAll(to) {
+  if (!to || !isAdminRoute(to.path)) return false;
+  if (!getToken()) return true;
+  return isPendingAdminBootstrap(to);
 }
 
 /**
@@ -80,10 +106,10 @@ const publicMenuPrefetch = store.dispatch("navMenu/getMenu").catch(() => null);
 
 /**
  * 注册博客前台动态菜单路由（挂到 webApp / BlogShell）
+ * @param {import('vue-router').Route} [to] 当前导航目标，用于判断是否推迟 404 通配
  * @returns {{ ok: boolean, needRematch: boolean }}
- *   needRematch=true 表示本轮刚 addRoute，调用方必须 next({...to, replace:true})
  */
-async function initPublicRoutes() {
+async function initPublicRoutes(to) {
   // 本会话已注册过：store 有数据且标记已写入 router
   if (store.state.navMenu.routesRegistered) {
     return { ok: true, needRematch: false };
@@ -96,8 +122,11 @@ async function initPublicRoutes() {
       routes = (await publicMenuPrefetch) || (await store.dispatch("navMenu/getMenu"));
     }
     if (!routes || routes.length === 0) {
-      // 无菜单数据时仍放行静态路由（首页等），避免整站卡死
       store.commit("navMenu/SET_ROUTES_REGISTERED", true);
+      // 无栏目时：非「后台相关 defer」才挂 *，避免后台直链 / 未登录进后台被吞
+      if (!shouldDeferCatchAll(to)) {
+        ensureCatchAll404();
+      }
       return { ok: true, needRematch: false };
     }
 
@@ -106,25 +135,53 @@ async function initPublicRoutes() {
       addChildRoute("webApp", item);
     });
 
-    // 404 必须在全部动态路由之后挂载，否则会抢先吞掉栏目路径
-    const has404 = router.getRoutes().some((r) => r.path === "*" || r.name === "404");
-    if (!has404) {
-      router.addRoute({
-        path: "*",
-        redirect: "/404",
-        type: "error",
-        hidden: true,
-        name: "404",
-      });
+    store.commit("navMenu/SET_ROUTES_REGISTERED", true);
+
+    // 后台直链尚未注入管理端路由、或未登录将跳登录时：不要挂 *
+    if (!shouldDeferCatchAll(to)) {
+      ensureCatchAll404();
     }
 
-    store.commit("navMenu/SET_ROUTES_REGISTERED", true);
-    // 关键：刚 addRoute 后必须让调用方 replace 重进，否则直链白屏
     return { ok: true, needRematch: true };
   } catch (error) {
     console.error("加载公共菜单失败:", error);
     return { ok: false, needRematch: false };
   }
+}
+
+/** 卸掉通配，便于在其之前插入后台动态路由后再挂回末尾 */
+function removeCatchAll404() {
+  if (typeof router.hasRoute === "function" && router.hasRoute(CATCH_ALL_NAME)) {
+    router.removeRoute(CATCH_ALL_NAME);
+    return;
+  }
+  // 极旧环境无 removeRoute 时：仅依赖「先不加 *」的 defer 策略
+}
+
+/**
+ * 注册 * → /404；必须排在全部动态路由之后。
+ * 与静态页 name:'404'（Error404.vue）区分，避免挂不上 / 重复名冲突。
+ */
+function ensureCatchAll404() {
+  removeCatchAll404();
+  if (router.getRoutes().some((r) => r.path === "*")) return;
+  router.addRoute({
+    path: "*",
+    redirect: "/404",
+    type: "error",
+    hidden: true,
+    name: CATCH_ALL_NAME,
+  });
+}
+
+/** 注入后台动态路由（跳过自带的 *，统一由 ensureCatchAll404 挂末尾） */
+function addAdminRoutes(routeList) {
+  removeCatchAll404();
+  (routeList || []).forEach((item) => {
+    if (!item || item.path === "*" || item.name === CATCH_ALL_NAME) return;
+    router.addRoute(item);
+  });
+  ensureCatchAll404();
 }
 
 router.beforeEach(async (to, from, next) => {
@@ -136,17 +193,20 @@ router.beforeEach(async (to, from, next) => {
   const hasToken = getToken();
 
   // 1. 确保前台博客动态菜单已挂到 webApp 下
-  const { ok, needRematch } = await initPublicRoutes();
+  const { ok, needRematch } = await initPublicRoutes(to);
   if (!ok) {
     NProgress.done();
     Message.error("加载站点菜单失败，请刷新重试");
     next("/404");
     return;
   }
-  // 动态路由刚写入：强制按当前 URL 再匹配一次（修复直链空白）
-  // 注意：不要 next({ ...to })，展开 Route 对象可能带上 name:null / matched 等内部字段，
-  // vue-router 解析时会触发 Cannot read properties of undefined (reading 'path')
-  if (needRematch) {
+
+  const pendingAdmin = isPendingAdminBootstrap(to);
+  // 未登录访问后台：同样不要用前台 rematch（无 * 时 matched 空；有 * 会被吞成 404）
+  const deferRematchForAdmin = pendingAdmin || (!hasToken && isAdminRoute(to.path));
+
+  // 前台刚 addRoute：后台相关导航延后到本守卫后续分支再 rematch / 跳登录
+  if (needRematch && !deferRematchForAdmin) {
     next({ path: to.fullPath, replace: true });
     return;
   }
@@ -165,14 +225,14 @@ router.beforeEach(async (to, from, next) => {
       try {
         const routes = await store.dispatch("user/getMenu");
         const addRoutes = await store.dispatch("generateRoutes", { routes });
-        addRoutes.forEach((item) => {
-          router.addRoute(item);
-        });
-        // 后台路由同样需要 replace 重进（只用 fullPath，避免展开 Route 触发 path 读空）
+        addAdminRoutes(addRoutes);
+        // 前台 + 后台都就绪后再 rematch（含此前 defer 的后台直链）
         next({ path: to.fullPath, replace: true });
       } catch (err) {
         await store.dispatch("user/logout");
         Message.error(err || "用户认证失败, 请重新登录");
+        // 登出后仍要有 *，避免未知路径白屏
+        ensureCatchAll404();
         if (to.path !== "/login") {
           next();
         } else {
@@ -181,10 +241,17 @@ router.beforeEach(async (to, from, next) => {
         NProgress.done();
       }
     } else {
+      // 后台菜单已在内存：确保 * 仍在（HMR / 异常卸路由后的兜底）
+      if (!router.getRoutes().some((r) => r.path === "*")) {
+        ensureCatchAll404();
+      }
       next();
     }
   } else {
     /* 未登录 */
+    if (!router.getRoutes().some((r) => r.path === "*")) {
+      ensureCatchAll404();
+    }
     if (whiteList.some((path) => to.path.startsWith(path.replace("**", "")))) {
       next();
     } else if (isAdminRoute(to.path)) {

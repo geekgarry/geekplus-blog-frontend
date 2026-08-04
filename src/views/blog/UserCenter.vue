@@ -18,6 +18,7 @@
         </div>
         <div class="uc-actions">
           <router-link class="gp-btn gp-btn--primary" to="/write">去投稿</router-link>
+          <router-link class="gp-btn" to="/user/comments">留言管理</router-link>
           <router-link class="gp-btn" to="/leave-word">留言板</router-link>
           <router-link class="gp-btn" to="/file-transfer">文件中转</router-link>
           <router-link class="gp-btn" to="/admin/user/profile">后台资料</router-link>
@@ -34,6 +35,36 @@
           </div>
         </div>
       </div>
+
+      <!-- 内容互动：留言管理主入口 -->
+      <section class="uc-quick gp-surface-card" v-if="username">
+        <div class="gp-surface-card__header">
+          <span class="category-title">我的互动</span>
+        </div>
+        <div class="gp-surface-card__body uc-interact">
+          <router-link class="uc-interact__card" to="/user/comments">
+            <i class="el-icon-chat-dot-round"></i>
+            <div>
+              <strong>留言管理</strong>
+              <p>查看自己的网站留言与文章评论{{ isAdmin ? '（管理员可看全站）' : '' }}</p>
+            </div>
+          </router-link>
+          <router-link class="uc-interact__card" to="/user/comments?tab=article">
+            <i class="el-icon-document"></i>
+            <div>
+              <strong>文章评论</strong>
+              <p>按文章维度浏览评论，一键跳转定位</p>
+            </div>
+          </router-link>
+          <router-link class="uc-interact__card" to="/leave-word">
+            <i class="el-icon-edit-outline"></i>
+            <div>
+              <strong>去留言板</strong>
+              <p>公开留言区，写下想说的话</p>
+            </div>
+          </router-link>
+        </div>
+      </section>
 
       <section class="uc-quick gp-surface-card">
         <div class="gp-surface-card__header">
@@ -53,6 +84,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import { isBlogSiteAdmin } from '@/utils/blogAdmin'
 
 export default {
   name: 'UserCenter',
@@ -62,7 +94,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['username', 'nickname', 'avatar', 'userId'])
+    ...mapGetters(['username', 'nickname', 'avatar', 'userId']),
+    isAdmin() {
+      return isBlogSiteAdmin()
+    }
   },
   methods: {
     async logout() {
@@ -149,6 +184,53 @@ h1 {
     text-align: center;
 
     &:hover {
+      color: var(--theme-color);
+    }
+  }
+}
+
+.uc-interact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.uc-interact__card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--background-2);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  i {
+    font-size: 22px;
+    color: var(--theme-color);
+    margin-top: 2px;
+  }
+
+  strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 15px;
+    color: var(--text-color-2);
+  }
+
+  p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--muted-1-color);
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+
+    strong {
       color: var(--theme-color);
     }
   }

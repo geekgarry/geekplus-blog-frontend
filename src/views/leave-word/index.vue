@@ -16,8 +16,15 @@
               <div class="lw-body">
                 <div class="skeleton-wrapper" v-if="loading"></div>
                 <template v-else>
-                  <comment-reply :hasLogin="!$common.isEmpty(username)" :comments="leaveWords" :isArticle="false"
-                    @comment="sendComment"></comment-reply>
+                  <comment-reply
+                    ref="commentReply"
+                    :hasLogin="!$common.isEmpty(username)"
+                    :comments="leaveWords"
+                    :isArticle="false"
+                    :highlightId="anchorCommentId"
+                    @comment="sendComment"
+                    @delete="deleteComment"
+                  ></comment-reply>
                 </template>
                 <plus-pager @pagination="getAllWebComments" :total="total" :page.sync="queryParams.pageNum"
                   :limit="queryParams.pageSize">
@@ -119,6 +126,7 @@ import {
   getRandomRecommendArt, getArticleLatestUserComment, getWebHotUserComment,
   sendUserComment, getAllUserComment, getGpNoticeNewOne, getTagArticleCount
 } from '@/api/geekplus/geekplus'
+import { delComment } from '@/api/geekplus/comment'
 
 export default {
   components: {
@@ -187,9 +195,24 @@ export default {
     },
     nickname() {
       return this.$store.getters.nickname;
+    },
+    /** 来自后台「定位留言」：/leave-word?commentId=xx */
+    anchorCommentId() {
+      return this.$route.query.commentId || null;
     }
   },
   methods: {
+    deleteComment(row) {
+      if (!row || !row.id) return;
+      delComment(row.id).then((res) => {
+        if (res.code === 200) {
+          this.$message.success('删除成功');
+          this.getAllWebComments();
+        }
+      }).catch((error) => {
+        this.$message.error((error && error.msg) || '删除失败');
+      });
+    },
     sendComment(data) {
       if (this.userId && this.nickname) {
         data.name = this.nickname;
@@ -223,13 +246,22 @@ export default {
     },
     getAllWebComments() {
       this.loading = true;
-      getAllUserComment(this.queryParams)
+      // 定位某条留言时适当加大页容量，提高命中率
+      const params = { ...this.queryParams };
+      if (this.anchorCommentId && (!params.pageSize || params.pageSize < 50)) {
+        params.pageSize = 50;
+      }
+      getAllUserComment(params)
         .then((res) => {
-          //console.log(response);
           this.leaveWords = res.rows;
           this.total = res.total;
           this.commentCount = res.count;
           this.loading = false;
+          this.$nextTick(() => {
+            if (this.$refs.commentReply && this.$refs.commentReply.scrollToHighlight) {
+              this.$refs.commentReply.scrollToHighlight();
+            }
+          });
         })
         .catch((error) => {
           this.msgError(error.msg, {

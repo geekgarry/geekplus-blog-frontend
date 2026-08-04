@@ -56,16 +56,24 @@ export const blogChildrenRoutes = [
     component: () => import(/* webpackChunkName: "blog-user-center" */ '@/views/blog/UserCenter.vue')
   },
   {
-    path: '/article/:id',
-    name: 'indexArticle',
-    meta: { title: '文章', icon: '' },
-    component: () => import("../views/article/mobile.vue")
+    path: '/user/comments',
+    name: 'userComments',
+    meta: { title: '留言管理', icon: '', requiresAuth: true },
+    component: () => import(/* webpackChunkName: "blog-user-comments" */ '@/views/blog/CommentManage.vue')
   },
   {
-    path: '/article1',
-    name: 'article',
+    // 生产文章详情：gp-page / gp-row / gp-col 框架（与 mobile 同源布局）
+    path: '/post/:id?',
+    name: 'indexArticle',
     meta: { title: '文章', icon: '' },
-    component: () => import('@/views/article/index.vue'),
+    component: () => import('@/views/article/index.vue')
+  },
+  {
+    // 对照副本
+    path: '/article/:id?',
+    name: 'articleMobileLegacy',
+    meta: { title: '文章(对照)', icon: '' },
+    component: () => import('@/views/article/mobile.vue'),
   },
   {
     path: '/article2',
@@ -160,8 +168,15 @@ export const constantRoutes = [
       {
         path: 'dashboard',
         name: 'Dashboard',
-        component: () => import('@/views/admin/dashboard/index'),
-        meta: { title: "首页", icon: 'dashboard', noCache: true, affix: true }
+        component: () => import('@/views/admin/dashboard/index_v1'),
+        meta: {
+          title: "首页",
+          icon: 'dashboard',
+          noCache: true,
+          affix: true,
+          // 页面内仍有 canViewBlogDashboard 二次校验
+          roles: ['admin', 'blog_admin', 'site_admin', 'website_admin']
+        }
       }
     ]
   },

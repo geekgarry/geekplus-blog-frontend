@@ -64,6 +64,7 @@ export function logout() {
   })
 }
 //获取所有用户
+// 部门筛选：支持 deptId（单部门）或 deptIds（逗号分隔，含子孙）或 includeChildren=true+deptId
 export function listUser(query){
   return request({
     url: '/sys/user/list',

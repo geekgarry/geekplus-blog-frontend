@@ -89,6 +89,11 @@ Vue.prototype.loadXMLString = loadXMLString;
 Vue.prototype.copyCode = copyCode;
 Vue.prototype.getHtmlPlainText = getHtmlPlainText;
 
+// 权限检查
+import { checkRole, checkPermi } from "@/utils/permission";
+Vue.prototype.checkRole = checkRole;
+Vue.prototype.checkPermi = checkPermi;
+
 Vue.use(ElementUI, {
   size: _getCookie('size') || 'medium',
   i18n: (key, value) => i18n.t(key, value)

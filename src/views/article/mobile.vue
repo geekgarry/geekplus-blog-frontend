@@ -31,8 +31,8 @@
                     </span>
                   </div>
                 </div>
-                <div class="article-content" :class="{ 'skeleton-loading': loading }"
-                  v-highlight v-viewer v-html="renderMdText(articleInfo.articleContent)">
+                <div class="article-content" :class="{ 'skeleton-loading': loading }" v-highlight v-viewer
+                  v-html="renderMdText(articleInfo.articleContent)">
                 </div>
                 <div class="plus-article-toolbar">
                   <!-- <button
@@ -151,7 +151,7 @@
               <div class="article-comments-container is-always-shadow" :class="{ 'mobile-view': isMobile }">
                 <comment-reply v-show="articleInfo.articleContent" :hasLogin="!$common.isEmpty(username)"
                   :total="commentsCount" :comments="articleComments" :isArticle="true"
-                  @comment="sendComment"></comment-reply>
+                  @comment="sendComment" @delete="deleteComment"></comment-reply>
                 <plus-pager @pagination="getArticleAllUserComments" :total="total" :page.sync="queryParams.pageNum"
                   :limit="queryParams.pageSize">
                 </plus-pager>
@@ -229,7 +229,8 @@
                   <!-- 侧栏搜索：gp-input-group 替代 el-input append 模式 -->
                   <div class="gp-input-group">
                     <input class="gp-input" placeholder="搜索文章" v-model="searchQuery" @keyup.enter="searchArticles">
-                    <button type="button" class="gp-btn gp-btn--append" @click="searchArticles"><i class="el-icon-search"></i></button>
+                    <button type="button" class="gp-btn gp-btn--append" @click="searchArticles"><i
+                        class="el-icon-search"></i></button>
                   </div>
                 </div>
               </div>
@@ -276,7 +277,7 @@
                     </div>
                     <div class="related-article-intro">
                       <h3><router-link :to="'/article/' + relatedArticle.id">{{ relatedArticle.articleTitle
-                          }}</router-link>
+                      }}</router-link>
                       </h3>
                       <p>{{ relatedArticle.abstractText }}</p>
                     </div>
@@ -322,14 +323,8 @@
               触控端用 dataURL（shareCardImg），避免 blob: 在 Web Share / a[download] 后被 WebKit 锁死导致无法长按。
             -->
             <div class="share-preview" v-if="shareCardImg">
-              <img
-                :key="'share-preview-' + sharePreviewKey"
-                ref="sharePreviewImg"
-                class="share-card-img"
-                :src="sharePreviewSrc"
-                alt="文章分享图"
-                title="长按图片可保存到相册"
-              >
+              <img :key="'share-preview-' + sharePreviewKey" ref="sharePreviewImg" class="share-card-img"
+                :src="sharePreviewSrc" alt="文章分享图" title="长按图片可保存到相册">
               <p class="share-hint">{{ isTouchDevice ? '长按上方图片保存到相册，或点下方按钮分享/下载' : '可点击下方按钮下载图片' }}</p>
             </div>
             <div class="share-preview share-preview--loading" v-else>
@@ -338,11 +333,9 @@
             </div>
           </div>
           <div class="share-box__btn">
-            <button
-              class="share-btn is-save"
-              :disabled="!shareCardImg || shareCardGenerating"
-              @click="saveShareCardImg"
-            >{{ isTouchDevice ? '分享/保存图片' : '下载分享图片' }}</button>
+            <button class="share-btn is-save" :disabled="!shareCardImg || shareCardGenerating"
+              @click="saveShareCardImg">{{
+                isTouchDevice ? '分享/保存图片' : '下载分享图片' }}</button>
             <button class="share-btn" @click="onLinkButtonTap">复制链接</button>
           </div>
         </div>
@@ -363,6 +356,7 @@ import {
   getArticleDetail, getRandomRecommendArt, getTagArticleCount,
   updateViewCountAndLikeCount, getAllArticleComment, sendArticleComment
 } from '@/api/geekplus/geekplus'
+import { delArticleComment } from '@/api/geekplus/comment'
 import { runWhenIdle, scheduleArticleViewCount, cancelIdle } from '@/utils/deferRequest'
 
 export default {
@@ -535,7 +529,7 @@ export default {
       return this.$store.getters.nickname;
     }
   },
-  mounted() {},
+  mounted() { },
   beforeDestroy() {
     this.cancelDeferredJobs();
     this.revokeShareBlobUrl();
@@ -562,6 +556,17 @@ export default {
       this._commentsIdleId = runWhenIdle(() => {
         this.getArticleAllUserComments();
       }, 1800);
+    },
+    deleteComment(row) {
+      if (!row || !row.id) return;
+      delArticleComment(row.id).then((res) => {
+        if (res.code === 200) {
+          this.$message.success('删除成功');
+          this.getArticleAllUserComments();
+        }
+      }).catch((error) => {
+        this.$message.error((error && error.msg) || '删除失败');
+      });
     },
     sendComment(data) {
       if (this.userId && this.nickname) {
@@ -613,6 +618,15 @@ export default {
           this.scheduleViewCountUpdate();
           this.scheduleCommentsRequest();
           this.scheduleSidebarRequests();
+        } else {
+          this.$message({
+            message: "文章不存在，即将跳转首页",
+            duration: 3000,
+            type: 'error'
+          });
+          setTimeout(() => {
+            this.$router.push('/');
+          }, 2000);
         }
       }).catch((error) => {
         this.$message({
@@ -620,6 +634,9 @@ export default {
           duration: 3000,
           type: 'error'
         });
+        setTimeout(() => {
+          this.$router.push('/');
+        }, 2000);
       }).finally(() => {
         this.loading = false;
       });
@@ -666,8 +683,8 @@ export default {
       }
       const articleViewAndLike = { likeCount: this.articleInfo.likeCount, id: this.articleId };
       updateViewCountAndLikeCount(articleViewAndLike)
-        .then(() => {})
-        .catch(() => {});
+        .then(() => { })
+        .catch(() => { });
     },
     onThumbsUpButtonTap() {
       this.articleInfo.likeCount += 1;
@@ -1552,7 +1569,7 @@ export default {
 .related-article-item+.related-article-item {
   margin-top: 8px;
   padding-top: 10px;
-  border-top: 1px solid var(--gp-surface-border, var(--borderColor));
+  border-top: 1px solid var(--gp-surface-border, var(--border-color-2));
 }
 
 .related-article-cover {

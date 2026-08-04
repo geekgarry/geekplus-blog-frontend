@@ -1219,7 +1219,7 @@ export default {
 .section-sub {
   font-size: 11px;
   font-weight: 400;
-  color: var(--muted-color, #909399);
+  color: var(--theme-color-muted, #909399);
   margin-left: 8px;
 }
 
@@ -1235,13 +1235,13 @@ export default {
 .field-label {
   display: block;
   font-size: 13px;
-  color: var(--muted-color, #606266);
+  color: var(--theme-color-muted, #606266);
   margin-bottom: 6px;
 }
 
 .field-label .optional,
 .optional {
-  color: var(--muted-color, #c0c4cc);
+  color: var(--theme-color-muted, #c0c4cc);
   font-weight: 400;
 }
 
@@ -1282,7 +1282,7 @@ export default {
 
 .avatar-placeholder-icon {
   font-size: 28px;
-  color: var(--muted-color, #c0c4cc);
+  color: var(--theme-color-muted, #c0c4cc);
   margin-bottom: 4px;
 }
 
@@ -1350,7 +1350,7 @@ export default {
 
 .drag-handle {
   cursor: grab;
-  color: var(--muted-color, #909399);
+  color: var(--theme-color-muted, #909399);
   margin-right: auto;
   padding: 4px 8px;
   font-size: 16px;
@@ -1370,7 +1370,7 @@ export default {
 
 .uploaded-file-name {
   font-size: 13px;
-  color: var(--muted-color, #606266);
+  color: var(--theme-color-muted, #606266);
 }
 
 .mt-3 {
@@ -1402,7 +1402,7 @@ export default {
 }
 
 .text-gray-500 {
-  color: var(--muted-color, #909399);
+  color: var(--theme-color-muted, #909399);
 }
 
 .flip-list-move {

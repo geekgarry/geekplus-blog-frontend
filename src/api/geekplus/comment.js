@@ -70,7 +70,7 @@ export function updateArticleComment(data) {
   })
 }
 
-// 删除用户评论回复留言
+// 删除网站留言（本人或管理员）
 export function delComment(id) {
   return request({
     url: '/geekplus/comment/' + id,
@@ -78,7 +78,7 @@ export function delComment(id) {
   })
 }
 
-// 删除用户评论回复留言
+// 删除文章评论（本人或管理员）
 export function delArticleComment(id) {
   return request({
     url: '/geekplus/articlecomment/' + id,

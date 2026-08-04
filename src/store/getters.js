@@ -13,8 +13,13 @@ const getters = {
   nickname: state => state.user.nickname,
   userId: state => state.user.userId,
   introduction: state => state.user.introduction,
-  roles: state => state.user.roles,
-  permissions: state => state.user.permissions,
+  roles: state => {
+    // SET_ROLES 写入 sysRoles；兼容旧字段 roles（字符串权限字符数组）
+    const raw = state.user.roles || state.user.sysRoles || []
+    if (!Array.isArray(raw)) return []
+    return raw.map((r) => (typeof r === 'string' ? r : (r && (r.roleKey || r.roleName)) || '')).filter(Boolean)
+  },
+  permissions: state => state.user.permissions || [],
   menus: state => state.user.menus,
   permission_routes: state => state.permission.permission_routes,
   // routes: state => state.permission.routes,

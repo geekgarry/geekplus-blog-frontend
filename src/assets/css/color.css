@@ -50,7 +50,7 @@
     --text-color-2: #3a3835;
     --text-color: #5c5854;
     --navbarFont: #3a3835;
-    --borderColor: #DCDFE6;
+    --border-color-2: #DCDFE6;
     --border-color: #f2efea;
     --borderHoverColor: #c9c3bb;
     --articleFontColor: #3a3835;
@@ -97,17 +97,17 @@
 }
 
 :root body[theme-mode="dark"] {
-    --background: #222222;
+    --background: #191919;
     --background-1: #323230;
     --background-2: #3a3a38;
     --hover-background: #3f3f3c;
-    --background-color: #1f1f1f;
+    --background-color: #111111;
     --background-origin: #171716;
     --navbarBackground: rgba(50, 50, 48, 0.94);
     --text-color-2: #ebe8e3;
     --text-color: #cfcbc5;
     --navbarFont: #ebe8e3;
-    --borderColor: #2A2926;
+    --border-color-2: #2A2926;
     --border-color: #3f3f3f;
     --borderHoverColor: #5a5a54;
     --articleFontColor: #ebe8e3;

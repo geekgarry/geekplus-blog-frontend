@@ -1,538 +1,744 @@
 <template>
-  <div class="app-container home">
-    <el-row :gutter="20">
-      <el-col :sm="24" :lg="24">
-        <blockquote class="text-warning" style="font-size: 14px">
-          <el-button class="mobile" type="primary" icon="el-icon-document"><el-link target="_blank" type="info" href="javascript:;">我的在线网页简历</el-link></el-button>
-          <br />
-          <el-link
-            href="#"
-            type="primary"
-            target="_blank"
-            >###</el-link
+  <div class="blog-insight-dash">
+    <!-- 无权限 -->
+    <div v-if="!allowed" class="dash-denied">
+      <i class="el-icon-lock"></i>
+      <h2>无权访问博客运营看板</h2>
+      <p>仅<strong>博客管理员 / 网站管理员 / 系统管理员</strong>可查看本页数据。</p>
+      <el-button type="primary" size="small" @click="$router.push('/admin')">返回首页</el-button>
+    </div>
+
+    <template v-else>
+      <div class="dash-header">
+        <div class="dash-header__text">
+          <h1>欢迎回来，{{ displayName }}</h1>
+          <p>近 30 天内容表现 · Redis 日统计 + 文章累计数据（当日实时，历史可归档落库）</p>
+        </div>
+        <div class="dash-header__actions">
+          <el-button type="primary" size="small" icon="el-icon-refresh" @click="loadDashboard">刷新</el-button>
+          <el-button size="small" class="btn-ghost" icon="el-icon-download" :loading="exporting" @click="handleExport">
+            导出报告
+          </el-button>
+          <el-button type="primary" size="small" icon="el-icon-edit" @click="goWrite">发布新文章</el-button>
+        </div>
+      </div>
+
+      <div v-loading="loading" class="dash-body">
+        <!-- KPI -->
+        <div class="kpi-row">
+          <div class="kpi-card" v-for="item in kpiList" :key="item.key">
+            <div class="kpi-card__icon" :style="{ background: item.iconBg }">
+              <i :class="item.icon"></i>
+            </div>
+            <div class="kpi-card__main">
+              <div class="kpi-card__label">{{ item.label }}</div>
+              <div class="kpi-card__value">{{ item.value }}</div>
+              <div class="kpi-card__delta" :class="item.up ? 'is-up' : 'is-down'">
+                <i :class="item.up ? 'el-icon-top' : 'el-icon-bottom'"></i>
+                {{ item.delta }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 图表 + 分布 -->
+        <div class="chart-row">
+          <div class="dash-panel chart-panel">
+            <div class="dash-panel__head">
+              <h3>流量与互动趋势</h3>
+              <span class="dash-panel__hint">近 30 天 · PV / 阅读增量 / 点赞增量</span>
+            </div>
+            <div ref="trendChart" class="trend-chart"></div>
+          </div>
+          <div class="dash-panel ratio-panel">
+            <div class="dash-panel__head">
+              <h3>内容类型占比</h3>
+            </div>
+            <div class="ratio-list">
+              <div class="ratio-item" v-for="(cat, idx) in categoryRatio" :key="cat.name">
+                <div class="ratio-item__top">
+                  <span>{{ cat.name }}</span>
+                  <strong>{{ cat.percent }}%</strong>
+                </div>
+                <el-progress
+                  :percentage="cat.percent"
+                  :stroke-width="8"
+                  :show-text="false"
+                  :color="ratioColors[idx % ratioColors.length]"
+                />
+              </div>
+            </div>
+            <div class="insight-box">
+              <i class="el-icon-opportunity"></i>
+              <div>
+                <strong>建议</strong>
+                <p>{{ insightText }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 最近创作 -->
+        <div class="dash-panel recent-panel">
+          <div class="dash-panel__head">
+            <h3>最近创作内容</h3>
+            <el-button type="text" @click="goAllArticles">查看全部</el-button>
+          </div>
+          <div v-if="!recentArticles.length" class="recent-empty">暂无文章数据</div>
+          <div
+            v-for="row in recentArticles"
+            :key="row.id"
+            class="recent-item"
           >
-          <br />
-          领取腾讯云通用云产品2860优惠券
-          <br />
-          <el-link
-            href="#"
-            type="primary"
-            target="_blank"
-            >####</el-link
-          >
-          <br />
-          服务器
-          <el-link href="#" type="primary" target="_blank"
-            >>☛☛点我进入☚☚</el-link
-          >
-          &nbsp;&nbsp;&nbsp; 云服务器
-          <el-link href="#" type="primary" target="_blank"
-            >>☛☛点我进入☚☚</el-link
-          ><br />
-          <h4 class="text-danger">
-            ####
-          </h4>
-        </blockquote>
-        <hr />
-      </el-col>
-    </el-row>
-    <el-row :gutter="20">
-      <el-col :sm="24" :lg="12" style="padding-left: 20px">
-        <h2>GeekPlusAdmin后台管理框架</h2>
-        <p>
-          一直想做一款后台管理系统，看了很多优秀的开源项目但是发现没有合适自己的。于是利用空闲休息时间开始自己写一套后台系统。如此有了极客普拉斯管理系统。他可以用于所有的Web应用程序，如网站管理后台等等，当然，您也可以对它进行代码修改定制操作。所有前端后台代码封装过后十分精简易上手，出错概率低。同时支持移动客户端访问。会陆续更新下去！。
-        </p>
-        <p>
-          <b>当前版本:</b> <span>v{{ version }}</span>
-        </p>
-        <p>
-          <el-tag type="danger">&yen;免费开源</el-tag>
-        </p>
-        <p>
-          <el-button
-            type="primary"
-            size="mini"
-            icon="el-icon-cloudy"
-            plain
-            @click="goTarget('https://github.com/geekgarry/geekplus-admin-vue-ui')"
-            >访问github</el-button
-          >
-        </p>
-      </el-col>
-
-      <el-col :sm="24" :lg="12" style="padding-left: 50px">
-        <el-row>
-          <el-col :span="12">
-            <h2>技术选型</h2>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="6">
-            <h4>后端技术</h4>
-            <ul>
-              <li>SpringBoot</li>
-              <li>Spring Security</li>
-              <li>JWT</li>
-              <li>MyBatis</li>
-              <li>Druid</li>
-              <li>Fastjson</li>
-              <li>...</li>
-            </ul>
-          </el-col>
-          <el-col :span="6">
-            <h4>前端技术</h4>
-            <ul>
-              <li>Vue</li>
-              <li>Vuex</li>
-              <li>Element-ui</li>
-              <li>Axios</li>
-              <li>Sass</li>
-              <li>Quill</li>
-              <li>...</li>
-            </ul>
-          </el-col>
-        </el-row>
-      </el-col>
-    </el-row>
-    <el-divider />
-    <el-row :gutter="20">
-      <el-col :xs="24" :sm="24" :md="12" :lg="8">
-        <el-card class="update-log">
-          <div slot="header" class="clearfix">
-            <span>系统公告</span>
+            <el-image class="recent-item__cover" :src="row.indexPicture || defaultCover" fit="cover">
+              <div slot="error" class="image-slot"><i class="el-icon-picture-outline"></i></div>
+            </el-image>
+            <div class="recent-item__main">
+              <div class="recent-item__meta">
+                <el-tag size="mini" effect="dark" :color="tagColor(row)">{{ categoryName(row) }}</el-tag>
+                <span>发布于 {{ formatTime(row.createTime || row.updateTime) }}</span>
+              </div>
+              <a class="recent-item__title" href="javascript:;" @click.prevent="goEdit(row)">{{ row.articleTitle }}</a>
+              <p class="recent-item__excerpt">{{ excerpt(row) }}</p>
+            </div>
+            <div class="recent-item__stats">
+              <div><span>阅读</span><strong>{{ numFormat(row.viewCount) }}</strong></div>
+              <div><span>点赞</span><strong>{{ numFormat(row.likeCount) }}</strong></div>
+              <div><span>CTR</span><strong>{{ calcCtr(row) }}</strong></div>
+            </div>
+            <el-dropdown trigger="click" @command="(cmd) => onArticleCmd(cmd, row)">
+              <button type="button" class="recent-item__more"><i class="el-icon-more"></i></button>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item command="edit">编辑</el-dropdown-item>
+                <el-dropdown-item command="view">前台预览</el-dropdown-item>
+                <el-dropdown-item command="list">文章列表</el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
           </div>
-          <div class="body">
-            <!-- <el-table :data="noticeList">
-              <el-table-column align="center" label="公告" prop="noticeContent" />
-            </el-table> -->
-            <span v-for="(item,index) in noticeList" :key="index">
-              <p><i class="el-icon-s-promotion"></i><el-link :href="item.noticeUrl"
-                target="_blank">{{item.noticeTitle}}</el-link></p>
-              {{item.noticeContent}}
-              <el-divider />
-            </span>
-            <!-- <p>
-              <i class="el-icon-s-promotion"></i> 官网：<el-link
-                href="#"
-                target="_blank"
-                >#</el-link
-              >
-            </p>
-            <p>
-              <i class="el-icon-user-solid"></i> QQ群：<s>满3565475</s>
-              <s>满3586468430</s> <s>满546754757</s>
-              <a href="#" target="_blank"
-                > 43567666</a
-              >
-            </p>
-            <p>
-              <i class="el-icon-chat-dot-round"></i> 微信：<a
-                href="javascript:;">/ *GeekPlus</a>
-            </p>
-            <p>
-              <i class="el-icon-money"></i> 支付宝：<a
-                href="javascript:;">/ *GeekPlus</a>
-            </p> -->
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="24" :md="12" :lg="8">
-        <el-card class="update-log">
-          <div slot="header" class="clearfix">
-            <span>更新日志</span>
-          </div>
-          <el-collapse accordion>
-            <el-collapse-item title="v3.2.1 - 2020-11-18">
-              <ol>
-                <li>阻止任意文件下载漏洞</li>
-                <li>代码生成支持上传控件</li>
-                <li>新增图片上传组件</li>
-                <li>调整默认首页</li>
-                <li>升级druid到最新版本v1.2.2</li>
-                <li>mapperLocations配置支持分隔符</li>
-                <li>权限信息调整</li>
-                <li>调整sql默认时间</li>
-                <li>解决代码生成没有bit类型的问题</li>
-                <li>升级pagehelper到最新版1.3.0</li>
-              </ol>
-            </el-collapse-item>
-            <el-collapse-item title="v3.2.0 - 2020-10-10">
-              <ol>
-                <li>升级springboot版本到2.1.17 提升安全性</li>
-                <li>升级oshi到最新版本v5.2.5</li>
-                <li>升级druid到最新版本v1.2.1</li>
-                <li>升级jjwt到版本0.9.1</li>
-                <li>升级fastjson到最新版1.2.74</li>
-                <li>修改sass为node-sass，避免el-icon图标乱码</li>
-                <li>代码生成支持同步数据库</li>
-                <li>代码生成支持富文本控件</li>
-                <li>代码生成页面时不忽略remark属性</li>
-                <li>代码生成添加select必填选项</li>
-                <li>Excel导出类型NUMERIC支持精度浮点类型</li>
-                <li>Excel导出targetAttr优化获取值，防止get方法不规范</li>
-                <li>Excel注解支持自动统计数据总和</li>
-                <li>Excel注解支持设置BigDecimal精度&舍入规则</li>
-                <li>菜单&数据权限新增（展开/折叠 全选/全不选 父子联动）</li>
-                <li>允许用户分配到部门父节点</li>
-                <li>菜单新增是否缓存keep-alive</li>
-                <li>表格操作列间距调整</li>
-                <li>限制系统内置参数不允许删除</li>
-                <li>富文本组件优化，支持自定义高度&图片冲突问题</li>
-                <li>富文本工具栏样式对齐</li>
-                <li>导入excel整形值校验优化</li>
-                <li>修复页签关闭所有时固定标签路由不刷新问题</li>
-                <li>表单构建布局型组件新增按钮</li>
-                <li>左侧菜单文字过长显示省略号</li>
-                <li>修正根节点为子部门时，树状结构显示问题</li>
-                <li>修正调用目标字符串最大长度</li>
-                <li>修正菜单提示信息错误</li>
-                <li>修正定时任务执行一次权限标识</li>
-                <li>修正数据库字符串类型nvarchar</li>
-                <li>优化递归子节点</li>
-                <li>优化数据权限判断</li>
-                <li>其他细节优化</li>
-              </ol>
-            </el-collapse-item>
-
-            <el-collapse-item title="v3.1.0 - 2020-08-13">
-              <ol>
-                <li>表格工具栏右侧添加刷新&显隐查询组件</li>
-                <li>后端支持CORS跨域请求</li>
-                <li>代码生成支持选择上级菜单</li>
-                <li>代码生成支持自定义路径</li>
-                <li>代码生成支持复选框</li>
-                <li>Excel导出导入支持dictType字典类型</li>
-                <li>Excel支持分割字符串组内容</li>
-                <li>验证码类型支持（数组计算、字符验证）</li>
-                <li>升级vue-cli版本到4.4.4</li>
-                <li>修改 node-sass 为 dart-sass</li>
-                <li>表单类型为Integer/Long设置整形默认值</li>
-                <li>代码生成器默认mapper路径与默认mapperScan路径不一致</li>
-                <li>优化防重复提交拦截器</li>
-                <li>优化上级菜单不能选择自己</li>
-                <li>修复角色的权限分配后，未实时生效问题</li>
-                <li>修复在线用户日志记录类型</li>
-                <li>修复富文本空格和缩进保存后不生效问题</li>
-                <li>修复在线用户判断逻辑</li>
-                <li>唯一限制条件只返回单条数据</li>
-                <li>添加获取当前的环境配置方法</li>
-                <li>超时登录后页面跳转到首页</li>
-                <li>全局异常状态汉化拦截处理</li>
-                <li>HTML过滤器改为将html转义</li>
-                <li>检查字符支持小数点&降级改成异常提醒</li>
-                <li>其他细节优化</li>
-              </ol>
-            </el-collapse-item>
-
-            <el-collapse-item title="v3.0.0 - 2020-07-20">
-              <ol>
-                <li>单应用调整为多模块项目</li>
-                <li>升级element-ui版本到2.13.2</li>
-                <li>删除babel，提高编译速度。</li>
-                <li>新增菜单默认主类目</li>
-                <li>编码文件名修改为uuid方式</li>
-                <li>定时任务cron表达式验证</li>
-                <li>角色权限修改时已有权限未自动勾选异常修复</li>
-                <li>防止切换权限用户后登录出现404</li>
-                <li>Excel支持sort导出排序</li>
-                <li>创建用户不允许选择超级管理员角色</li>
-                <li>修复代码生成导入表结构出现异常页面不提醒问题</li>
-                <li>修复代码生成点击多次表修改数据不变化的问题</li>
-                <li>修复头像上传成功二次打开无法改变裁剪框大小和位置问题</li>
-                <li>修复布局为small者mini用户表单显示错位问题</li>
-                <li>修复热部署导致的强换异常问题</li>
-                <li>修改用户管理复选框宽度，防止部分浏览器出现省略号</li>
-                <li>IpUtils工具，清除Xss特殊字符，防止Xff注入攻击</li>
-                <li>生成domain 如果是浮点型 统一用BigDecimal</li>
-                <li>定时任务调整label-width，防止部署出现错位</li>
-                <li>调整表头固定列默认样式</li>
-                <li>代码生成模板调整，字段为String并且必填则加空串条件</li>
-                <li>代码生成字典Integer/Long使用parseInt</li>
-                <li>
-                  修复dict_sort不可update为0的问题&查询返回增加dict_sort升序排序
-                </li>
-                <li>修正岗位导出权限注解</li>
-                <li>禁止加密密文返回前端</li>
-                <li>修复代码生成页面中的查询条件创建时间未生效的问题</li>
-                <li>修复首页搜索菜单外链无法点击跳转问题</li>
-                <li>修复菜单管理选择图标，backspace删除时不过滤数据</li>
-                <li>用户管理部门分支节点不可检查&显示计数</li>
-                <li>数据范围过滤属性调整</li>
-                <li>其他细节优化</li>
-              </ol>
-            </el-collapse-item>
-
-            <el-collapse-item title="v2.3.0 - 2020-06-01">
-              <ol>
-                <li>升级fastjson到最新版1.2.70 修复高危安全漏洞</li>
-                <li>dev启动默认打开浏览器</li>
-                <li>vue-cli使用默认source-map</li>
-                <li>slidebar eslint报错优化</li>
-                <li>当tags-view滚动关闭右键菜单</li>
-                <li>字典管理添加缓存读取</li>
-                <li>参数管理支持缓存操作</li>
-                <li>支持一级菜单（和主页同级）在main区域显示</li>
-                <li>限制外链地址必须以http(s)开头</li>
-                <li>tagview & sidebar 主题颜色与element ui(全局)同步</li>
-                <li>修改数据源类型优先级，先根据方法，再根据类</li>
-                <li>支持是否需要设置token属性，自定义返回码消息。</li>
-                <li>swagger请求前缀加入配置。</li>
-                <li>登录地点设置内容过长则隐藏显示</li>
-                <li>修复定时任务执行一次按钮后不提示消息问题</li>
-                <li>修改上级部门（选择项排除本身和下级）</li>
-                <li>通用http发送方法增加参数 contentType 编码类型</li>
-                <li>更换IP地址查询接口</li>
-                <li>修复页签变量undefined</li>
-                <li>添加校验部门包含未停用的子部门</li>
-                <li>修改定时任务详情下次执行时间日期显示错误</li>
-                <li>角色管理查询设置默认排序字段</li>
-                <li>swagger添加enable参数控制是否启用</li>
-                <li>只对json类型请求构建可重复读取inputStream的request</li>
-                <li>修改代码生成字典字段int类型没有自动选中问题</li>
-                <li>vuex用户名取值修正</li>
-                <li>表格树模板去掉多余的)</li>
-                <li>代码生成序号修正</li>
-                <li>全屏情况下不调整上外边距</li>
-                <li>代码生成Date字段添加默认格式</li>
-                <li>用户管理角色选择权限控制</li>
-                <li>修复路由懒加载报错问题</li>
-                <li>模板sql.vm添加菜单状态</li>
-                <li>设置用户名称不能修改</li>
-                <li>dialog添加append-to-body属性，防止ie遮罩</li>
-                <li>菜单区分状态和显示隐藏功能</li>
-                <li>升级fastjson到最新版1.2.68 修复安全加固</li>
-                <li>修复代码生成如果选择字典类型缺失逗号问题</li>
-                <li>登录请求params更换为data，防止暴露url</li>
-                <li>日志返回时间格式处理</li>
-                <li>添加handle控制允许拖动的元素</li>
-                <li>布局设置点击扩大范围</li>
-                <li>代码生成列属性排序查询</li>
-                <li>代码生成列支持拖动排序</li>
-                <li>修复时间格式不支持ios问题</li>
-                <li>表单构建添加父级class，防止冲突</li>
-                <li>定时任务并发属性修正</li>
-                <li>角色禁用&菜单隐藏不查询权限</li>
-                <li>其他细节优化</li>
-              </ol>
-            </el-collapse-item>
-
-            <el-collapse-item title="v2.2.0 - 2020-03-18">
-              <ol>
-                <li>系统监控新增定时任务功能</li>
-                <li>添加一个打包Web工程bat</li>
-                <li>修复页签鼠标滚轮按下的时候，可以关闭不可关闭的tag</li>
-                <li>修复点击退出登录有时会无提示问题</li>
-                <li>修复防重复提交注解无效问题</li>
-                <li>修复通知公告批量删除异常问题</li>
-                <li>添加菜单时路由地址必填限制</li>
-                <li>代码生成字段描述可编辑</li>
-                <li>修复用户修改个人信息导致缓存不过期问题</li>
-                <li>个人信息创建时间获取正确属性值</li>
-                <li>操作日志详细显示正确类型</li>
-                <li>导入表单击行数据时选中对应的复选框</li>
-                <li>批量替换表前缀逻辑调整</li>
-                <li>固定重定向路径表达式</li>
-                <li>升级element-ui版本到2.13.0</li>
-                <li>操作日志排序调整</li>
-                <li>修复charts切换侧边栏或者缩放窗口显示bug</li>
-                <li>其他细节优化</li>
-              </ol>
-            </el-collapse-item>
-
-            <el-collapse-item title="v2.1.0 - 2020-02-24">
-              <ol>
-                <li>新增表单构建</li>
-                <li>代码生成支持树表结构</li>
-                <li>新增用户导入</li>
-                <li>修复动态加载路由页面刷新问题</li>
-                <li>修复地址开关无效问题</li>
-                <li>汉化错误提示页面</li>
-                <li>代码生成已知问题修改</li>
-                <li>修复多数据源下配置关闭出现异常处理</li>
-                <li>添加HTML过滤器，用于去除XSS漏洞隐患</li>
-                <li>修复上传头像控制台出现异常</li>
-                <li>修改用户管理分页不正确的问题</li>
-                <li>修复验证码记录提示错误</li>
-                <li>修复request.js缺少Message引用</li>
-                <li>修复表格时间为空出现的异常</li>
-                <li>添加Jackson日期反序列化时区配置</li>
-                <li>调整根据用户权限加载菜单数据树形结构</li>
-                <li>调整成功登陆不恢复按钮，防止多次点击</li>
-                <li>修改用户个人资料同步缓存信息</li>
-                <li>修复页面同时出现el-upload和QuillEditor不显示处理</li>
-                <li>修复在角色管理页修改菜单权限偶尔未选中问题</li>
-                <li>配置文件新增redis密码属性</li>
-                <li>设置mybatis全局的配置文件</li>
-                <li>其他细节优化</li>
-              </ol>
-            </el-collapse-item>
-
-            <el-collapse-item title="v2.0.0 - 2019-12-02">
-              <ol>
-                <li>新增代码生成</li>
-                <li>新增@RepeatSubmit注解，防止重复提交</li>
-                <li>新增菜单主目录添加/删除操作</li>
-                <li>日志记录过滤特殊对象，防止转换异常</li>
-                <li>修改代码生成路由脚本错误</li>
-                <li>用户上传头像实时同步缓存，无需重新登录</li>
-                <li>调整切换页签后不重新加载数据</li>
-                <li>添加jsencrypt实现参数的前端加密</li>
-                <li>系统退出删除用户缓存记录</li>
-                <li>其他细节优化</li>
-              </ol>
-            </el-collapse-item>
-            <el-collapse-item title="v1.1.0 - 2019-11-11">
-              <ol>
-                <li>新增在线用户管理</li>
-                <li>新增按钮组功能实现（批量删除、导出、清空）</li>
-                <li>新增查询条件重置按钮</li>
-                <li>新增Swagger全局Token配置</li>
-                <li>新增后端参数校验</li>
-                <li>修复字典管理页面的日期查询异常</li>
-                <li>修改时间函数命名防止冲突</li>
-                <li>去除菜单上级校验，默认为顶级</li>
-                <li>修复用户密码无法修改问题</li>
-                <li>修复菜单类型为按钮时不显示权限标识</li>
-                <li>其他细节优化</li>
-              </ol>
-            </el-collapse-item>
-            <el-collapse-item title="v1.0.0 - 2019-10-08">
-              <ol>
-                <li>若依前后端分离系统正式发布</li>
-              </ol>
-            </el-collapse-item>
-          </el-collapse>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="24" :md="12" :lg="8">
-        <el-card class="update-log">
-          <div slot="header" class="clearfix">
-            <span>捐赠支持</span>
-          </div>
-          <div class="body">
-            <p>
-              <i class="el-icon-s-promotion"></i> 官网：<el-link
-                href="/"
-                target="_blank"
-                >GeekPlus</el-link
-              >
-            </p>
-            <img
-              src="#"
-              alt="donate"
-              width="100%"
-            />
-            <span style="display: inline-block; height: 30px; line-height: 30px"
-              >####</span
-            >
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
 <script>
-import { listNotice } from "@/api/system/notice";
-import {geySysUserOnline} from "@/api/system/user"
+import * as echarts from 'echarts'
+import { exportArticles } from '@/api/geekplus/articles'
+import { getDashboardStats } from '@/api/geekplus/stats'
+import { canViewBlogDashboard } from '@/utils/blogAdmin'
+import { numFormatKWM } from '@/utils/plusTool'
+
 export default {
-  name: "index",
+  name: 'BlogInsightDashboard',
   data() {
     return {
-      // 版本号
-      version: "3.2.1",
-      noticeList:[],
-      queryParams:{
-        pageNum:1,
-        pageSize:10,
-        // noticeTitle:null,
-        // noticeContent:null
-      }
-    };
+      allowed: false,
+      loading: false,
+      exporting: false,
+      stats: {},
+      trend: [],
+      recentArticles: [],
+      categoryRatio: [],
+      kpiList: [],
+      insightText: '持续产出高质量深度内容，有助于提升整体阅读与互动。',
+      ratioColors: ['#3b82f6', '#60a5fa', '#a78bfa', '#94a3b8', '#34d399', '#f59e0b'],
+      defaultCover: require('@/assets/images/cover2.jpeg'),
+      chart: null,
+      _resizeBound: null
+    }
+  },
+  computed: {
+    displayName() {
+      return this.$store.getters.nickname || this.$store.getters.username || '管理员'
+    }
   },
   created() {
-    this.fetchNoticeData();
-    //this.getOnlineSysUser();
+    this.allowed = canViewBlogDashboard()
+    if (this.allowed) {
+      this.loadDashboard()
+    }
+  },
+  mounted() {
+    this._resizeBound = () => {
+      if (this.chart) this.chart.resize()
+    }
+    window.addEventListener('resize', this._resizeBound)
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this._resizeBound)
+    if (this.chart) {
+      this.chart.dispose()
+      this.chart = null
+    }
   },
   methods: {
-    goTarget(href) {
-      window.open(href, "_blank");
+    numFormat(n) {
+      return numFormatKWM(Number(n) || 0) || '0'
     },
-    fetchNoticeData(){
-      listNotice(this.queryParams).then((response) => {
-        this.noticeList = response.rows;
-      });
+    formatTime(val) {
+      if (!val) return '-'
+      if (this.getYMDTime) return this.getYMDTime(val)
+      return String(val).slice(0, 16)
     },
-    getOnlineSysUser(){
-      geySysUserOnline().then((res)=>{
-        console.log(res)
+    categoryName(row) {
+      if (!row) return '未分类'
+      if (row.categoryName) return row.categoryName
+      if (row.category && row.category.categoryName) {
+        return row.category.categoryName
+      }
+      return row.articleCategory != null ? ('分类#' + row.articleCategory) : '未分类'
+    },
+    tagColor(row) {
+      const name = this.categoryName(row)
+      let hash = 0
+      for (let i = 0; i < name.length; i++) hash = (hash + name.charCodeAt(i) * 17) % 360
+      return `hsl(${hash}, 55%, 42%)`
+    },
+    excerpt(row) {
+      const text = row.abstractText || row.articleDigest || row.articleTitle || ''
+      return String(text).replace(/<[^>]+>/g, '').slice(0, 80)
+    },
+    calcCtr(row) {
+      const views = Number(row.viewCount) || 0
+      const likes = Number(row.likeCount) || 0
+      if (!views) return '0%'
+      return ((likes / views) * 100).toFixed(1) + '%'
+    },
+    async loadDashboard() {
+      this.loading = true
+      try {
+        const res = await getDashboardStats(30)
+        const data = (res && res.data) || {}
+        this.stats = data
+        this.trend = Array.isArray(data.trend) ? data.trend : []
+        this.recentArticles = Array.isArray(data.recentArticles) ? data.recentArticles : []
+        this.categoryRatio = (data.categoryRatio || []).map((c) => ({
+          name: c.name || '未分类',
+          percent: Number(c.percent) || 0,
+          count: c.count
+        }))
+        if (!this.categoryRatio.length) {
+          this.categoryRatio = [{ name: '暂无分类', percent: 0 }]
+        }
+        this.buildKpi()
+        const top = this.categoryRatio[0]
+        if (top && top.percent >= 40) {
+          this.insightText = `「${top.name}」占比偏高（${top.percent}%），可适当补充其他类型。今日 UV ${this.numFormat(data.todayUv)} / PV ${this.numFormat(data.todayPv)}。`
+        } else {
+          this.insightText = `今日 UV ${this.numFormat(data.todayUv)}，PV ${this.numFormat(data.todayPv)}；阅读增量 ${this.numFormat(data.todayViews)}，点赞增量 ${this.numFormat(data.todayLikes)}。`
+        }
+        this.$nextTick(() => this.renderTrendChart())
+      } catch (e) {
+        this.$message.error((e && (e.msg || e.message)) || '加载看板数据失败')
+      } finally {
+        this.loading = false
+      }
+    },
+    buildKpi() {
+      const s = this.stats || {}
+      const vp = s.visitPeriod || {}
+      const totalViews = Number(s.totalViews) || 0
+      const totalLikes = Number(s.totalLikes) || 0
+      const avgCtr = totalViews ? ((totalLikes / totalViews) * 100) : 0
+      this.kpiList = [
+        {
+          key: 'visit',
+          label: '总访问量',
+          value: this.numFormat(vp.visitCount != null ? vp.visitCount : s.todayPv),
+          delta: '今日 ' + this.numFormat(vp.today) + ' · 月 ' + this.numFormat(vp.month),
+          up: true,
+          icon: 'el-icon-data-line',
+          iconBg: 'rgba(56,189,248,0.18)'
+        },
+        {
+          key: 'views',
+          label: '总阅读量',
+          value: this.numFormat(totalViews),
+          delta: '今日 +' + this.numFormat(s.todayViews) + ' · 年访 ' + this.numFormat(vp.year),
+          up: true,
+          icon: 'el-icon-view',
+          iconBg: 'rgba(59,130,246,0.18)'
+        },
+        {
+          key: 'likes',
+          label: '总点赞',
+          value: this.numFormat(totalLikes),
+          delta: '今日 +' + this.numFormat(s.todayLikes) + ' · 季访 ' + this.numFormat(vp.quarter),
+          up: true,
+          icon: 'el-icon-star-off',
+          iconBg: 'rgba(249,115,22,0.18)'
+        },
+        {
+          key: 'uv',
+          label: '今日 UV',
+          value: this.numFormat(s.todayUv),
+          delta: 'PV ' + this.numFormat(s.todayPv),
+          up: true,
+          icon: 'el-icon-user',
+          iconBg: 'rgba(167,139,250,0.18)'
+        },
+        {
+          key: 'ctr',
+          label: '互动率',
+          value: avgCtr.toFixed(1) + '%',
+          delta: '评论 ' + this.numFormat(s.totalComments),
+          up: true,
+          icon: 'el-icon-aim',
+          iconBg: 'rgba(52,211,153,0.18)'
+        }
+      ]
+    },
+    renderTrendChart() {
+      if (!this.$refs.trendChart) return
+      if (this.chart) {
+        this.chart.dispose()
+        this.chart = null
+      }
+      this.chart = echarts.init(this.$refs.trendChart)
+      const labels = this.trend.map((t) => t.label || t.date)
+      const pvSeries = this.trend.map((t) => Number(t.pv) || 0)
+      const viewSeries = this.trend.map((t) => Number(t.newViews) || 0)
+      const likeSeries = this.trend.map((t) => Number(t.newLikes) || 0)
+
+      this.chart.setOption({
+        backgroundColor: 'transparent',
+        tooltip: { trigger: 'axis' },
+        legend: {
+          data: ['PV', '阅读增量', '点赞增量'],
+          textStyle: { color: '#94a3b8' },
+          top: 0
+        },
+        grid: { left: 40, right: 16, top: 36, bottom: 28 },
+        xAxis: {
+          type: 'category',
+          data: labels,
+          axisLabel: { color: '#64748b', interval: 4 },
+          axisLine: { lineStyle: { color: '#1e293b' } }
+        },
+        yAxis: {
+          type: 'value',
+          axisLabel: { color: '#64748b' },
+          splitLine: { lineStyle: { color: 'rgba(148,163,184,0.12)' } }
+        },
+        series: [
+          {
+            name: 'PV',
+            type: 'bar',
+            barMaxWidth: 12,
+            data: pvSeries,
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: '#60a5fa' },
+                { offset: 1, color: '#2563eb' }
+              ]),
+              borderRadius: [4, 4, 0, 0]
+            }
+          },
+          {
+            name: '阅读增量',
+            type: 'line',
+            smooth: true,
+            data: viewSeries,
+            symbol: 'circle',
+            symbolSize: 5,
+            lineStyle: { color: '#34d399', width: 2 },
+            itemStyle: { color: '#34d399' }
+          },
+          {
+            name: '点赞增量',
+            type: 'line',
+            smooth: true,
+            data: likeSeries,
+            symbol: 'circle',
+            symbolSize: 5,
+            lineStyle: { color: '#f59e0b', width: 2 },
+            itemStyle: { color: '#f59e0b' }
+          }
+        ]
       })
-    }
-  },
-};
-</script>
-
-<style scoped lang="scss">
-.home {
-  blockquote {
-    padding: 10px 20px;
-    margin: 0 0 20px;
-    font-size: 17.5px;
-    border-left: 5px solid #eee;
-  }
-  hr {
-    margin-top: 20px;
-    margin-bottom: 20px;
-    border: 0;
-    border-top: 1px solid #eee;
-  }
-  .col-item {
-    margin-bottom: 20px;
-  }
-
-  ul {
-    padding: 0;
-    margin: 0;
-  }
-
-  font-family: "open sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 13px;
-  color: #676a6c;
-  overflow-x: hidden;
-
-  ul {
-    list-style-type: none;
-  }
-
-  h4 {
-    margin-top: 0px;
-  }
-
-  h2 {
-    margin-top: 10px;
-    font-size: 26px;
-    font-weight: 100;
-  }
-
-  p {
-    margin-top: 10px;
-
-    b {
-      font-weight: 700;
-    }
-  }
-
-  .update-log {
-    ol {
-      display: block;
-      list-style-type: decimal;
-      margin-block-start: 1em;
-      margin-block-end: 1em;
-      margin-inline-start: 0;
-      margin-inline-end: 0;
-      padding-inline-start: 40px;
+    },
+    goWrite() {
+      this.$router.push('/admin/geekplus/writeArticle')
+    },
+    goAllArticles() {
+      this.$router.push('/admin/geekplus/articles')
+    },
+    goEdit(row) {
+      this.$router.push({ path: '/admin/geekplus/writeArticle', query: { articleId: row.id } })
+    },
+    onArticleCmd(cmd, row) {
+      if (cmd === 'edit') this.goEdit(row)
+      else if (cmd === 'view') window.open(`/article/${row.id}`, '_blank')
+      else if (cmd === 'list') this.goAllArticles()
+    },
+    handleExport() {
+      this.exporting = true
+      this.exportChart()
+      // exportArticles({})
+      //   .then((response) => {
+      //     this.download(response.msg);
+      //     //this.$message.success('已发起导出，请按接口返回下载')
+      //   })
+      //   .catch(() => {
+      //     this.$message.warning('导出接口暂不可用，可在文章列表页导出')
+      //   })
+      //   .finally(() => {
+      //     this.exporting = false
+      //   })
+    },
+    async exportChart() {
+      const chart = echarts.getInstanceByDom(this.$refs.trendChart);
+      const canvas = chart.renderToCanvas({pixelRatio: 2}); // 获取渲染后的canvas对象
+      const imageUrl = canvas.toDataURL('image/png'); // 将canvas转换为图片URL
+      const link = document.createElement('a'); // 创建一个a标签用于下载图片
+      link.download = 'echarts-chart.png'; // 设置下载文件名
+      link.href = imageUrl; // 设置下载链接为图片的URL
+      document.body.appendChild(link); // 将a标签添加到文档中以便触发下载
+      link.click(); // 触发点击事件开始下载
+      document.body.removeChild(link); // 下载完成后移除a标签
+      this.exporting = false;
     }
   }
 }
-</style>
+</script>
 
+<style lang="scss" scoped>
+.blog-insight-dash {
+  --dash-bg: var(--background, #0b1220);
+  --dash-panel: var(--background-origin, #111a2e);
+  --dash-border: var(--border-color, rgba(148, 163, 184, 0.12));
+  --dash-text: var(--text-color, #e2e8f0);
+  --dash-muted: var(--text-color-2, #94a3b8);
+  --dash-accent: var(--theme-color, #3b82f6);
+  min-height: calc(100vh - 84px);
+  padding: 24px;
+  background:
+    radial-gradient(1200px 480px at 10% -10%, rgba(37, 99, 235, 0.18), transparent 60%),
+    radial-gradient(900px 420px at 90% 0%, rgba(245, 158, 11, 0.08), transparent 55%),
+    var(--dash-bg);
+  color: var(--dash-text);
+}
+
+.dash-denied {
+  max-width: 480px;
+  margin: 80px auto;
+  text-align: center;
+  padding: 40px 24px;
+  border-radius: 16px;
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-border);
+
+  i {
+    font-size: 42px;
+    color: var(--dash-accent);
+  }
+
+  h2 {
+    margin: 12px 0 8px;
+    font-size: 20px;
+  }
+
+  p {
+    color: var(--dash-muted);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+}
+
+.dash-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.dash-header__text {
+  h1 {
+    margin: 0 0 6px;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  p {
+    margin: 0;
+    color: var(--dash-muted);
+    font-size: 13px;
+  }
+}
+
+.dash-header__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-ghost {
+  background: transparent !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
+  color: var(--dash-text) !important;
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.kpi-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-border);
+}
+
+.kpi-card__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #93c5fd;
+  font-size: 18px;
+}
+
+.kpi-card__label {
+  font-size: 12px;
+  color: var(--dash-muted);
+}
+
+.kpi-card__value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 2px 0;
+}
+
+.kpi-card__delta {
+  font-size: 12px;
+
+  &.is-up {
+    color: #34d399;
+  }
+
+  &.is-down {
+    color: #f87171;
+  }
+}
+
+.chart-row {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.dash-panel {
+  border-radius: 14px;
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-border);
+  padding: 16px 18px 18px;
+}
+
+.dash-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+
+  h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+  }
+}
+
+.dash-panel__hint {
+  font-size: 12px;
+  color: var(--dash-muted);
+}
+
+.trend-chart {
+  width: 100%;
+  height: 280px;
+}
+
+.ratio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ratio-item__top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 4px;
+  color: var(--dash-muted);
+
+  strong {
+    color: var(--dash-text);
+  }
+}
+
+.insight-box {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+
+  i {
+    color: #fbbf24;
+    font-size: 18px;
+    margin-top: 2px;
+  }
+
+  strong {
+    font-size: 13px;
+  }
+
+  p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--dash-muted);
+    line-height: 1.5;
+  }
+}
+
+.recent-panel {
+  padding-bottom: 8px;
+}
+
+.recent-empty {
+  padding: 28px;
+  text-align: center;
+  color: var(--dash-muted);
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 4px;
+  border-top: 1px solid var(--dash-border);
+
+  &:first-of-type {
+    border-top: none;
+  }
+}
+
+.recent-item__cover {
+  width: 88px;
+  height: 64px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #1e293b;
+}
+
+.recent-item__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.recent-item__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--dash-muted);
+  margin-bottom: 4px;
+}
+
+.recent-item__title {
+  display: inline-block;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dash-text);
+  text-decoration: none;
+  margin-bottom: 4px;
+
+  &:hover {
+    color: #93c5fd;
+  }
+}
+
+.recent-item__excerpt {
+  margin: 0;
+  font-size: 12px;
+  color: var(--dash-muted);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.recent-item__stats {
+  display: flex;
+  gap: 18px;
+  flex-shrink: 0;
+
+  div {
+    text-align: center;
+    min-width: 52px;
+  }
+
+  span {
+    display: block;
+    font-size: 11px;
+    color: var(--dash-muted);
+  }
+
+  strong {
+    font-size: 14px;
+  }
+}
+
+.recent-item__more {
+  border: none;
+  background: transparent;
+  color: var(--dash-muted);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px 8px;
+}
+
+@media screen and (max-width: 1200px) {
+  .kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .chart-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .blog-insight-dash {
+    padding: 16px 12px 28px;
+  }
+
+  .kpi-row {
+    grid-template-columns: 1fr;
+  }
+
+  .recent-item {
+    flex-wrap: wrap;
+  }
+
+  .recent-item__stats {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+</style>

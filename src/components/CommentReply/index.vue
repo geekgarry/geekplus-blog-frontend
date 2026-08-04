@@ -10,8 +10,14 @@
       <div class="top-comment-input" v-if="isArticle">
         <InputBox :hasLogin="hasLogin" @publishComment="sendCommentMsg" ref="commentInputRef"></InputBox>
       </div>
-      <div class="comment-message-list">
-        <div class="comment-message" v-for="(item, index) in comments" :key="index">
+        <div class="comment-message-list">
+        <div
+          class="comment-message"
+          v-for="(item, index) in comments"
+          :key="item.id || index"
+          :id="'comment-' + item.id"
+          :class="{ 'is-anchor-target': String(highlightId) === String(item.id) }"
+        >
           <div class="main-message">
             <a class="user-logo"><img alt="GeekPlus" :src="UserLogo"></a>
             <div class="message-wrapper">
@@ -23,6 +29,12 @@
               <div class="message-footer">
                 <span class="message-time">{{ dateTimeAgo(item.createTime) }}</span>
                 <a class="msg-reply-btn" href="javascript:void(0)" @click="openReplyBox(index.toString())">回复</a>
+                <a
+                  v-if="canDelete(item)"
+                  class="msg-reply-btn msg-delete-btn"
+                  href="javascript:void(0)"
+                  @click="onDeleteComment(item)"
+                >删除</a>
               </div>
               <div v-if="String(index) === replyBoxIndex" class="reply-input-box">
                 <InputBox :hasLogin="hasLogin" @publishComment="sendCommentMsg" :parentId="item.id" :replyId="item.id" :replyName="item.name"
@@ -31,8 +43,13 @@
             </div>
           </div>
           <div v-if="item.children" class="sub-comment-message">
-            <!-- <sub-reply-message  v-on:sendUserCommentStatus="getUserCommentStatus" :replyMessage="item.children"></sub-reply-message> -->
-            <div class="main-message" v-for="(subItem, subIndex) in item.children" :key="subIndex">
+            <div
+              class="main-message"
+              v-for="(subItem, subIndex) in item.children"
+              :key="subItem.id || subIndex"
+              :id="'comment-' + subItem.id"
+              :class="{ 'is-anchor-target': String(highlightId) === String(subItem.id) }"
+            >
               <a class="user-logo"><img alt="GeekPlus" :src="subItem.userId == 'sysUser:1' ? GpLogo : UserLogo"></a>
               <div class="message-wrapper">
                 <div class="message-meta">
@@ -45,6 +62,12 @@
                   <span class="message-time">{{ dateTimeAgo(subItem.createTime) }}</span>
                   <a class="msg-reply-btn" href="javascript:void(0)"
                     @click="openReplyBox(index + '-' + subIndex)">回复</a>
+                  <a
+                    v-if="canDelete(subItem)"
+                    class="msg-reply-btn msg-delete-btn"
+                    href="javascript:void(0)"
+                    @click="onDeleteComment(subItem)"
+                  >删除</a>
                 </div>
                 <div v-if="String(index + '-' + subIndex) === replyBoxIndex" class="reply-input-box">
                   <InputBox :hasLogin="hasLogin" @publishComment="sendCommentMsg" :parentId="item.id" :replyId="subItem.id"
@@ -65,10 +88,12 @@
 <script>
 import { defineComponent } from "vue";
 import InputBox from "./InputBox.vue";
+import { canDeleteComment } from "@/utils/blogAdmin";
+import { getToken } from "@/utils/auth";
 
 export default defineComponent({
   name: "CommentReply",
-  emits: [],
+  emits: ["comment", "delete"],
   components: {
     InputBox
   },
@@ -197,6 +222,11 @@ export default defineComponent({
     borderRadius: {
       type: Number,
       default: 0,
+    },
+    /** 需要高亮并滚动定位的评论 ID（来自 ?commentId=） */
+    highlightId: {
+      type: [String, Number],
+      default: null
     }
   },
   data() {
@@ -225,18 +255,47 @@ export default defineComponent({
       leaveMessage: this.comments
     }
   },
+  watch: {
+    comments() {
+      this.$nextTick(() => this.scrollToHighlight());
+    },
+    highlightId() {
+      this.$nextTick(() => this.scrollToHighlight());
+    }
+  },
   created() {
 
   },
   mounted() {
-
+    this.$nextTick(() => this.scrollToHighlight());
   },
   methods: {
+    scrollToHighlight() {
+      const id = this.highlightId;
+      if (id == null || id === "") return;
+      const el = document.getElementById("comment-" + id);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    },
     openReplyBox(index) {
       this.replyBoxIndex = this.replyBoxIndex === index ? null : index;
     },
     closeReplyBox() {
       this.replyBoxIndex = '-1';
+    },
+    canDelete(row) {
+      if (!getToken() || !row) return false;
+      return canDeleteComment(row.userId);
+    },
+    onDeleteComment(row) {
+      if (!row || !row.id) return;
+      this.$confirm("确认删除这条留言吗？", "提示", {
+        confirmButtonText: "删除",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
+        this.$emit("delete", row);
+      }).catch(() => {});
     },
     sendCommentMsg(data) {
       // this.commentMessage = data;
@@ -318,6 +377,11 @@ export default defineComponent({
   margin-left: 5px;
 }
 
+.msg-delete-btn {
+  color: #f56c6c !important;
+  margin-left: 8px;
+}
+
 .top-comment-input {
   padding: 5px 0 10px;
 }
@@ -327,12 +391,26 @@ export default defineComponent({
   margin: 5px auto 0;
   /* border-bottom: 1px solid #e8e8e8;
   background: #c5c5c533; */
+  border-radius: 10px;
+  transition: background 0.35s ease, box-shadow 0.35s ease;
+}
+
+.comment-message.is-anchor-target,
+.main-message.is-anchor-target {
+  background: rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
+  animation: comment-anchor-pulse 1.6s ease 2;
+}
+
+@keyframes comment-anchor-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.12); }
 }
 
 .bottom-divider {
   padding-bottom: 6px;
   margin-left: 1em;
-  border-bottom: 1px solid var(--borderColor);
+  border-bottom: 1px solid var(--border-color-2);
 }
 
 .main-message {

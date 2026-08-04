@@ -483,7 +483,7 @@ export default {
   color: var(--text-color-2, #181818);
   font-size: 15px;
   margin-top: 25px;
-  border-bottom: 1px solid var(--borderColor, #a0a5a8);
+  border-bottom: 1px solid var(--border-color-2, #a0a5a8);
   line-height: 2;
 }
 

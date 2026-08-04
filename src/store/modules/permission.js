@@ -49,8 +49,9 @@ const permission = {
     //   }
     generateRoutes({ commit }, {routes}) {
       return new Promise(resolve => {
+        // 通配 * 不在此推入：由 permission.js 在「前台+后台」全部 addRoute 之后统一挂末尾，
+        // 避免前台先挂 * 导致后台直链 rematch 被吞成 /404
         let permissionRoutes = generaMenu(routes).concat(filterAsyncRoutes(dynamicRoutes));
-        permissionRoutes.push({ path: '*', redirect: '/404', hidden: true, name: '404' })
         commit('SET_ROUTES', permissionRoutes)
         resolve(permissionRoutes)
       })

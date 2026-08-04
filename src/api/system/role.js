@@ -71,6 +71,15 @@ export function updateRole(data) {
   })
 }
 
+/** 保存角色行级数据权限（data_scope + sys_role_dept） */
+export function dataScope(data) {
+  return request({
+    url: '/sys/role/dataScope',
+    method: 'post',
+    data: data
+  })
+}
+
 //更改角色状态
 export function changeRoleStatus(data) {
   return request({
