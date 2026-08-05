@@ -159,8 +159,8 @@
                   <p>分类: {{ categoryCount }}</p>
                   <div class="stats-visit">
                     <p>总访问: {{ abbreviateNumber(visitCount) }}</p>
-                    <p v-if="visitToday != null" class="stats-sub">今 {{ abbreviateNumber(visitToday) }} / 月 {{ abbreviateNumber(visitMonth) }}</p>
-                    <p v-if="visitYear != null" class="stats-sub">季 {{ abbreviateNumber(visitQuarter) }} / 年 {{ abbreviateNumber(visitYear) }}</p>
+                    <!-- <p v-if="visitToday != null" class="stats-sub">今 {{ abbreviateNumber(visitToday) }} / 月 {{ abbreviateNumber(visitMonth) }}</p>
+                    <p v-if="visitYear != null" class="stats-sub">季 {{ abbreviateNumber(visitQuarter) }} / 年 {{ abbreviateNumber(visitYear) }}</p> -->
                   </div>
                 </div>
                 <div style="text-align: center;">
