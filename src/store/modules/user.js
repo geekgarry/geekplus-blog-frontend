@@ -167,16 +167,16 @@ const actions = {
 
   // user logout
   logout({ commit, state }) {
-    return new Promise((resolve, reject) => {
-      logout().then(() => {
+    return new Promise((resolve) => {
+      const done = () => {
         commit('SET_TOKEN', '')
-        removeToken() // must remove  token  first
-        //resetRouter()，state.token
+        removeToken()
         commit('RESET_STATE')
         resolve()
-      }).catch(error => {
-        reject(error)
-      })
+      }
+      logout()
+        .then(() => done())
+        .catch(() => done()) // 服务端已失效时仍清本地，避免卡在半登录态
     })
   },
 

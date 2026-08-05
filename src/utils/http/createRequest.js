@@ -67,6 +67,7 @@ function createFallbackUi() {
  * @param {number[]} [options.businessErrorCodes] 业务失败 code（提示后 reject）
  * @param {{ showError?: Function, confirmRelogin?: Function }} [options.ui]
  * @param {() => (void|Promise<void>)} [options.onRelogin] 用户确认重新登录后的回调
+ * @param {() => (void|Promise<void>)} [options.onReloginCancel] 用户点取消：应清本地 token，让页面以游客继续
  * @param {string} [options.reloginTitle]
  * @param {string} [options.reloginMessage]
  * @param {string} [options.reloginConfirmText]
@@ -93,6 +94,8 @@ export function createRequest(options = {}) {
 
   const ui = Object.assign(createFallbackUi(), options.ui || {})
   const onRelogin = typeof options.onRelogin === 'function' ? options.onRelogin : null
+  const onReloginCancel =
+    typeof options.onReloginCancel === 'function' ? options.onReloginCancel : null
 
   const isPageVisible = options.isPageVisible || defaultIsPageVisible
   const waitUntilPageVisible = options.waitUntilPageVisible || defaultWaitUntilPageVisible
@@ -119,6 +122,8 @@ export function createRequest(options = {}) {
   )
 
   let isReloginShowing = false
+  /** 用户点「取消」后抑制重复弹窗，直到重新拿到有效 token */
+  let authPromptSuppressed = false
   let lastTipAt = 0
   let lastTipMsg = ''
 
@@ -150,7 +155,22 @@ export function createRequest(options = {}) {
     }
   }
 
+  function clearLocalAuthQuietly() {
+    if (!onReloginCancel) return Promise.resolve()
+    return Promise.resolve()
+      .then(() => onReloginCancel())
+      .catch(() => {})
+  }
+
   function showReloginConfirm() {
+    // 重新登录成功后 getToken 有值，解除抑制
+    if (authPromptSuppressed) {
+      if (getToken()) {
+        authPromptSuppressed = false
+      } else {
+        return
+      }
+    }
     if (isReloginShowing) return
     if (!isPageVisible()) {
       const once = () => {
@@ -168,11 +188,17 @@ export function createRequest(options = {}) {
     const finish = () => {
       setTimeout(() => {
         isReloginShowing = false
-      }, 800)
+      }, 400)
     }
     const runLogout = () => {
+      authPromptSuppressed = false
       if (!onRelogin) return Promise.resolve()
       return Promise.resolve().then(() => onRelogin()).catch(() => {})
+    }
+    const runCancel = () => {
+      // 取消：清本地登录态，抑制后续 401 弹窗，页面可继续以游客加载公开内容
+      authPromptSuppressed = true
+      return clearLocalAuthQuietly()
     }
 
     const confirmFn = ui.confirmRelogin
@@ -190,9 +216,7 @@ export function createRequest(options = {}) {
       })
     )
       .then(() => runLogout())
-      .catch(() => {
-        /* 用户取消 */
-      })
+      .catch(() => runCancel())
       .finally(finish)
   }
 

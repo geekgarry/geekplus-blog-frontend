@@ -29,8 +29,13 @@ const request = createRequest({
   ui: createElementUiAdapter({ Message, MessageBox }),
   onRelogin: () =>
     store.dispatch('user/logout').then(() => {
-      location.href = '/user'
+      const redirect = encodeURIComponent(
+        (typeof location !== 'undefined' && location.pathname + location.search + location.hash) || '/'
+      )
+      location.href = `/user?method=login&redirect=${redirect}`
     }),
+  // 点「取消」：只清本地 token，不跳转，让当前页继续请求公开接口
+  onReloginCancel: () => store.dispatch('user/resetToken'),
   reloginTitle: '退出登录',
   reloginMessage: '未登录, 需要重新登录',
   reloginConfirmText: '重新登录',
