@@ -111,9 +111,12 @@ module.exports = {
       jodit$: path.resolve(__dirname, 'node_modules/jodit/es2021/jodit.min.js'),
       },
     },
-    // cache: {
-    //   type: 'filesystem'  // 启用持久化缓存
-    // },
+    cache: {
+      type: 'filesystem', // 启用持久化缓存
+      buildDependencies: {
+        config: [__filename],
+      },
+    },
     // output: {
     //   path: path.resolve(__dirname, './dist'),
     //   filename: `static/js/[name].[contenthash].js`,
