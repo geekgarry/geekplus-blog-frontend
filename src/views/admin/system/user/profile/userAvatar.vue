@@ -1,7 +1,14 @@
 <template>
   <div>
-    <div class="user-info-head" @click="editCropper()"><img v-bind:src="options.img" title="点击上传头像" class="img-circle img-lg" /></div>
-    <el-dialog :title="title" :visible.sync="open" width="800px" append-to-body @opened="modalOpened">
+    <div class="user-info-head" @click="editCropper()">
+      <img
+        :src="avatarUrl"
+        title="点击上传头像"
+        class="img-circle img-lg"
+        @error="onAvatarError"
+      />
+    </div>
+    <el-dialog :title="title" :visible.sync="open" width="800px" append-to-body @opened="modalOpened" @close="onDialogClose">
       <el-row>
         <el-col :xs="24" :sm="12" :md="12" :style="{height: '350px'}">
           <vue-cropper
@@ -15,10 +22,12 @@
             @realTime="realTime"
             v-if="visible"
           />
+          <div v-else class="avatar-cropper-placeholder">加载裁剪器…</div>
         </el-col>
         <el-col :xs="24" :sm="12" :md="12" :style="{height: '350px'}">
           <div class="avatar-upload-preview">
-            <img :src="previews.url" :style="previews.img" />
+            <img v-if="previews.url" :src="previews.url" :style="previews.img" />
+            <img v-else :src="options.img || defaultAvatar" class="preview-fallback" />
           </div>
         </el-col>
       </el-row>
@@ -59,26 +68,22 @@
       </el-row>
     </el-dialog>
 
-    <!-- 显示所有头像的对话框 -->
     <el-dialog :title="title" :visible.sync="displayAvatar" width="600px" append-to-body>
-      <el-row :gutter="20" >
+      <el-row :gutter="20">
         <el-col :span="6" v-for="avatarImg in allAvatarImg" :key="avatarImg">
           <div style="text-align: -webkit-center;">
-            <!-- <el-image
-              style="width: 100px; height: 100px"
-              :src="carouselImg"
-              :fit="fit"></el-image> -->
             <el-image
-              style="width: 100px; height: 100px; "
-              :src="baseApi+avatarImg"
+              style="width: 100px; height: 100px;"
+              :src="baseApi + avatarImg"
               fit="contain"
               :preview-src-list="localImgToWebImg(allAvatarImg)"
-              lazy >
+              lazy>
               <div slot="placeholder" class="image-slot">
                 加载中<span class="dot">...</span>
               </div>
+              <div slot="error" class="image-slot">加载失败</div>
             </el-image>
-            <div style="">
+            <div>
               <el-tooltip content="点击删除头像" placement="top">
                 <el-button @click="deleteFileByPath(avatarImg)" type="danger" icon="el-icon-delete" circle></el-button>
               </el-tooltip>
@@ -99,125 +104,140 @@
 
 <script>
 import store from "@/store";
-import { checkRole } from "@/utils/permission";
 import { VueCropper } from "vue-cropper";
 import { uploadAvatar, getAvatarImageList, updateUserAvatar } from "@/api/system/user";
-import {deleteFile} from "@/api/common"
+import { deleteFile } from "@/api/common";
 import { isBlogSiteAdmin } from "@/utils/blogAdmin";
+
+const DEFAULT_AVATAR = require("@/assets/mai.png");
+
+function resolveAvatarUrl(raw) {
+  if (!raw) return DEFAULT_AVATAR;
+  const s = String(raw).trim();
+  if (!s || s === "null" || s === "undefined") return DEFAULT_AVATAR;
+  if (/^(data:|blob:|https?:\/\/)/i.test(s)) return s;
+  if (s.indexOf(process.env.VUE_APP_BASE_API) === 0) return s;
+  // 已是站点相对路径或签名 URL 路径
+  if (s.charAt(0) === "/") return process.env.VUE_APP_BASE_API + s;
+  return process.env.VUE_APP_BASE_API + "/" + s.replace(/^\//, "");
+}
 
 export default {
   components: { VueCropper },
   props: {
     user: {
-      type: Object
-    }
+      type: Object,
+      default: () => ({}),
+    },
   },
   data() {
     return {
-      // 是否显示弹出层
       open: false,
       displayAvatar: false,
       allAvatarImg: [],
-      // 是否显示cropper
       visible: false,
-      // 弹出层标题
       title: "修改头像",
+      defaultAvatar: DEFAULT_AVATAR,
+      avatarBroken: false,
       options: {
-        img: store.getters.avatar, //裁剪图片的地址
-        autoCrop: true, // 是否默认生成截图框
-        autoCropWidth: 200, // 默认生成截图框宽度
-        autoCropHeight: 200, // 默认生成截图框高度
-        fixedBox: true // 固定截图框大小 不允许改变
+        img: DEFAULT_AVATAR,
+        autoCrop: true,
+        autoCropWidth: 200,
+        autoCropHeight: 200,
+        fixedBox: true,
       },
       previews: {},
-      baseHost: window.location.host,
       baseApi: process.env.VUE_APP_BASE_API,
     };
   },
+  computed: {
+    avatarUrl() {
+      if (this.avatarBroken) return this.defaultAvatar;
+      return resolveAvatarUrl(
+        (this.user && this.user.avatar) || store.getters.avatar || this.options.img
+      );
+    },
+  },
+  watch: {
+    "user.avatar": {
+      immediate: true,
+      handler(val) {
+        this.avatarBroken = false;
+        this.options.img = resolveAvatarUrl(val || store.getters.avatar);
+      },
+    },
+  },
   methods: {
-    getAvatarList(){
-      let queryParams = { fileFolder: store.getters.username };
-      getAvatarImageList(queryParams).then((response)=>{
-        this.displayAvatar=true;
-        this.allAvatarImg=response.data;//this.localImgToWebImg(response.data);
-        //console.log(response);
-      }).catch((error)=>{
-        console.log(error);
-      })
-      //this.msgSuccess("在线浏览选择头像")
+    isBlogSiteAdmin,
+    onAvatarError() {
+      this.avatarBroken = true;
+      // 裁剪器不能用坏链，回落到默认图，保证仍可重新上传
+      this.options.img = this.defaultAvatar;
     },
-    // 把服务器获取的图片路径拼接成公网地址，因为跨域代理后访问后端资源需要带上跨域设置的那个API前缀头
-    // 如果单独再设置了后端资源跨域代理，则可以不用如此，这里这样是为了防止没有设置后端资源的跨域代理
-    // 后端资源的跨域代理请看vue.config.js，看设置了API跨域代理之外，是否还有一个资源代理
+    getAvatarList() {
+      getAvatarImageList({ fileFolder: store.getters.username })
+        .then((response) => {
+          this.displayAvatar = true;
+          this.allAvatarImg = response.data;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
     localImgToWebImg(imgList) {
-      var len = imgList.length;
-      let resultArr = new Array();
-      for (var i = 0; i < len; i++) {
-        // let imgInfo={
-        //   originalUrl:imgList[i],
-        //   imgUrl: process.env.VUE_APP_BASE_API+imgList[i]
-        // };
-        resultArr.push(this.baseApi + imgList[i]);
-        //resultArr.push(imgInfo);
-        //this.list.push(temp);
-      }
-      return resultArr;
+      return (imgList || []).map((i) => this.baseApi + i);
     },
-    //删除文件
-    deleteFileByPath(pathStr){
-      //let filePath = pathStr.replace(process.env.VUE_APP_BASE_API, '');
-      let filePath = pathStr;
-      this.$confirm('是否确认删除所选的文件?', "警告", {
+    deleteFileByPath(pathStr) {
+      this.$confirm("是否确认删除所选的文件?", "警告", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
-        type: "warning"
-      }).then(function(){
-        deleteFile({filePath:filePath}).then((response)=>{
-          //console.log(response);
-          //this.msgSuccess(response.msg)
-        })
-      }).then(()=>{
-        this.msgSuccess("删除成功");
-        //console.log(error);
-        this.getAvatarList();
+        type: "warning",
       })
+        .then(() => deleteFile({ filePath: pathStr }))
+        .then(() => {
+          this.msgSuccess("删除成功");
+          this.getAvatarList();
+        })
+        .catch(() => {});
     },
-    //更新当前的头像
-    updateCurrentAvatarImg(avatarImg){
-      var queryForm={avatar: avatarImg}
-      updateUserAvatar(queryForm).then((response) => {
-        if(response.data!=undefined || response.data!= null){
-          this.options.img = process.env.VUE_APP_BASE_API + response.data;
-          store.commit('user/SET_AVATAR', this.options.img);
+    updateCurrentAvatarImg(avatarImg) {
+      updateUserAvatar({ avatar: avatarImg }).then((response) => {
+        if (response.data != undefined || response.data != null) {
+          this.avatarBroken = false;
+          this.options.img = resolveAvatarUrl(response.data);
+          store.commit("user/SET_AVATAR", this.options.img);
         }
         this.msgSuccess(response.msg);
-      })
+      });
     },
-    // 编辑头像
     editCropper() {
+      // 坏图时用默认图打开裁剪，避免 vue-cropper 空白导致无法操作
+      if (this.avatarBroken) {
+        this.options.img = this.defaultAvatar;
+      } else {
+        this.options.img = resolveAvatarUrl(
+          (this.user && this.user.avatar) || store.getters.avatar || this.options.img
+        );
+      }
+      this.previews = {};
       this.open = true;
     },
-    // 打开弹出层结束时的回调
     modalOpened() {
       this.visible = true;
     },
-    // 覆盖默认的上传行为
-    requestUpload() {
+    onDialogClose() {
+      this.visible = false;
     },
-    // 向左旋转
+    requestUpload() {},
     rotateLeft() {
-      this.$refs.cropper.rotateLeft();
+      this.$refs.cropper && this.$refs.cropper.rotateLeft();
     },
-    // 向右旋转
     rotateRight() {
-      this.$refs.cropper.rotateRight();
+      this.$refs.cropper && this.$refs.cropper.rotateRight();
     },
-    // 图片缩放
     changeScale(num) {
-      num = num || 1;
-      this.$refs.cropper.changeScale(num);
+      this.$refs.cropper && this.$refs.cropper.changeScale(num || 1);
     },
-    // 上传预处理
     beforeUpload(file) {
       if (file.type.indexOf("image/") == -1) {
         this.msgError("文件格式错误，请上传图片类型,如：JPG，PNG后缀的文件。");
@@ -225,51 +245,80 @@ export default {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => {
+          this.avatarBroken = false;
           this.options.img = reader.result;
         };
       }
     },
-    // 上传图片 profile/avatar/2023/07/04/53ad67d8-f67c-4053-86c3-1f4aecd720c4.jpeg
     uploadImg() {
-      this.$refs.cropper.getCropBlob(data => {
+      if (!this.$refs.cropper) {
+        this.msgError("请先选择或上传头像图片");
+        return;
+      }
+      this.$refs.cropper.getCropBlob((data) => {
         let formData = new FormData();
         formData.append("avatarFile", data);
-        // 如果是网站管理员，则上传到用户名对应的文件夹
-        // 否则就不携带fileFolder参数
-        if(this.isBlogSiteAdmin()){
+        if (this.isBlogSiteAdmin()) {
           formData.append("fileFolder", store.getters.username);
         }
-        uploadAvatar(formData).then(response => {
+        uploadAvatar(formData).then((response) => {
           this.open = false;
-          this.options.img = process.env.VUE_APP_BASE_API + response.imgUrl;
-          store.commit('user/SET_AVATAR', this.options.img);
-          this.msgSuccess("修改成功");
           this.visible = false;
+          this.avatarBroken = false;
+          const url = resolveAvatarUrl(response.imgUrl || (response.data && response.data.imgUrl));
+          this.options.img = url;
+          store.commit("user/SET_AVATAR", url);
+          this.msgSuccess("修改成功");
         });
       });
     },
-    // 实时预览
     realTime(data) {
       this.previews = data;
     },
-    cancel(){
-      this.open=false;
-    }
-  }
+    cancel() {
+      this.open = false;
+      this.visible = false;
+    },
+  },
 };
 </script>
 <style scoped lang="scss">
 .user-info-head {
   position: relative;
   display: inline-block;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f0f2f5;
+  cursor: pointer;
+  vertical-align: middle;
 }
-.avatar-upload-preview{
+.user-info-head img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.avatar-upload-preview {
   text-align: center;
   margin: 0 auto;
   align-content: center;
 }
+.preview-fallback {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 50%;
+}
+.avatar-cropper-placeholder {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #909399;
+}
 .user-info-head:hover:after {
-  content: '+';
+  content: "+";
   position: absolute;
   left: 0;
   right: 0;
@@ -282,7 +331,8 @@ export default {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   cursor: pointer;
-  line-height: 110px;
+  line-height: 120px;
   border-radius: 50%;
+  text-align: center;
 }
 </style>

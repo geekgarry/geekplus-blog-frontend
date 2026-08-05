@@ -166,10 +166,10 @@ export function getUserProfile() {
   })
 }
 
-// 修改用户个人信息
+// 修改用户个人信息（成功后后端会使会话失效，需重新登录）
 export function updateUserProfile(data) {
   return request({
-    url: '/sys/user',
+    url: '/sys/user/updateUserProfile',
     method: 'put',
     data: data
   })

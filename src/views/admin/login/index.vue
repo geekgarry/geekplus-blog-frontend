@@ -162,7 +162,8 @@ export default {
             Cookies.remove("rememberPwd");
           }
           this.$store.dispatch('user/login', this.loginForm).then(() => {
-            this.$router.push({ path: this.redirect || '/admin/' })
+            const target = this.redirect || '/admin/'
+            this.$router.push({ path: target })
             this.loading = false
           }).catch(() => {
             this.loading = false

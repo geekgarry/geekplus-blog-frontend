@@ -12,13 +12,17 @@
     </button>
     <div v-if="open" class="gp-user-menu__panel" :style="panelStyle" @click.stop>
       <template v-if="loggedIn">
-        <button type="button" class="gp-user-menu__item" @click="go('/admin')">
+        <!-- <button type="button" class="gp-user-menu__item" @click="go('/admin')">
           <i class="el-icon-house" aria-hidden="true"></i>
           <span>管理中心</span>
-        </button>
+        </button> -->
         <button type="button" class="gp-user-menu__item" @click="go('/user/center')">
           <i class="el-icon-user" aria-hidden="true"></i>
           <span>个人中心</span>
+        </button>
+        <button type="button" class="gp-user-menu__item" @click="go('/write')">
+          <i class="el-icon-edit" aria-hidden="true"></i>
+          <span>写文章</span>
         </button>
         <button type="button" class="gp-user-menu__item" @click="onLogout">
           <i class="el-icon-switch-button" aria-hidden="true"></i>

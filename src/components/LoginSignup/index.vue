@@ -258,8 +258,12 @@ export default {
             Cookies.remove("rememberPwd");
           }
           this.$store.dispatch('user/login', this.loginForm).then(() => {
-            // this.$router.push({ path: this.redirect || '/' })
-            window.location.reload();
+            // 弹窗登录：始终按当前页路径刷新，不跳首页
+            const path = (this.$route && this.$route.fullPath) || window.location.pathname + window.location.search + window.location.hash
+            if (window.history && window.history.replaceState) {
+              window.history.replaceState(null, '', path)
+            }
+            window.location.reload()
             this.loading = false;
           }).catch(() => {
             this.getCode();

@@ -70,7 +70,11 @@ export default {
     },
     close() {
       this.$store.dispatch("tagsView/delView", this.$route);
-      this.$router.push({ path: "/" });
+      if (window.history.length > 1) {
+        this.$router.back();
+      } else {
+        this.$router.push({ path: "/admin/dashboard" });
+      }
     }
   }
 };

@@ -94,7 +94,7 @@
 
         <p class="gp-side-layout__group">个人</p>
         <router-link class="gp-side-nav-item" to="/about" title="关于作者" @click.native="closeDrawer">
-          <i class="el-icon-user"></i><span>关于作者</span>
+          <i class="el-icon-user"></i><span>关于本站</span>
         </router-link>
         <router-link class="gp-side-nav-item" to="/user/center" title="个人中心" @click.native="closeDrawer">
           <i class="el-icon-s-custom"></i><span>个人中心</span>

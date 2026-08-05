@@ -10,7 +10,8 @@ module.exports = {
         safari: '12',
         edge: '79',
         ios: '12',
-        android: '8'
+        android: '8',
+        ie: '11'
       },
     }, "cli-plugin-babel-preset"]
   ],

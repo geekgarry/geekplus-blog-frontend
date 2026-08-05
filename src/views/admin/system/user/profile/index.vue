@@ -15,6 +15,10 @@
                 <svg-icon icon-class="user" />用户名称
                 <div class="pull-right">{{ user.username }}</div>
               </li>
+              <li class="list-group-item" v-if="user.remark">
+                <svg-icon icon-class="form" />备注
+                <div class="pull-right">{{ user.remark }}</div>
+              </li>
               <li class="list-group-item">
                 <svg-icon icon-class="phone" />手机号码
                 <div class="pull-right">{{ user.phoneNumber }}</div>

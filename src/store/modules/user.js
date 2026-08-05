@@ -87,9 +87,8 @@ const actions = {
     return new Promise((resolve, reject) => {
       login(userInfo).then(response => {
         const { data } = response
-        setTokenExpires(data.token)
+        setTokenExpires(data.token, userInfo.rememberMe !== false)
         commit('SET_TOKEN', data.token)
-        // console.log(data);
         resolve()
       }).catch(error => {
         reject(error)

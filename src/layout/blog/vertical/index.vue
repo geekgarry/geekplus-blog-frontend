@@ -6,7 +6,7 @@
       <div class="drawer-header">
         <div class="drawer-header-title">
           <div class="navbar-title">
-            <router-link class="drawer-user-center" :to="!$common.isEmpty(username) ? '/admin/user/profile' : '/'">
+            <router-link class="drawer-user-center" :to="!$common.isEmpty(username) ? '/user/center' : '/'">
               <img class="drawer-user-avatar" :src="!$common.isEmpty(username) ? userAvatar : iLogo">
             </router-link>
             <span class="web-title">{{ nickname || 'GeekPlus' }}</span>

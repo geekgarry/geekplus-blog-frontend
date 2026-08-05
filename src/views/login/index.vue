@@ -270,7 +270,18 @@ export default {
             Cookies.remove("rememberPwd");
           }
           this.$store.dispatch('user/login', this.loginForm).then(() => {
-            this.$router.push({ path: this.redirect || '/' })
+            // 优先回到来源页；无 redirect 时停留在当前路径刷新，避免一律回首页
+            const target = this.redirect || this.$route.fullPath || '/'
+            if (target === this.$route.fullPath || target === this.$route.path) {
+              // 刷新页面，可以不用reload吗？
+              // this.$router.go(0);
+              window.location.reload()
+            } else {
+              this.$router.push({ path: target }).catch(() => {
+                // 跳转目标页
+                window.location.href = target
+              })
+            }
             this.loading = false
           }).catch(() => {
             this.loading = false

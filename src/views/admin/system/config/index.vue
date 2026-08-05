@@ -27,14 +27,13 @@
           <el-input v-model="queryParams.configKey" placeholder="请输入参数键名" clearable size="small" style="width: 140px"
             @keyup.enter.native="handleQuery" />
         </el-form-item>
+        <el-form-item label="值类型" prop="valueType" class="el-form-search-item">
+          <el-select v-model="queryParams.valueType" placeholder="值类型" clearable size="small" style="width: 120px">
+            <el-option v-for="item in valueTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="系统内置" prop="configType" class="el-form-search-item">
           <el-select v-model="queryParams.configType" placeholder="系统内置" clearable size="small" style="width: 140px">
-            <!-- <el-option
-              v-for="dict in dict.type.sys_yes_no"
-              :key="dict.value"
-              :label="dict.label"
-              :value="dict.value"
-            /> -->
             <el-option label="是" value="Y"></el-option>
             <el-option label="否" value="N"></el-option>
           </el-select>
@@ -49,16 +48,17 @@
 
     <el-table v-loading="loading" :data="configList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="参数主键" align="center" prop="configId" />
+      <el-table-column label="参数主键" align="center" prop="configId" width="80" />
       <el-table-column label="参数名称" align="center" prop="configName" :show-overflow-tooltip="true" />
       <el-table-column label="参数键名" align="center" prop="configKey" :show-overflow-tooltip="true" />
-      <el-table-column label="参数键值" align="center" prop="configValue" />
-      <el-table-column label="系统内置" align="center" prop="configType">
+      <el-table-column label="值类型" align="center" prop="valueType" width="90">
         <template slot-scope="scope">
-          <!-- <dict-tag
-            :options="dict.type.sys_yes_no"
-            :value="scope.row.configType"
-          /> -->
+          <span>{{ valueTypeLabel(scope.row.valueType) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="参数键值" align="center" prop="configValue" :show-overflow-tooltip="true" />
+      <el-table-column label="系统内置" align="center" prop="configType" width="80">
+        <template slot-scope="scope">
           <span v-show="scope.row.configType == 'Y'">是</span>
           <span v-show="scope.row.configType == 'N'">否</span>
         </template>
@@ -83,25 +83,47 @@
       @pagination="getList" />
 
     <!-- 添加或修改参数配置对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+    <el-dialog :title="title" :visible.sync="open" width="520px" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="90px">
         <el-form-item label="参数名称" prop="configName">
           <el-input v-model="form.configName" placeholder="请输入参数名称" />
         </el-form-item>
         <el-form-item label="参数键名" prop="configKey">
           <el-input v-model="form.configKey" placeholder="请输入参数键名" />
         </el-form-item>
+        <el-form-item label="值类型" prop="valueType">
+          <el-select v-model="form.valueType" placeholder="请选择值类型" style="width: 100%" @change="onValueTypeChange">
+            <el-option v-for="item in valueTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="参数键值" prop="configValue">
-          <el-input v-model="form.configValue" placeholder="请输入参数键值" />
+          <el-switch
+            v-if="form.valueType === 'boolean'"
+            v-model="boolValue"
+            active-text="是 / true"
+            inactive-text="否 / false"
+          />
+          <el-input-number
+            v-else-if="form.valueType === 'number'"
+            v-model="numberValue"
+            controls-position="right"
+            style="width: 100%"
+          />
+          <el-input
+            v-else-if="form.valueType === 'text' || form.valueType === 'json'"
+            v-model="form.configValue"
+            type="textarea"
+            :rows="form.valueType === 'json' ? 6 : 4"
+            :placeholder="form.valueType === 'json' ? '请输入 JSON' : '请输入多行文本'"
+          />
+          <el-input
+            v-else
+            v-model="form.configValue"
+            placeholder="请输入参数键值"
+          />
         </el-form-item>
         <el-form-item label="系统内置" prop="configType">
           <el-radio-group v-model="form.configType">
-            <!-- <el-radio
-              v-for="dict in dict.type.sys_yes_no"
-              :key="dict.value"
-              :label="dict.value"
-              >{{ dict.label }}</el-radio
-            > -->
             <el-radio label="Y">是</el-radio>
             <el-radio label="N">否</el-radio>
           </el-radio-group>
@@ -128,43 +150,44 @@ import {
   refreshCache
 } from "@/api/system/config";
 
+const VALUE_TYPE_OPTIONS = [
+  { value: "string", label: "字符串" },
+  { value: "boolean", label: "布尔" },
+  { value: "number", label: "数字" },
+  { value: "text", label: "长文本" },
+  { value: "json", label: "JSON" },
+];
+
+function parseBool(val) {
+  if (val === true || val === false) return val;
+  const s = String(val == null ? "" : val).trim().toLowerCase();
+  return s === "true" || s === "y" || s === "1" || s === "yes";
+}
+
 export default {
   name: "Config",
-  // dicts: ["sys_yes_no"],
   data() {
     return {
-      //tableHeight: document.documentElement.clientHeight - 180,
-      // 遮罩层
+      valueTypeOptions: VALUE_TYPE_OPTIONS,
       loading: true,
-      // 选中数组
       ids: [],
-      // 非单个禁用
       single: true,
-      // 非多个禁用
       multiple: true,
-      // 显示搜索条件
       showSearch: true,
-      // 总条数
       total: 0,
-      // 参数表格数据
       configList: [],
-      // 弹出层标题
       title: "",
-      // 是否显示弹出层
       open: false,
-      // 日期范围
       dateRange: [],
-      // 查询参数
       queryParams: {
         pageNum: 1,
         pageSize: 10,
         configName: undefined,
         configKey: undefined,
+        valueType: undefined,
         configType: undefined,
       },
-      // 表单参数
       form: {},
-      // 表单校验
       rules: {
         configName: [
           { required: true, message: "参数名称不能为空", trigger: "blur" },
@@ -172,17 +195,71 @@ export default {
         configKey: [
           { required: true, message: "参数键名不能为空", trigger: "blur" },
         ],
+        valueType: [
+          { required: true, message: "值类型不能为空", trigger: "change" },
+        ],
         configValue: [
-          { required: true, message: "参数键值不能为空", trigger: "blur" },
+          {
+            validator: (rule, value, callback) => {
+              if (this.form.valueType === "boolean") {
+                callback();
+                return;
+              }
+              if (value === undefined || value === null || String(value).trim() === "") {
+                callback(new Error("参数键值不能为空"));
+                return;
+              }
+              if (this.form.valueType === "json") {
+                try {
+                  JSON.parse(String(value));
+                } catch (e) {
+                  callback(new Error("JSON 格式不正确"));
+                  return;
+                }
+              }
+              callback();
+            },
+            trigger: "blur",
+          },
         ],
       },
     };
+  },
+  computed: {
+    boolValue: {
+      get() {
+        return parseBool(this.form.configValue);
+      },
+      set(v) {
+        this.$set(this.form, "configValue", v ? "true" : "false");
+      },
+    },
+    numberValue: {
+      get() {
+        const n = Number(this.form.configValue);
+        return Number.isFinite(n) ? n : 0;
+      },
+      set(v) {
+        this.$set(this.form, "configValue", v == null ? "" : String(v));
+      },
+    },
   },
   created() {
     this.getList();
   },
   methods: {
-    /** 查询参数列表 */
+    valueTypeLabel(type) {
+      const hit = this.valueTypeOptions.find((i) => i.value === type);
+      return hit ? hit.label : type || "字符串";
+    },
+    onValueTypeChange(type) {
+      if (type === "boolean") {
+        this.$set(this.form, "configValue", parseBool(this.form.configValue) ? "true" : "false");
+      } else if (type === "number") {
+        const n = Number(this.form.configValue);
+        this.$set(this.form, "configValue", Number.isFinite(n) ? String(n) : "0");
+      }
+    },
     getList() {
       this.loading = true;
       listConfig(this.addDateRange(this.queryParams, this.dateRange)).then(
@@ -193,68 +270,71 @@ export default {
         }
       );
     },
-    // 取消按钮
     cancel() {
       this.open = false;
       this.reset();
     },
-    // 表单重置
     reset() {
       this.form = {
         configId: undefined,
         configName: undefined,
         configKey: undefined,
         configValue: undefined,
+        valueType: "string",
         configType: "Y",
         remark: undefined,
       };
       this.resetForm("form");
     },
-    /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageNum = 1;
       this.getList();
     },
-    /** 重置按钮操作 */
     resetQuery() {
       this.dateRange = [];
       this.resetForm("queryForm");
       this.handleQuery();
     },
-    /** 新增按钮操作 */
     handleAdd() {
       this.reset();
       this.open = true;
       this.title = "添加参数";
     },
-    // 多选框选中数据
     handleSelectionChange(selection) {
       this.ids = selection.map((item) => item.configId);
       this.single = selection.length != 1;
       this.multiple = !selection.length;
     },
-    /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
       const query = { configId: row.configId || this.ids[0] };
       getConfig(query).then((response) => {
-        this.form = response.data;
+        const data = response.data || {};
+        if (!data.valueType) {
+          data.valueType = "string";
+        }
+        this.form = data;
         this.open = true;
         this.title = "修改参数";
       });
     },
-    /** 提交按钮 */
     submitForm: function () {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-          if (this.form.configId != undefined) {
-            updateConfig(this.form).then((response) => {
+          const payload = { ...this.form };
+          if (payload.valueType === "boolean") {
+            payload.configValue = parseBool(payload.configValue) ? "true" : "false";
+          } else if (payload.valueType === "number") {
+            payload.configValue = String(payload.configValue);
+          }
+          if (payload.configId != undefined) {
+            updateConfig(payload).then(() => {
               this.msgSuccess("修改成功");
               this.open = false;
               this.getList();
             });
           } else {
-            addConfig(this.form).then((response) => {
+            addConfig(payload).then(() => {
               this.msgSuccess("新增成功");
               this.open = false;
               this.getList();
@@ -263,7 +343,6 @@ export default {
         }
       });
     },
-    /** 删除按钮操作 */
     handleDelete(row) {
       const configIds = row.configId || this.ids;
       this.confirm('是否确认删除参数编号为"' + configIds + '"的数据项？')
@@ -276,7 +355,6 @@ export default {
         })
         .catch(() => { });
     },
-    /** 导出按钮操作 */
     handleExport() {
       this.download(
         "system/config/export",
@@ -286,7 +364,6 @@ export default {
         `config_${new Date().getTime()}.xlsx`
       );
     },
-    /** 刷新缓存按钮操作 */
     handleRefreshCache() {
       refreshCache().then(() => {
         this.msgSuccess("刷新成功");

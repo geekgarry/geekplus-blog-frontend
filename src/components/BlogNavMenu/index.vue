@@ -130,12 +130,12 @@
 
   <!-- 移动端抽屉菜单：与桌面同一数据源 / 路由逻辑 -->
   <ul v-else class="gp-nav-drawer">
-    <li v-if="showAdminEntry" class="gp-nav-drawer__item">
+    <!-- <li v-if="showAdminEntry" class="gp-nav-drawer__item">
       <button type="button" class="gp-nav-drawer__link" @click="navigate('/admin')">
         <svg-icon class="gp-nav-menu__icon" icon-class="manage-center" />
         <span>管理中心</span>
       </button>
-    </li>
+    </li> -->
     <li
       v-for="(item, index) in allItems"
       :key="item.key"
@@ -243,7 +243,7 @@ export default {
           { key: 'resumeGenerator', label: '简历生成', path: '/resumeGenerator', icon: 'document', children: null },
         ] },
         { key: 'chat', label: 'AI 助手', path: '/chat', icon: 'ai', children: null },
-        { key: 'leave', label: '给我留言', path: '/leave-word', icon: 'leave-word', children: null },
+        { key: 'leave', label: '留言板', path: '/leave-word', icon: 'leave-word', children: null },
         { key: 'about', label: '关于本站', path: '/about', icon: 'cheers', children: null }
       ]
     },
