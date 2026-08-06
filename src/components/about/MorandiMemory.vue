@@ -29,9 +29,19 @@
 </template>
 
 <script>
+import { randomMunsellColor, getRandomTulipColor, getRandomMorandiColor, generateMorandiColorCombined } from '@/utils/plusTool'
+
+// 莫兰迪色块配对：轻量网页小游戏,按照莫兰迪色块配对规则,生成12个色块
 const PALETTE = [
-  '#8a9a8c', '#9a8f86', '#7a8f9a', '#a89a8e',
-  '#8e9a9e', '#9e8e8a', '#86948a', '#948a92'
+  '#8a9a8c', '#9a8f86', '#7a8f9a', '#a89a8e', '#889a8c', '#988f86',
+  '#8e9a9e', '#9e8e8a', '#86948a', '#948a92', '#8b9a8e', '#8e9a8b',
+  '#8b9b8d', '#9b9a87', '#7b9a9b', '#a99b8d', '#899b8d', '#998b7d',
+  '#8e9b9f', '#9e8f8b', '#87958a', '#948b92', '#8b9b9f', '#9f8b87',
+  '#8e9a9a', '#919a8e', '#8e9a91', '#918e9a', '#8e919a', '#9a8e91',
+  '#7b9a8c', '#9a8b7c', '#7c9a8b', '#8b9a7b', '#7c8b9a', '#8b7c9a',
+  '#79a8bc', '#9a79bc', '#7a98bc', '#8b7a9c', '#7b8b9a', '#8c7c9a',
+  '#9b8a7c', '#8b9a7a', '#7caa8b', '#8b9a7c', '#7a8b9a', '#8d7c9a',
+  '#98bca8', '#99bca8', '#89bca8', '#8bc9a8', '#8bc8a9', '#8bc7a8',
 ]
 
 function shuffle(arr) {
@@ -101,6 +111,14 @@ export default {
           this.lock = false
         }, 520)
       }
+    },
+    // 生成16个随机莫兰迪色块,不用固定的PALETTE,随机生成
+    generateRandomColors() {
+      const colors = []
+      for (let i = 0; i < 16; i++) {
+        colors.push(getRandomMorandiColor())
+      }
+      return colors
     }
   }
 }
@@ -179,6 +197,10 @@ export default {
   border-radius: 12px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+}
+
+.mm__card.is-matched .mm__face--back {
+  background: var(--theme-color-muted, rgba(110, 139, 142, 0.2));
 }
 
 .mm__face--back {

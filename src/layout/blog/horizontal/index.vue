@@ -70,7 +70,9 @@
             :title="item.meta && item.meta.title || item.categoryName || item.name"
             @click="toggleItem(index, item)"
           >
-            <i class="el-icon-folder-opened"></i>
+            <!-- 图标, 如果 item.icon 存在, 则显示 item.icon, 否则显示 el-icon-folder-opened -->
+            <svg-icon :icon-class="item.icon" v-if="item.icon"></svg-icon>
+            <i class="el-icon-folder-opened" v-else></i>
             <span>{{ item.meta && item.meta.title || item.categoryName || item.name }}</span>
             <i
               v-if="item.children && item.children.length"
@@ -87,6 +89,9 @@
               :title="sub.meta && sub.meta.title || sub.categoryName || sub.name"
               @click.native="closeDrawer"
             >
+              <!-- 图标, 如果 sub.icon 存在, 则显示 sub.icon, 否则显示 el-icon-folder-opened -->
+              <svg-icon :icon-class="sub.icon" v-if="sub.icon"></svg-icon>
+              <i class="el-icon-postcard" v-else></i>
               <span>{{ sub.meta && sub.meta.title || sub.categoryName || sub.name }}</span>
             </router-link>
           </div>

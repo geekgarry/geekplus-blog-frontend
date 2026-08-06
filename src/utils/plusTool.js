@@ -184,9 +184,8 @@ export function getRandomColor() {
   return color;
 }
 /*********************************************/
-//随机蒙塞尔颜色
+//获取随机蒙塞尔颜色,返回十六进制颜色
 export function randomMunsellColor() {
-  // 生成随机莫兰迪颜色
   const letters = "0CEF";
   let color = "#";
   for (let i = 0; i < 6; i++) {
@@ -194,13 +193,51 @@ export function randomMunsellColor() {
   }
   return color;
 }
-//获取随机莫兰迪色系
+//获取随机郁金香色系
 export function getRandomTulipColor() {
   const hue = Math.random() * 360; // 色相在0-360之间
   const saturation = 40 + Math.random() * 30; // 饱和度在40-70之间
   const lightness = 50 + Math.random() * 15; // 亮度在50-65之间
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
+//获取随机莫兰迪色系，参考莫兰迪色系规则，返回十六进制颜色
+export function getRandomMorandiColor() {
+  const hue = Math.floor(Math.random() * 360); // 色相在0-360之间
+  const saturation = 20 + Math.random() * 10; // 饱和度在20-30之间
+  const lightness = 50 + Math.random() * 15; // 亮度在50-65之间
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+export function generateMorandiColorCombined() {
+  // 首先生成一个接近灰色的RGB颜色
+  const baseValue = Math.floor(Math.random() * 51) + 100; // 100到150
+  const color = `rgb(${baseValue}, ${baseValue}, ${baseValue})`;
+  // 然后将该颜色转换为HSL，并调整其饱和度和亮度以符合莫兰迪色系的特点
+  const hslColor = rgbToHsl(baseValue, baseValue, baseValue); // 使用自定义的rgbToHsl函数转换颜色并调整参数
+  return `hsl(${hslColor.h}, ${hslColor.s}%, ${hslColor.l}%)`;
+}
+
+function rgbToHsl(r, g, b) {
+  r /= 255, g /= 255, b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h, s, l = (max + min) / 2;
+
+  if (max === min) {
+      h = s = 0; // achromatic
+  } else {
+      let d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+  }
+
+  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) }; // Adjust saturation and lightness here if needed for Morandi effect.
+}
+
 //随机选固定颜色
 export function someColor() {
   var colors = [
