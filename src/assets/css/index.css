@@ -25,8 +25,11 @@ body {
 }
 
 /* 去除移动端tap高亮效果 */
-a {
+*,a,button,input,textarea {
   -webkit-tap-highlight-color: transparent; /* 对于非苹果浏览器 */
+  -moz-tap-highlight-color: transparent;
+  -ms-tap-highlight-color: transparent;
+  -o-tap-highlight-color: transparent;
   tap-highlight-color: transparent; /* 某些安卓浏览器可能需要这个属性 */
 }
 
@@ -820,7 +823,6 @@ audio {
   flex-direction: row;
   text-decoration: none;
   color: inherit;
-  -webkit-tap-highlight-color: inherit;
   -webkit-user-select: none;
   user-select: none;
   -moz-user-focus: none;
@@ -837,7 +839,6 @@ audio {
   flex-direction: row;
   text-decoration: none;
   color: inherit;
-  -webkit-tap-highlight-color: inherit;
   -webkit-user-select: none;
   user-select: none;
   -moz-user-focus: none;
