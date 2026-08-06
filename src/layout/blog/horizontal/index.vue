@@ -478,7 +478,7 @@ export default {
 .gp-side-layout__mask {
   position: fixed;
   inset: 0;
-  z-index: 1040;
+  z-index: 1010;
   background: var(--mask, rgba(47, 45, 43, 0.42));
   backdrop-filter: blur(2px);
 }
@@ -487,7 +487,7 @@ export default {
   position: fixed;
   inset: 0 auto 0 0;
   width: min(280px, 86vw);
-  /* z-index: 1050; */
+  z-index: 1011;
   display: flex;
   flex-direction: column;
   background: var(--gp-surface-bg, var(--background, #faf8f5));
