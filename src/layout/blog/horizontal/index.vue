@@ -487,7 +487,7 @@ export default {
   position: fixed;
   inset: 0 auto 0 0;
   width: min(280px, 86vw);
-  z-index: 1050;
+  /* z-index: 1050; */
   display: flex;
   flex-direction: column;
   background: var(--gp-surface-bg, var(--background, #faf8f5));
