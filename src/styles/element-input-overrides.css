@@ -1,0 +1,87 @@
+/**
+ * 仅覆盖 el-input / el-textarea（以及关联的 input-number、input-group）
+ * 挂在 plugins/element.js 末尾：保证排在 babel-plugin-component 注入的 theme-chalk/input.css 之后。
+ */
+.el-input .el-input__inner:hover,
+.el-input__inner:hover {
+  border-color: var(--borderHoverColor, #c0c4cc);
+}
+
+.el-input .el-input__inner,
+.el-input__inner {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--background-origin, #ffffff);
+  background-image: none;
+  border-radius: 4px;
+  border: 1px solid var(--border-color-2, #dcdfe6);
+  box-sizing: border-box;
+  color: var(--text-color-2, #606266);
+  display: inline-block;
+  font-size: inherit;
+  height: 40px;
+  line-height: 40px;
+  outline: none;
+  padding: 0 15px;
+  transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+  width: 100%;
+}
+
+.el-input .el-input__inner:focus,
+.el-input__inner:focus {
+  border-color: var(--theme-color, #6e8b8e);
+  outline: none;
+}
+
+.el-input-group__append,
+.el-input-group__prepend {
+  background-color: var(--default-button-bg, #f5f7fa);
+  color: var(--text-color-2, #909399);
+  vertical-align: middle;
+  display: table-cell;
+  position: relative;
+  border-color: var(--border-color-2, #dcdfe6);
+  padding: 0 20px;
+  width: 1px;
+  white-space: nowrap;
+}
+
+.el-input-number__increase,
+.el-input-number__decrease {
+  background: var(--background-origin, #ffffff);
+  color: var(--text-color-2, #606266);
+}
+
+.el-input-number.is-controls-right .el-input-number__increase {
+  border-bottom: 1px solid var(--border-color, #DCDFE6);
+}
+
+.el-input-number.is-controls-right .el-input-number__decrease {
+  border-left: 1px solid var(--border-color, #DCDFE6);
+}
+
+.el-input-number__increase {
+  border-left: 1px solid var(--border-color, #DCDFE6);
+}
+
+.el-textarea .el-textarea__inner:hover,
+.el-textarea__inner:hover {
+  border-color: var(--borderHoverColor, #c0c4cc);
+}
+
+.el-textarea .el-textarea__inner,
+.el-textarea__inner {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 4px;
+  color: var(--text-color-2, #606266);
+  background-color: var(--background-origin, #ffffff);
+  border: 1px solid var(--border-color-2, #dcdfe6);
+  transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.el-textarea .el-textarea__inner:focus,
+.el-textarea__inner:focus {
+  border-color: var(--theme-color, #6e8b8e);
+  outline: none;
+}

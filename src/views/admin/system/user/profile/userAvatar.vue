@@ -109,7 +109,7 @@ import { uploadAvatar, getAvatarImageList, updateUserAvatar } from "@/api/system
 import { deleteFile } from "@/api/common";
 import { isBlogSiteAdmin } from "@/utils/blogAdmin";
 
-const DEFAULT_AVATAR = require("@/assets/mai.png");
+const DEFAULT_AVATAR = require("@/assets/mai.jpg");
 
 function resolveAvatarUrl(raw) {
   if (!raw) return DEFAULT_AVATAR;

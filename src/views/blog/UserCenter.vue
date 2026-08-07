@@ -90,7 +90,7 @@ export default {
   name: 'UserCenter',
   data() {
     return {
-      defaultAvatar: require('@/assets/mai.png')
+      defaultAvatar: require('@/assets/mai.jpg')
     }
   },
   computed: {

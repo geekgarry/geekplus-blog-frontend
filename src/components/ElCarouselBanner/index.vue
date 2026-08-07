@@ -42,6 +42,7 @@
  *
  * 用途：保留项目早期首页轮播实现，方便日后其它模块按需引用。
  * 数据兼容：carouselImg / img / image；carouselTitle / title；carouselLink / link / href
+ * Carousel 已在 plugins/element 核心包注册。
  *
  * 示例：
  *   <el-carousel-banner :items="carouselList" height="280" :interval="3000" />

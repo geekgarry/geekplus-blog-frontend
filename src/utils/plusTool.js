@@ -1266,6 +1266,18 @@ function fetchClickTextWords() {
     });
 }
 
+var clickTextFetchInflight = null;
+function ensureClickTextWords(force) {
+  if (!force && loadCachedClickWords()) {
+    return Promise.resolve(clickWords);
+  }
+  if (clickTextFetchInflight) return clickTextFetchInflight;
+  clickTextFetchInflight = fetchClickTextWords().finally(function () {
+    clickTextFetchInflight = null;
+  });
+  return clickTextFetchInflight;
+}
+
 function onClickTextEffect(e) {
   var target = e.target || e.srcElement;
   var tag = (target && target.tagName ? target.tagName : "").toLowerCase();
@@ -1298,10 +1310,21 @@ function onClickTextEffect(e) {
 }
 
 function clickTextEffect() {
-  loadCachedClickWords();
-  fetchClickTextWords();
+  var hasCache = loadCachedClickWords();
+  // 有本地缓存则首屏不抢网；idle 后再静默刷新。无缓存才立刻拉一次。
+  if (hasCache) {
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(function () { ensureClickTextWords(true); }, { timeout: 8000 });
+    } else {
+      window.setTimeout(function () { ensureClickTextWords(true); }, 4000);
+    }
+  } else {
+    ensureClickTextWords(false);
+  }
   if (!clickTextRefreshTimer) {
-    clickTextRefreshTimer = window.setInterval(fetchClickTextWords, 30 * 60 * 1000);
+    clickTextRefreshTimer = window.setInterval(function () {
+      ensureClickTextWords(true);
+    }, 30 * 60 * 1000);
   }
   if (clickTextBound) return;
   clickTextBound = true;
@@ -1323,6 +1346,15 @@ function clickTextEffect() {
   }
 }
 clickTextEffect();
+
+// 供布局开关飘字复用，避免再打一遍 getClickTextWords
+export function getCachedClickTextWords() {
+  loadCachedClickWords();
+  return clickWords.slice();
+}
+export function refreshClickTextWords(force) {
+  return ensureClickTextWords(!!force);
+}
 
 /********************** 分割文本为句子数组 ************************/
 function splitSentences1(text) {

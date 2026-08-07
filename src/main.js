@@ -10,6 +10,10 @@
  * - 侧栏类非关键请求用 runWhenIdle / runAfter 错峰，见 docs/v2/03
  */
 import Vue from "vue";
+// Element 按需注册须尽早完成（在路由守卫 / 业务页之前）
+import { setupElement } from "@/plugins/element";
+setupElement();
+
 import App from "./App.vue";
 import "./registerServiceWorker";
 import router from "./router";
@@ -27,23 +31,27 @@ import i18n from './lang/index'
 
 import { parseTime, dateFormat, resetForm, addDateRange, selectDictLabel, selectDictLabels, download, handleTree, firstUpperCase } from "@/utils/gputil";
 
-// Element 全量引入须在其它可能触碰 element-ui 的模块之前完成注册意图（见 babel 注释）
-import ElementUI from "element-ui";
-import "element-ui/lib/theme-chalk/index.css";
-import "element-ui/lib/theme-chalk/display.css";
 import "./styles/index.scss";
-// geekplusadmin.scss 仅在管理端 Layout 中加载，避免污染博客首屏 CSS
+// geekplusadmin.scss / element-admin 仅在管理端 Layout 中加载
 
 // 广告组件同步注册，杜绝首屏 Unknown custom element: <Adsense>
 import AdsenseWidget from '@/components/Adsense/index.vue';
 
 import "./assets/css/color.css";
-import "./assets/css/animation.css";
 import "./assets/css/index.css";
-import "./assets/css/tocbot.css";
 import "./assets/css/gp-blog-ui.css";
-// markdown-highlight 仅文章页需要，由文章页 / mixin 按需引入
-
+// animation / tocbot 非首屏关键，空闲后再注入，减轻 render-blocking CSS
+function loadNonCriticalCss() {
+  import("./assets/css/animation.css").catch(() => {});
+  import("./assets/css/tocbot.css").catch(() => {});
+}
+if (typeof window !== 'undefined') {
+  if (window.requestIdleCallback) {
+    window.requestIdleCallback(loadNonCriticalCss, { timeout: 2500 });
+  } else {
+    window.setTimeout(loadNonCriticalCss, 1200);
+  }
+}
 import {
   getNowDate,
   checkHtml,
@@ -94,10 +102,7 @@ import { checkRole, checkPermi } from "@/utils/permission";
 Vue.prototype.checkRole = checkRole;
 Vue.prototype.checkPermi = checkPermi;
 
-Vue.use(ElementUI, {
-  size: _getCookie('size') || 'medium',
-  i18n: (key, value) => i18n.t(key, value)
-});
+// Element 已在上方 setupElement() 完成按需注册
 
 Vue.prototype.$common = common;
 Vue.config.productionTip = false;

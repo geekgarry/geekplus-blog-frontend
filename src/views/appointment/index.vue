@@ -80,6 +80,7 @@
 </template>
 
 <script>
+import '@/plugins/element-admin'
 import axios from "axios";
 
 export default {

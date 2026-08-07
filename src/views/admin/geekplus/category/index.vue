@@ -306,15 +306,20 @@ export default {
     submitForm() {
       this.$refs["form"].validate(valid => {
         if (valid) {
+          const clearNav = () => {
+            try { sessionStorage.removeItem("gp_public_nav_menu"); } catch (e) { /* ignore */ }
+          };
           if (this.form.id != null) {
             updateCategory(this.form).then(response => {
-              this.msgSuccess("修改成功");
+              this.msgSuccess("修改成功（前台导航缓存已失效）");
+              clearNav();
               this.open = false;
               this.getList();
             });
           } else {
             addCategory(this.form).then(response => {
-              this.msgSuccess("新增成功");
+              this.msgSuccess("新增成功（前台导航缓存已失效）");
+              clearNav();
               this.open = false;
               this.getList();
             });
@@ -332,8 +337,9 @@ export default {
       }).then(function () {
         return delCategory(ids);
       }).then(() => {
+        try { sessionStorage.removeItem("gp_public_nav_menu"); } catch (e) { /* ignore */ }
         this.getList();
-        this.msgSuccess("删除成功");
+        this.msgSuccess("删除成功（前台导航缓存已失效）");
       })
     },
     /** 导出按钮操作 */

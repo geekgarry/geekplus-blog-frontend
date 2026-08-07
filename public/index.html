@@ -9,11 +9,13 @@
   <!-- <meta name="referrer" content="no-referrer" /> -->
   <meta name="renderer" content="webkit">
   <meta name="force-rendering" content="webkit">
-  <meta name="viewport"
-    content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="always">
   <meta http-equiv="Cache-Control" content="no-siteapp">
   <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+  <!-- 提前建连：首屏 API / 上传图同源加速 -->
+  <link rel="dns-prefetch" href="//localhost:8080">
+  <link rel="preconnect" href="https://localhost:8080" crossorigin>
   <title>
     <%= htmlWebpackPlugin.options.title %>
   </title>

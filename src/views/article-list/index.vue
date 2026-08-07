@@ -93,7 +93,7 @@
                 </div>
               </div>
 
-              <div class="gp-surface-card box-card" :class="{ 'skeleton-loading': otherLoading }">
+              <!-- <div class="gp-surface-card box-card" :class="{ 'skeleton-loading': otherLoading }">
                 <div class="gp-surface-card__header">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-data-board"></i>网站公告</span>
@@ -104,7 +104,7 @@
                     小站初建，欢迎来访~
                   </div>
                 </div>
-              </div>
+              </div> -->
             </div>
           </div>
           <div class="gp-col-24 gp-col-xl-17 gp-col-lg-17 gp-col-md-17 gp-col-sm-24 gp-col-xs-24">
@@ -184,7 +184,7 @@ export default {
     return {
       loading: true,
       otherLoading: true,
-      userAvatar: require("@/assets/mai.png"), // Replace with your avatar image path
+      userAvatar: require("@/assets/mai.jpg"), // Replace with your avatar image path
       userName: "麦壳儿",
       userDescription: "青衫烟雨间，挽风踏清歌",
       categoryCount: 14,
@@ -265,7 +265,9 @@ export default {
     };
   },
   created() {
-    this.getAllArticleCategory();
+    if (!this.isMobile) {
+      this.getAllArticleCategory();
+    }
     // window.document.title = (this.$route.meta.title || '文章列表') + "-极客普拉斯&梦极客园";
     // this.$router.onReady(() => {});
   },

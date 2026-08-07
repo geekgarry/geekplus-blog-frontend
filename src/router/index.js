@@ -62,18 +62,18 @@ export const blogChildrenRoutes = [
     component: () => import(/* webpackChunkName: "blog-user-comments" */ '@/views/blog/CommentManage.vue')
   },
   {
-    // 生产文章详情：gp-page / gp-row / gp-col 框架（与 mobile 同源布局）
+    // 生产文章详情：按设备异步加载 desktop index / mobile，减少互拉
     path: '/post/:id?',
     name: 'indexArticle',
     meta: { title: '文章', icon: '' },
-    component: () => import('@/views/article/index.vue')
+    component: () => import(/* webpackChunkName: "web-view-article-entry" */ '@/views/article/ArticleEntry.vue')
   },
   {
-    // 对照副本
+    // 对照副本（固定移动版，便于对比）
     path: '/article/:id?',
     name: 'articleMobileLegacy',
     meta: { title: '文章(对照)', icon: '' },
-    component: () => import('@/views/article/mobile.vue'),
+    component: () => import(/* webpackChunkName: "web-view-article-mobile" */ '@/views/article/mobile.vue'),
   },
   {
     path: '/article2',

@@ -69,7 +69,8 @@
       <el-dialog
         title="选择简历模板"
         :visible.sync="templateDialogVisible"
-        width="720px"
+        :width="refreshDeviceType() ? '720px' : '100%'"
+        :fullscreen="refreshDeviceType()"
         class="no-print"
         append-to-body
       >
@@ -177,6 +178,7 @@
 </template>
 
 <script>
+import '@/plugins/element-admin'
 import { getToken } from '@/utils/auth';
 import {
   saveResume,
@@ -695,7 +697,7 @@ export default {
   border: 2px solid var(--border-color, #e5e7eb);
   border-radius: 12px;
   padding: 14px;
-  background: var(--background-color, #fff);
+  background: var(--background-1, #fff);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -718,7 +720,7 @@ export default {
 }
 .template-card-desc {
   font-size: 12px;
-  color: var(--theme-color-muted, #6b7280);
+  color: var(--text-color-2, #6b7280);
   line-height: 1.4;
 }
 .vip-badge {

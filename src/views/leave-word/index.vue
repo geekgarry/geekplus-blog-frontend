@@ -80,7 +80,7 @@
                 </div>
               </div>
 
-              <div class="gp-surface-card box-card" :class="{ 'skeleton-loading': otherLoading }">
+              <div v-if="!isMobile" class="gp-surface-card box-card" :class="{ 'skeleton-loading': otherLoading }">
                 <div class="gp-surface-card__header">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-data-board"></i>推荐文章</span>
@@ -95,7 +95,7 @@
                 </div>
               </div>
 
-              <div class="gp-surface-card box-card" :class="{ 'skeleton-loading': otherLoading }">
+              <div v-if="!isMobile" class="gp-surface-card box-card" :class="{ 'skeleton-loading': otherLoading }">
                 <div class="gp-surface-card__header">
                   <div class="category-section">
                     <span class="category-title"><i class="el-icon-data-board"></i>网站公告</span>
@@ -143,7 +143,7 @@ export default {
         pageNum: 1,
         pageSize: 10
       },
-      userAvatar: require("@/assets/mai.png"), // Replace with your avatar image path
+      userAvatar: require("@/assets/mai.jpg"), // Replace with your avatar image path
       userName: "麦壳儿",
       userDescription: "青衫烟雨间，挽风踏清歌",
       categoryCount: 14,
@@ -169,11 +169,16 @@ export default {
   },
   created() {
     this.getAllWebComments();
-    this.getRecommendArticles();
+    if (!this.isMobile) {
+      this.getRecommendArticles();
+    }
     this.getAllArticleCategory();
   },
   async mounted() {
     this.getOneNewestNotice();
+    if (!this.isMobile) {
+      this.getOneNewestNotice();
+    }
   },
   watch: {
     $route(to, from) {

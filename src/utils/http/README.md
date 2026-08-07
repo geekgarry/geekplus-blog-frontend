@@ -32,7 +32,9 @@ export default createRequest({
   ui: createElementUiAdapter({ Message, MessageBox }),
   onRelogin: () => {
     // store.dispatch('user/Logout'); location.href = '/login'
-  }
+  },
+  // 可选：用户点取消时清本地登录态，避免后续请求继续带坏 token
+  // onReloginCancel: () => store.dispatch('user/FedLogOut')
 })
 ```
 

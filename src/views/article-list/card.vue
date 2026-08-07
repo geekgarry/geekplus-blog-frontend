@@ -170,7 +170,7 @@ export default {
     return {
       loading: true,
       otherLoading: true,
-      userAvatar: require("@/assets/mai.png"), // Replace with your avatar image path
+      userAvatar: require("@/assets/mai.jpg"), // Replace with your avatar image path
       userName: "麦壳儿",
       userDescription: "青衫烟雨间，挽风踏清歌",
       categoryCount: 14,
@@ -298,7 +298,9 @@ export default {
     };
   },
   created() {
-    this.getRandomRecommendArticles();
+    if (!this.isMobile) {
+      this.getRandomRecommendArticles();
+    }
     window.document.title = (this.$route.meta.title || '文章列表') + "-极客普拉斯&梦极客园";
     this.$router.onReady(() => {});
   },

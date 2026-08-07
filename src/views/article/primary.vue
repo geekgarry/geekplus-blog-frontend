@@ -157,6 +157,7 @@
 </template>
 
 <script>
+import '@/plugins/element-admin'
 import PlusFooter from '@/layout/components/Footer'
 import CommentReply from '@/components/CommentReply'
 import PlusPager from '@/components/PlusPager';

@@ -298,6 +298,8 @@ export default {
     }
   },
   mounted() {
+    this.ensureWebInfo();
+    this.prefetchArticleChunk();
     this.handleResize()
     window.addEventListener('resize', this.handleResize)
     document.addEventListener('click', this.onDocClick, true)

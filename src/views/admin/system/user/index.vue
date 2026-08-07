@@ -17,6 +17,13 @@
       </el-col>
       <!--用户数据-->
       <el-col :span="20" :xs="24">
+        <el-alert
+          title="列表已按当前登录角色的数据权限过滤（全部 / 本部门 / 自定部门 / 仅本人）。请在「角色管理 → 数据权限」中配置。"
+          type="info"
+          :closable="true"
+          show-icon
+          class="mb8"
+        />
         <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
           <el-form-item label="用户名称" prop="username">
             <el-input v-model="queryParams.username" placeholder="请输入用户名称" clearable size="small" style="width: 240px"

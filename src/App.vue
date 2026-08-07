@@ -58,9 +58,9 @@ export default {
       this.loadGpPlayer();
     };
     if (typeof window !== 'undefined' && window.requestIdleCallback) {
-      window.requestIdleCallback(bootExtras, { timeout: 4000 });
+      window.requestIdleCallback(bootExtras, { timeout: 8000 });
     } else {
-      window.setTimeout(bootExtras, 2500);
+      window.setTimeout(bootExtras, 4000);
     }
   },
   computed: {

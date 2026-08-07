@@ -325,7 +325,7 @@ export default {
   data() {
     return {
       redirect: undefined,
-      userAvatar: require('@/assets/mai.png'),
+      userAvatar: require('@/assets/mai.jpg'),
       aiAvatar: require('@/assets/logo.png'),
       fileDialogVisible: false,//聊天对话框是否显示
       dialogInputIsFocus: false,

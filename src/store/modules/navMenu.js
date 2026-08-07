@@ -6,7 +6,10 @@ import { constantRoutes } from "@/router";
 import { listSubParentCategory } from "@/api/geekplus/geekplus";
 
 /** session 缓存：同标签页内直链/刷新可跳过等待接口，加快首屏可匹配路由（v2：叶子不再带空 children[]） */
-const NAV_MENU_CACHE_KEY = "gp_public_nav_menu_v2";
+const NAV_MENU_CACHE_KEY = "gp_public_nav_menu";
+const NAV_MENU_CACHE_AT_KEY = "gp_public_nav_menu_at";
+/** 有缓存时多久才后台静默刷新（毫秒）；避免每次 getMenu 都打 listSubParentCategory */
+const NAV_MENU_REFRESH_TTL_MS = 10 * 60 * 1000;
 
 const state = {
   menuRouters: [],
@@ -30,9 +33,28 @@ const mutations = {
 /** 进行中的拉菜单 Promise，避免 permission 预取与守卫重复打接口 */
 let menuLoadingPromise = null;
 
+function readNavMenuCacheAge() {
+  try {
+    const at = Number(sessionStorage.getItem(NAV_MENU_CACHE_AT_KEY) || 0);
+    return at > 0 ? Date.now() - at : Number.POSITIVE_INFINITY;
+  } catch (e) {
+    return Number.POSITIVE_INFINITY;
+  }
+}
+
+function writeNavMenuCache(menus) {
+  try {
+    sessionStorage.setItem(NAV_MENU_CACHE_KEY, JSON.stringify(menus));
+    sessionStorage.setItem(NAV_MENU_CACHE_AT_KEY, String(Date.now()));
+  } catch (e) {
+    /* quota / 隐私模式忽略 */
+  }
+}
+
 const actions = {
   /**
-   * 拉取栏目树。优先读 sessionStorage，命中则立刻 resolve，并后台静默刷新缓存。
+   * 拉取栏目树。优先读 sessionStorage；命中且未过期则不再请求网络。
+   * 过期后后台静默刷新，不阻塞首屏路由注册。
    */
   getMenu({ commit }) {
     if (menuLoadingPromise) {
@@ -48,6 +70,11 @@ const actions = {
             commit("SET_ADD_MENU", menus);
             resolve(menus);
             usedCache = true;
+            // 缓存仍新鲜：整次 getMenu 结束，不打接口
+            if (readNavMenuCacheAge() < NAV_MENU_REFRESH_TTL_MS) {
+              menuLoadingPromise = null;
+              return;
+            }
           }
         }
       } catch (e) {
@@ -57,13 +84,8 @@ const actions = {
       listSubParentCategory()
         .then((response) => {
           const menus = getMenuList(response.data || []);
-          try {
-            sessionStorage.setItem(NAV_MENU_CACHE_KEY, JSON.stringify(menus));
-          } catch (e) {
-            /* quota / 隐私模式忽略 */
-          }
+          writeNavMenuCache(menus);
           commit("SET_ADD_MENU", menus);
-          // 未用缓存时才 resolve；已用缓存则仅更新 store，避免打断正在进行的 generateRoutes
           if (!usedCache) {
             resolve(menus);
           }

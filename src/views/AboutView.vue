@@ -155,7 +155,7 @@ export default {
   data() {
     return {
       loading: true,
-      userAvatar: require('@/assets/mai.png'),
+      userAvatar: require('@/assets/mai.jpg'),
       userName: '麦壳儿',
       userDescription: '青衫烟雨间，挽风踏清歌',
       categoryCount: 14,

@@ -62,7 +62,9 @@
                           class="special-cover-img"
                           :src="item.indexPicture || articleCover"
                           :alt="item.articleTitle"
-                          loading="lazy"
+                          :loading="index < 2 ? 'eager' : 'lazy'"
+                          :fetchpriority="index === 0 ? 'high' : 'auto'"
+                          decoding="async"
                         >
                       </div>
                     </div>
@@ -91,23 +93,25 @@
             <div class="section-header"><i class="el-icon-s-home"></i><plus-breadcrumb></plus-breadcrumb></div>
             <div class="index-blog-post">
               <div class="article-list">
-                <div v-for="article in articlesList" :key="article.id" class="article-card is-always-shadow"
+                <div v-for="(article, aIdx) in articlesList" :key="article.id" class="article-card is-always-shadow"
                   :class="{ 'skeleton-loading': loading }">
                   <div class="article-content">
                     <div class="article-content-wrapper">
                       <h3 class="article-title"><a href="javascript:void(0);"
-                          @click="$router.push({ path: '/article/' + article.id })">{{ article.articleTitle }}</a></h3>
+                          @click="$router.push({ path: '/post/' + article.id })">{{ article.articleTitle }}</a></h3>
                       <div class="article-info">
                         <p class="article-summary">{{ article.abstractText }}</p>
                       </div>
                     </div>
                     <div class="article-cover">
-                      <router-link :to="'/article/' + article.id" class="article-cover-link">
+                      <router-link :to="'/post/' + article.id" class="article-cover-link">
                         <img
                           class="article-image"
                           :src="article.indexPicture || articleCover"
                           :alt="article.articleTitle"
-                          loading="lazy"
+                          :loading="aIdx < 2 ? 'eager' : 'lazy'"
+                          :fetchpriority="aIdx === 0 ? 'high' : 'auto'"
+                          decoding="async"
                         >
                       </router-link>
                     </div>
@@ -219,7 +223,7 @@
                           :style="{ backgroundImage: 'url(' + article.indexPicture + ')' }"></a>
                         <a class="thumbnail-b" href="javascript:void(0);" v-else @click="navToArticle(article.id)"
                           :style="{ backgroundImage: 'url(' + articleCover + ')' }"></a>
-                        <span class="top-article-card-caption"><router-link :to="'/article/' + article.id">{{
+                        <span class="top-article-card-caption"><router-link :to="'/post/' + article.id">{{
                           article.articleTitle }}</router-link></span>
                       </div>
                     </div>
@@ -232,7 +236,7 @@
                           :style="{ backgroundImage: 'url(' + articleCover + ')' }"></a>
                       </div>
                       <div class="article-card-detail">
-                        <div class="article-card-detail-title"><router-link :to="'/article/' + article.id">{{
+                        <div class="article-card-detail-title"><router-link :to="'/post/' + article.id">{{
                           article.articleTitle }}</router-link>
                         </div>
                         <div class="article-card-detail-date">{{ dateTimeAgo(article.createTime) }}</div>
@@ -286,7 +290,6 @@ import PlusPager from '@/components/PlusPager'
 import PlusCarousel from '@/components/PlusCarousel'
 // 备用：Element UI 原版轮播封装，其它页面可按需 import
 // import ElCarouselBanner from '@/components/ElCarouselBanner'
-import { Message, Pagination } from 'element-ui'
 import {
   getVisitInfo, getCarousel, getArticlesByCategoryLimit, getArticleLatestUserComment, getWebHotUserComment,
   getIndexAllCategoryArticleList, getGpNoticeNewOne
@@ -328,7 +331,7 @@ export default {
           carouselLink: "#"
         }
       ],
-      userAvatar: require("@/assets/mai.png"),
+      userAvatar: require("@/assets/mai.jpg"),
       articleCount: 58,
       categoryCount: 14,
       visitCount: 1,
@@ -579,7 +582,7 @@ export default {
     },
     //点击到文章页面
     navToArticle(id) {
-      this.$router.push({ path: "/article/" + id }, onComplete => { }, onAbort => { });
+      this.$router.push({ path: "/post/" + id });
     },
     getIndexArticleList() {
       this.loading = true;

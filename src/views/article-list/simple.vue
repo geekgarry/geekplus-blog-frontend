@@ -114,7 +114,7 @@ export default {
   data() {
     return {
       loading: false,
-      userAvatar: require("@/assets/mai.png"), // Replace with your avatar image path
+      userAvatar: require("@/assets/mai.jpg"), // Replace with your avatar image path
       userName: "麦壳儿",
       userDescription: "青衫烟雨间，挽风踏清歌",//"静水流深，沧笙踏歌",
       categoryCount: 14,

@@ -1,40 +1,58 @@
 <template>
-  <!-- 视口宽度优先：缩放窗口也能切移动/桌面首页，避免仅靠 UA 误判 -->
-  <MobileIndexView v-if="isMobile" />
-  <DesktopIndexView v-else />
+  <!-- 视口宽度优先 + UA：只异步加载当前端首页，避免桌面/移动两套同打进首包 -->
+  <component :is="activeView" v-if="activeView" />
+  <div v-else class="index-boot-placeholder" aria-hidden="true" />
 </template>
+
 <script>
-import DesktopIndexView from "@/views/desktop/IndexView.vue"
-import MobileIndexView from "@/views/mobile/IndexView.vue"
+function resolvePreferMobile() {
+  if (typeof window === "undefined") return false;
+  const narrow = window.innerWidth < 768;
+  const ua = navigator.userAgent || "";
+  const uaMobile =
+    /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i.test(
+      ua
+    ) || typeof window.orientation !== "undefined";
+  // 窄屏优先走移动首页；真机 UA 也走移动（即便横屏较宽）
+  return narrow || uaMobile;
+}
 
 export default {
   name: "IndexView",
-  components: {
-    DesktopIndexView,
-    MobileIndexView
-  },
   data() {
     return {
-      viewportMobile: typeof window !== "undefined" ? window.innerWidth < 768 : false
-    }
+      activeView: null,
+      preferMobile: resolvePreferMobile(),
+    };
   },
-  computed: {
-    isMobile() {
-      const uaMobile = this.$common && this.$common.isMobile ? this.$common.isMobile() : false
-      return uaMobile
-    }
+  async created() {
+    await this.loadActiveView();
   },
-  mounted() {
-    this._onResize = () => {
-      this.viewportMobile = window.innerWidth < 768
-    }
-    window.addEventListener("resize", this._onResize)
-    this._onResize()
+  methods: {
+    async loadActiveView() {
+      const mobile = this.preferMobile;
+      try {
+        if (mobile) {
+          const mod = await import(
+            /* webpackChunkName: "web-view-mobile-IndexView" */ "@/views/mobile/IndexView.vue"
+          );
+          this.activeView = mod.default || mod;
+        } else {
+          const mod = await import(
+            /* webpackChunkName: "web-view-desktop-IndexView" */ "@/views/desktop/IndexView.vue"
+          );
+          this.activeView = mod.default || mod;
+        }
+      } catch (e) {
+        console.error("加载首页失败", e);
+      }
+    },
   },
-  beforeDestroy() {
-    if (this._onResize) {
-      window.removeEventListener("resize", this._onResize)
-    }
-  }
-}
+};
 </script>
+
+<style scoped>
+.index-boot-placeholder {
+  min-height: 50vh;
+}
+</style>

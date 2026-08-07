@@ -26,6 +26,9 @@ const getDefaultState = () => {
 
 const state = getDefaultState()
 
+/** 模块级 Promise，避免 rematch 并发重复打 /sys/user/getMenu */
+let menuTreeLoadingPromise = null
+
 const mutations = {
   RESET_STATE: (state) => {
     Object.assign(state, getDefaultState())
@@ -120,14 +123,18 @@ const actions = {
   },
 
   getMenu({ commit, state }) {
-    return new Promise((resolve, reject) => {
+    // 路由 rematch / 并发守卫可能短时间多次 dispatch，合并为一次请求
+    if (menuTreeLoadingPromise) {
+      return menuTreeLoadingPromise
+    }
+    menuTreeLoadingPromise = new Promise((resolve, reject) => {
       getMenuTree().then(response => {
         const { data } = response;
         const menus = data.menuList;
         if (!menus) {
           return reject('Verification failed, please Login again.')
         }
-        const avatar = data.avatar == "" ? require("@/assets/mai.png") : data.avatar;
+        const avatar = data.avatar == "" ? require("@/assets/mai.jpg") : data.avatar;
         commit('SET_MENUS', menus)
         commit('SET_PERMISSIONS', data.permsSet)
         commit('SET_USERNAME', data.username)
@@ -138,7 +145,6 @@ const actions = {
         if (data.roleNames) {
           commit('SET_ROLE_NAMES', data.roleNames)
         }
-        // 后端若下发 userType，写入 sysUser 供看板权限判断
         if (data.userType != null || data.sysUser) {
           commit('SET_USER', data.sysUser || {
             userId: data.userId,
@@ -147,22 +153,14 @@ const actions = {
             userType: data.userType
           })
         }
-        //let onlineUser = localStorage.getItem("onlineUser");
-        //console.log(onlineUser)
-        // if (onlineUser) {
-          //let tokenId = localStorage.getItem("tokenId");
-          // let tokenId=store.state.user.token+":"+store.state.user.username
-          //console.log(tokenId);
-          // if (null != tokenId) {
-          //   this.websocket.Init(tokenId);
-          // }
-        // }
-        //const { name, avatar } = data.avatar
         resolve(menus)
       }).catch(error => {
         reject(error)
+      }).finally(() => {
+        menuTreeLoadingPromise = null
       })
     })
+    return menuTreeLoadingPromise
   },
 
   // user logout

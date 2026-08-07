@@ -46,7 +46,7 @@
                   <div class="article-content">
                     <div class="article-content-wrapper">
                       <h3 class="article-title"><a href="javascript:void(0);"
-                          @click="$router.push({ path: '/article/' + article.id })">{{ article.articleTitle }}</a></h3>
+                          @click="$router.push({ path: '/post/' + article.id })">{{ article.articleTitle }}</a></h3>
                       <div class="article-info">
                         <p class="article-summary">{{ article.abstractText }}</p>
                       </div>
@@ -54,13 +54,17 @@
                     <div class="article-cover">
                       <router-link
                         class="article-cover-link"
-                        :to="'/article/' + article.id"
+                        :to="'/post/' + article.id"
                       >
                         <img
                           class="article-image"
                           :src="article.indexPicture || require('@/assets/images/cover1.jpeg')"
                           :alt="article.articleTitle"
-                          loading="lazy"
+                          :loading="index < 2 ? 'eager' : 'lazy'"
+                          :fetchpriority="index === 0 ? 'high' : 'auto'"
+                          decoding="async"
+                          width="160"
+                          height="100"
                         >
                       </router-link>
                     </div>
@@ -107,11 +111,10 @@ import PlusFooter from '@/layout/components/Footer'
 import PlusCarousel from '@/components/PlusCarousel'
 // 备用：原 el-carousel 封装组件，便于其它页面继续使用官方轮播
 // import ElCarouselBanner from '@/components/ElCarouselBanner'
-import { Message } from 'element-ui'
 import {
-  getHomeViewData, getCarousel, getArticlesByCategoryLimit, getArticleLatestUserComment, getWebHotUserComment,
-  getIndexAllCategoryArticleList, getGpArticlesByCategory, getGpNoticeNewOne
+  getCarousel, getGpArticlesByCategory, getGpNoticeNewOne
 } from '@/api/geekplus/geekplus'
+import { runWhenIdle, runAfter, cancelIdle } from '@/utils/deferRequest'
 
 export default {
   name: 'MobileIndexView',
@@ -146,7 +149,7 @@ export default {
           carouselLink: "#"
         }
       ],
-      userAvatar: require("@/assets/mai.png"),
+      userAvatar: require("@/assets/mai.jpg"),
       //首页文章列表
       articlesList: [
         {
@@ -276,14 +279,20 @@ export default {
     };
   },
   created() {
+    // 关键路径：轮播 + 列表；通知等次要请求 idle 后再拉，减少移动端首屏并发
     this.getIndexViewCarousel();
     this.getIndexArticleList();
-    // this.getOneNewestNotice();
+    this._secondaryIdleId = runWhenIdle(() => {
+      runAfter(() => this.getOneNewestNotice(), 600);
+    }, 1600);
   },
   mounted() {
     //TODO: 注释掉轮播图滑动，因为已经没有在用官方element UI的el-carousel了
     // this.slideBanner();
     // this.loadMore(); // Initial data load
+  },
+  beforeDestroy() {
+    cancelIdle(this._secondaryIdleId);
   },
   computed: {
     hotArticleList() {
@@ -380,9 +389,9 @@ export default {
         this.oneNewNotice = res && res.data !== undefined ? res.data : res || {};
       });
     },
-    //点击到文章页面
+    // 点击到文章页面（统一走 /post，由 ArticleEntry 按设备选页）
     navToArticle(id) {
-      this.$router.push({ path: "/article/" + id }, onComplete => { }, onAbort => { });
+      this.$router.push({ path: "/post/" + id });
     },
     getIndexArticleList() {
       this.loading = true;

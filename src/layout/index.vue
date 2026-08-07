@@ -23,6 +23,8 @@ import { Navbar, Sidebar, Topbar, AppMain, TagsView, Settings } from './componen
 import ResizeMixin from './mixin/ResizeHandler'
 import RightPanel from '@/components/RightPanel'
 import '@/styles/geekplusadmin.scss'
+import '@/styles/sidebar.scss'
+import '@/plugins/element-admin'
 
 export default {
   name: 'Layout',
@@ -84,6 +86,7 @@ export default {
   @import "~@/styles/mixin.scss";
   @import "~@/styles/variables.scss";
   /* @import 'element-theme-dark/lib/index.css'; */
+  @import "~@/styles/sidebar.scss";
 
   .app-wrapper {
     @include clearfix;

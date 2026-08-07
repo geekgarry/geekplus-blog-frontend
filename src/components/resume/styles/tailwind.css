@@ -5,6 +5,9 @@
  * Tailwind preflight is disabled for this app (Element UI).
  * Border utilities only set border-width; without preflight they need solid style.
  */
+/* #resume-print-area > div{
+  background-color: var(--background-origin, #fff);
+} */
 #resume-print-area *,
 #resume-print-area *::before,
 #resume-print-area *::after,

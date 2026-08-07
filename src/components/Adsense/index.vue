@@ -1,9 +1,9 @@
 <template>
   <!--
     自研 Adsense 占位：同步注册，避免页面早于 vue-google-adsense 异步加载时出现 Unknown custom element。
-    真正广告脚本空闲后再注入；失败时仅保留占位高度，不影响页面结构。
+    真正广告脚本：进入视口 + 空闲后再注入，降低 Lighthouse 第三方主线程阻塞。
   -->
-  <div class="gp-adsense" :class="{ 'is-ready': ready }">
+  <div ref="root" class="gp-adsense" :class="{ 'is-ready': ready }">
     <ins
       ref="ins"
       class="adsbygoogle"
@@ -28,7 +28,6 @@ function ensureAdsScript() {
     if (existing) {
       existing.addEventListener('load', () => resolve())
       existing.addEventListener('error', () => resolve())
-      // 已存在时也尽快 resolve，避免卡住
       setTimeout(resolve, 50)
       return
     }
@@ -43,6 +42,15 @@ function ensureAdsScript() {
   return adsScriptPromise
 }
 
+function whenIdle(fn, timeout) {
+  if (typeof window === 'undefined') return
+  if (window.requestIdleCallback) {
+    window.requestIdleCallback(fn, { timeout: timeout || 4000 })
+  } else {
+    window.setTimeout(fn, Math.min(timeout || 4000, 2500))
+  }
+}
+
 export default {
   name: 'Adsense',
   inheritAttrs: false,
@@ -53,7 +61,7 @@ export default {
     dataFullWidthResponsive: { type: [String, Boolean], default: '' }
   },
   data() {
-    return { ready: false, pushed: false }
+    return { ready: false, pushed: false, _io: null }
   },
   computed: {
     client() {
@@ -74,11 +82,35 @@ export default {
     }
   },
   mounted() {
-    this.boot()
+    this.scheduleBoot()
+  },
+  beforeDestroy() {
+    if (this._io) {
+      this._io.disconnect()
+      this._io = null
+    }
   },
   methods: {
-    async boot() {
+    scheduleBoot() {
       if (!this.client || !this.slot) return
+      const el = this.$refs.root
+      if (typeof IntersectionObserver === 'undefined' || !el) {
+        whenIdle(() => this.boot(), 5000)
+        return
+      }
+      this._io = new IntersectionObserver((entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return
+        if (this._io) {
+          this._io.disconnect()
+          this._io = null
+        }
+        // 进入视口后再等空闲，避开 LCP / FCP 关键路径
+        whenIdle(() => this.boot(), 3500)
+      }, { rootMargin: '200px 0px', threshold: 0.01 })
+      this._io.observe(el)
+    },
+    async boot() {
+      if (!this.client || !this.slot || this.pushed) return
       try {
         await ensureAdsScript()
         await this.$nextTick()

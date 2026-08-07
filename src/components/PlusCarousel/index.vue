@@ -39,6 +39,9 @@
             class="plus-carousel__img"
             :src="item.img"
             :alt="item.title || ''"
+            :loading="isLcpSlide(item) ? 'eager' : 'lazy'"
+            :fetchpriority="isLcpSlide(item) ? 'high' : 'low'"
+            decoding="async"
             draggable="false"
             @error="onImgError($event)"
           >
@@ -305,6 +308,10 @@ export default {
     document.removeEventListener('visibilitychange', this.onVisibilityChange)
   },
   methods: {
+    /** 首屏 LCP：当前真实页（及对应克隆）优先加载，其余懒加载 */
+    isLcpSlide(item) {
+      return item && item._real === this.current
+    },
     /** 数据变化后回到第一张真实页 */
     resetToStart() {
       this.current = 0

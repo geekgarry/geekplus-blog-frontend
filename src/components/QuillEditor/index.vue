@@ -59,6 +59,7 @@
 </template>
 
 <script>
+import '@/plugins/element-admin'
 import hljs from 'highlight.js';
 import "highlight.js/styles/default.css";
 // import 'highlight.js/styles/monokai-sublime.css';

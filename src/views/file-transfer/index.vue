@@ -457,6 +457,7 @@ export default {
 
 .gp-transfer__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 16px;
 }

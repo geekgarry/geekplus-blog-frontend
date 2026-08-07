@@ -89,7 +89,7 @@
           <img
             v-if="item.role === 'user'"
             class="ai-avatar"
-            src="@/assets/mai.png"
+            :src="require('@/assets/mai.jpg')"
             alt="Me"
           >
         </div>

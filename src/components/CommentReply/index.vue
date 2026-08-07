@@ -231,7 +231,7 @@ export default defineComponent({
   },
   data() {
     return {
-      UserLogo: require("@/assets/mai.png"),
+      UserLogo: require("@/assets/mai.jpg"),
       GpLogo: require("@/assets/logo.png"),
       replyBoxIndex: '-1',
       //网站直接留言

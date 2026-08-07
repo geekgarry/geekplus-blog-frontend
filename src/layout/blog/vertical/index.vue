@@ -192,8 +192,9 @@ import { mapState } from 'vuex'
 import LoginSignup from '@/components/LoginSignup/index'
 import BlogNavMenu from '@/components/BlogNavMenu/index'
 import BlogUserMenu from '@/components/BlogUserMenu/index'
-import { getGpWebTitleInfo, selectGpArticlesListByKeyWords, getMostViewedArticle, getClickTextWords } from '@/api/geekplus/geekplus'
+import { getGpWebTitleInfo, selectGpArticlesListByKeyWords, getMostViewedArticle } from '@/api/geekplus/geekplus'
 import { enableClickFloat, disableClickFloat, setClickFloatWords } from '@/utils/clickFloat'
+import { getCachedClickTextWords, refreshClickTextWords } from '@/utils/plusTool'
 import { runWhenIdle, cancelIdle } from '@/utils/deferRequest'
 import blogLayoutMixin from '@/layout/blog/blogLayoutMixin'
 // import '@/utils/TweenMax.min.js';
@@ -262,7 +263,8 @@ export default {
       visible: true,
     };
     this.$store.commit("changeNavbarStatus", navbarStatus);
-    this.getWebInfo();
+    this.ensureWebInfo();
+    this.prefetchArticleChunk();
     // 热门文章非首屏关键：idle 后再拉，减轻与首页/正文的瞬时并发
     this._hotIdleId = runWhenIdle(() => {
       this.getMostViewedArticles();
@@ -497,9 +499,28 @@ export default {
       })
     },
     getWebInfo() {
+      const CACHE_KEY = 'gp_web_title_info_v1'
+      const CACHE_AT = 'gp_web_title_info_v1_at'
+      const TTL = 30 * 60 * 1000
+      try {
+        const at = Number(sessionStorage.getItem(CACHE_AT) || 0)
+        const raw = sessionStorage.getItem(CACHE_KEY)
+        if (raw && Date.now() - at < TTL) {
+          const data = JSON.parse(raw)
+          if (data && !this.$common.isEmpty(data)) {
+            this.$store.commit('loadWebInfo', data)
+            return
+          }
+        }
+      } catch (e) { /* ignore */ }
+
       getGpWebTitleInfo({ id: 1 }).then((res) => {
         if (!this.$common.isEmpty(res.data)) {
           this.$store.commit("loadWebInfo", res.data);
+          try {
+            sessionStorage.setItem(CACHE_KEY, JSON.stringify(res.data))
+            sessionStorage.setItem(CACHE_AT, String(Date.now()))
+          } catch (e) { /* ignore */ }
         }
       }).catch((error) => {
         this.$message({
@@ -591,9 +612,13 @@ export default {
     },
     bootClickFloat() {
       enableClickFloat()
-      getClickTextWords().then((res) => {
-        const list = (res && res.data) || []
-        setClickFloatWords(list)
+      // 优先用 plusTool 已缓存词库，避免与入口再打一遍 getClickTextWords
+      const cached = getCachedClickTextWords()
+      if (cached && cached.length) {
+        setClickFloatWords(cached)
+      }
+      refreshClickTextWords(false).then((words) => {
+        if (words && words.length) setClickFloatWords(words)
       }).catch(() => {})
     },
     updateReadProgress() {

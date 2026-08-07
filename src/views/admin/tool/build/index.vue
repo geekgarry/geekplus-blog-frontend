@@ -142,6 +142,7 @@
 </template>
 
 <script>
+import '@/plugins/element-admin'
 import draggable from 'vuedraggable'
 import { saveAs } from 'file-saver'
 import beautifier from 'js-beautify'
@@ -163,7 +164,7 @@ import {
 import { makeUpJs } from '@/utils/generator/js'
 import { makeUpCss } from '@/utils/generator/css'
 import drawingDefalut from '@/utils/generator/drawingDefalut'
-import logo from '@/assets/mai.png'
+import logo from '@/assets/mai.jpg'
 import CodeTypeDialog from './CodeTypeDialog'
 import DraggableItem from './DraggableItem'
 

@@ -106,7 +106,7 @@ import Search from '@/components/HeaderSearch'
 import Langs from "./Lang"
 import Topbar from "./Topbar"
 import NotificationMsg from "./NotificationMsg"
-import headPic from "@/assets/mai.png";
+import headPic from "@/assets/mai.jpg";
 import { getOnlineUserCount } from "@/api/monitor/online"
 import { refreshUserAuth } from '@/api/system/user'
 //权限检查js方法

@@ -203,14 +203,15 @@ module.exports = {
       });
     }
 
+    // Element 图标字体已在 plugins/element 引入；此处不再单独处理 chunk-elementUI CSS
     config.plugin("html").tap((args) => {
-    args[0].title = name;
-    args[0].minify = {
-      removeComments: true,
-      collapseWhitespace: true,
-      removeAttributeQuotes: true
-    };
-    return args;
+      args[0].title = name;
+      args[0].minify = {
+        removeComments: true,
+        collapseWhitespace: true,
+        removeAttributeQuotes: true
+      };
+      return args;
     });
     // webpack.config.js 规则典型配置
     // 确保没有错误地设置资源类型
@@ -268,6 +269,15 @@ module.exports = {
               name: "chunk-elementUI",
               priority: 20,
               test: /[\\/]node_modules[\\/]_?element-ui(.*)/,
+              // 仅打包进首屏依赖的 Element；管理端重型留在 async chunk，避免 Table 等打进首页
+              chunks: "initial",
+            },
+            elementUIAsync: {
+              name: "chunk-elementUI-async",
+              priority: 25,
+              test: /[\\/]node_modules[\\/]_?element-ui(.*)/,
+              chunks: "async",
+              reuseExistingChunk: true,
             },
             commons: {
               name: "chunk-commons",

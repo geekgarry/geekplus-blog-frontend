@@ -157,6 +157,16 @@
         </template>
       </el-table-column>
       <el-table-column
+        label="数据范围"
+        align="center"
+        prop="dataScope"
+        width="140"
+      >
+        <template slot-scope="scope">
+          <span>{{ dataScopeLabel(scope.row.dataScope) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column
         label="创建时间"
         align="center"
         prop="createTime"
@@ -498,6 +508,10 @@ export default {
     // });
   },
   methods: {
+    dataScopeLabel(val) {
+      const hit = (this.dataScopeOptions || []).find((i) => String(i.value) === String(val));
+      return hit ? hit.label : (val == null || val === "" ? "未设置" : val);
+    },
     /** 查询角色列表 */
     getList() {
       this.loading = true;
@@ -799,7 +813,7 @@ export default {
         deptIds,
       })
         .then(() => {
-          this.msgSuccess("数据权限保存成功");
+          this.msgSuccess("数据权限已保存，部门缓存已同步；相关用户下次请求按新范围过滤");
           this.openDeptDataScope = false;
           this.getList();
         })

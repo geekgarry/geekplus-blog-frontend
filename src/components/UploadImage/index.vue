@@ -18,6 +18,7 @@
 </template>
 
 <script>
+import '@/plugins/element-admin'
 import { getToken } from "@/utils/auth";
 
 export default {

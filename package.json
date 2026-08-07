@@ -99,7 +99,6 @@
       "Edge >= 79",
       "iOS >= 12",
       "Android >= 8",
-      "ie >= 11",
       "not dead",
       "not op_mini all"
     ],
