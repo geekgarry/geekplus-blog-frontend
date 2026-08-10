@@ -22,6 +22,7 @@
 import { Navbar, Sidebar, Topbar, AppMain, TagsView, Settings } from './components'
 import ResizeMixin from './mixin/ResizeHandler'
 import RightPanel from '@/components/RightPanel'
+import { markBootReady } from '@/utils/bootLoader'
 import '@/styles/geekplusadmin.scss'
 import '@/styles/sidebar.scss'
 import '@/plugins/element-admin'
@@ -38,6 +39,15 @@ export default {
     Settings,
   },
   mixins: [ResizeMixin],
+  mounted() {
+    this.$nextTick(() => {
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(() => markBootReady())
+      } else {
+        markBootReady()
+      }
+    })
+  },
   computed: {
     sidebar() {
       return this.$store.state.app.sidebar

@@ -490,7 +490,6 @@ export default {
     },
     getListRoles() {
       listAllRole({}).then((res) => {
-        // console.log(res)
         this.listRole = res.rows;
       })
     },

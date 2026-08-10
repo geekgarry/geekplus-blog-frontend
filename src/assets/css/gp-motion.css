@@ -1,0 +1,75 @@
+/**
+ * 前台轻量动效：菜单下拉、页面切换、展开折叠
+ * 时长偏短，避免拖沓；尊重 prefers-reduced-motion
+ */
+
+.gp-drop-enter-active,
+.gp-drop-leave-active {
+  transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: top center;
+}
+
+.gp-drop-enter,
+.gp-drop-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+}
+
+.gp-menu-expand-enter-active,
+.gp-menu-expand-leave-active {
+  transition: opacity 0.2s ease, transform 0.22s ease;
+}
+
+.gp-menu-expand-enter,
+.gp-menu-expand-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.gp-page-enter-active {
+  transition: opacity 0.24s ease, transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gp-page-leave-active {
+  transition: opacity 0.12s ease;
+}
+
+.gp-page-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.gp-page-leave-to {
+  opacity: 0;
+}
+
+.gp-fade-enter-active,
+.gp-fade-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.gp-fade-enter,
+.gp-fade-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gp-drop-enter-active,
+  .gp-drop-leave-active,
+  .gp-menu-expand-enter-active,
+  .gp-menu-expand-leave-active,
+  .gp-page-enter-active,
+  .gp-page-leave-active,
+  .gp-fade-enter-active,
+  .gp-fade-leave-active {
+    transition-duration: 0.01ms !important;
+  }
+
+  .gp-drop-enter,
+  .gp-drop-leave-to,
+  .gp-menu-expand-enter,
+  .gp-menu-expand-leave-to,
+  .gp-page-enter {
+    transform: none;
+  }
+}

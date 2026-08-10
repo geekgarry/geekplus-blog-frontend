@@ -370,6 +370,26 @@
   .gp-side-layout .blog-side-container {
     display: none !important;
   }
+
+  .el-form {
+    font-size: 16px !important;
+  }
+  .el-form-item__label {
+    font-size: 16px !important;
+  }
+  .el-form-item__content {
+    font-size: 16px !important;
+  }
+  .el-form-item__error {
+    font-size: 16px !important;
+  }
+
+  .el-input {
+    font-size: 16px !important;
+  }
+  .el-textarea {
+    font-size: 16px !important;
+  }
 }
 
 .gp-side-layout .gp-page {

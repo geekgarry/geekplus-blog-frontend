@@ -7,7 +7,9 @@
       'is-collapsed': isCollapsed && !isMobile
     }"
   >
-    <div class="gp-side-layout__mask" v-show="isDrawerOpen" @click="closeDrawer"></div>
+    <transition name="gp-fade">
+      <div class="gp-side-layout__mask" v-show="isDrawerOpen" @click="closeDrawer"></div>
+    </transition>
 
     <div
       class="gp-side-layout__aside"
@@ -76,25 +78,26 @@
             <span>{{ item.meta && item.meta.title || item.categoryName || item.name }}</span>
             <i
               v-if="item.children && item.children.length"
-              class="gp-side-nav-arrow"
-              :class="(openIndex === index || flyoutIndex === index) ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"
+              class="gp-side-nav-arrow el-icon-arrow-down"
             ></i>
           </button>
-          <div v-if="item.children && openIndex === index && !isDesktopCollapsed" class="gp-side-nav-sub">
-            <router-link
-              v-for="(sub, si) in item.children"
-              :key="'s-' + si"
-              class="gp-side-nav-item gp-side-nav-item--sub"
-              :to="resolveChildPath(item, sub)"
-              :title="sub.meta && sub.meta.title || sub.categoryName || sub.name"
-              @click.native="closeDrawer"
-            >
-              <!-- 图标, 如果 sub.icon 存在, 则显示 sub.icon, 否则显示 el-icon-folder-opened -->
-              <svg-icon :icon-class="sub.icon" v-if="sub.icon"></svg-icon>
-              <i class="el-icon-postcard" v-else></i>
-              <span>{{ sub.meta && sub.meta.title || sub.categoryName || sub.name }}</span>
-            </router-link>
-          </div>
+          <transition name="gp-menu-expand">
+            <div v-if="item.children && openIndex === index && !isDesktopCollapsed" class="gp-side-nav-sub">
+              <router-link
+                v-for="(sub, si) in item.children"
+                :key="'s-' + si"
+                class="gp-side-nav-item gp-side-nav-item--sub"
+                :to="resolveChildPath(item, sub)"
+                :title="sub.meta && sub.meta.title || sub.categoryName || sub.name"
+                @click.native="closeDrawer"
+              >
+                <!-- 图标, 如果 sub.icon 存在, 则显示 sub.icon, 否则显示 el-icon-folder-opened -->
+                <svg-icon :icon-class="sub.icon" v-if="sub.icon"></svg-icon>
+                <i class="el-icon-postcard" v-else></i>
+                <span>{{ sub.meta && sub.meta.title || sub.categoryName || sub.name }}</span>
+              </router-link>
+            </div>
+          </transition>
         </div>
 
         <p class="gp-side-layout__group">个人</p>
@@ -158,24 +161,26 @@
     </div>
 
     <!-- 收起态浮层子菜单：挂在 aside 外，避免 transform/overflow 裁切 -->
-    <div
-      v-show="isDesktopCollapsed && flyoutMenu"
-      class="gp-side-nav-flyout"
-      :style="flyoutStyle"
-      @mouseenter="keepFlyout"
-      @mouseleave="onNavLeave"
-    >
-      <p class="gp-side-nav-flyout__title">{{ flyoutTitle }}</p>
-      <router-link
-        v-for="(sub, si) in (flyoutMenu && flyoutMenu.children) || []"
-        :key="'f-' + si"
-        class="gp-side-nav-flyout__item"
-        :to="resolveChildPath(flyoutMenu, sub)"
-        @click.native="onFlyoutNavigate"
+    <transition name="gp-drop">
+      <div
+        v-show="isDesktopCollapsed && flyoutMenu"
+        class="gp-side-nav-flyout"
+        :style="flyoutStyle"
+        @mouseenter="keepFlyout"
+        @mouseleave="onNavLeave"
       >
-        {{ sub.meta && sub.meta.title || sub.categoryName || sub.name }}
-      </router-link>
-    </div>
+        <p class="gp-side-nav-flyout__title">{{ flyoutTitle }}</p>
+        <router-link
+          v-for="(sub, si) in (flyoutMenu && flyoutMenu.children) || []"
+          :key="'f-' + si"
+          class="gp-side-nav-flyout__item"
+          :to="resolveChildPath(flyoutMenu, sub)"
+          @click.native="onFlyoutNavigate"
+        >
+          {{ sub.meta && sub.meta.title || sub.categoryName || sub.name }}
+        </router-link>
+      </div>
+    </transition>
 
     <div class="gp-side-layout__main">
       <header class="gp-side-layout__top">
@@ -213,11 +218,27 @@
       </header>
 
       <div class="gp-side-layout__body">
-        <keep-alive>
-          <router-view :key="keyMenuPath" />
-        </keep-alive>
+        <transition name="gp-page">
+          <keep-alive>
+            <router-view :key="keyMenuPath" />
+          </keep-alive>
+        </transition>
       </div>
     </div>
+
+    <!-- 下滑超过阈值后显示，点击平滑滚到顶部 -->
+    <transition name="gp-fade">
+      <button
+        v-show="showBackTop"
+        type="button"
+        class="gp-back-top"
+        title="回到顶部"
+        aria-label="回到顶部"
+        @click="scrollToTop"
+      >
+        <svg-icon icon-class="backToTopArrow" />
+      </button>
+    </transition>
   </div>
 </template>
 
@@ -231,6 +252,8 @@ import { mapGetters } from 'vuex'
 import blogLayoutMixin from '@/layout/blog/blogLayoutMixin'
 
 const COLLAPSE_KEY = 'gp-side-collapsed'
+/** 滚动超过该距离（px）后显示回到顶部 */
+const BACK_TOP_OFFSET = 320
 
 export default {
   name: 'HorizontalBlogLayout',
@@ -245,7 +268,8 @@ export default {
       searchQuery: '',
       windowWidth: typeof window !== 'undefined' ? window.innerWidth : 1200,
       iLogo: require('@/assets/logo.png'),
-      _flyoutLeaveTimer: null
+      _flyoutLeaveTimer: null,
+      showBackTop: false
     }
   },
   computed: {
@@ -301,7 +325,9 @@ export default {
     this.ensureWebInfo();
     this.prefetchArticleChunk();
     this.handleResize()
+    this.onWindowScroll()
     window.addEventListener('resize', this.handleResize)
+    window.addEventListener('scroll', this.onWindowScroll, { passive: true })
     document.addEventListener('click', this.onDocClick, true)
     this.$nextTick(() => {
       const nav = this.$el && this.$el.querySelector('.gp-side-layout__nav')
@@ -313,6 +339,7 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.handleResize)
+    window.removeEventListener('scroll', this.onWindowScroll)
     document.removeEventListener('click', this.onDocClick, true)
     if (this._navEl) {
       this._navEl.removeEventListener('scroll', this.onNavScroll)
@@ -325,6 +352,7 @@ export default {
     $route() {
       this.closeDrawer()
       this.closeFlyout()
+      this.$nextTick(() => this.onWindowScroll())
     },
     isDrawerOpen(val) {
       if (this.isMobile) {
@@ -345,6 +373,16 @@ export default {
       } else {
         this.closeFlyout()
       }
+    },
+    onWindowScroll() {
+      const top = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0
+      this.showBackTop = top > BACK_TOP_OFFSET
+    },
+    scrollToTop() {
+      const reduceMotion = typeof window !== 'undefined' &&
+        window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
     },
     openDrawer() {
       this.isDrawerOpen = true
@@ -492,10 +530,10 @@ export default {
   z-index: 1011;
   display: flex;
   flex-direction: column;
-  background: var(--gp-surface-bg, var(--background, #faf8f5));
-  color: var(--text-color-2, #3a3835);
-  border-right: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.08));
-  box-shadow: var(--gp-surface-shadow, 0 2px 14px rgba(58, 56, 53, 0.06));
+  background: var(--gp-aside-bg, var(--gp-surface-bg, var(--background, #f7f9fa)));
+  color: var(--text-color-2, #344449);
+  border-right: 1px solid var(--gp-surface-border, rgba(52, 68, 73, 0.08));
+  box-shadow: var(--gp-surface-shadow, 0 2px 14px rgba(52, 68, 73, 0.06));
   transform: translate3d(-105%, 0, 0);
   transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), width 0.22s ease;
   overflow: hidden;
@@ -623,6 +661,11 @@ export default {
   font-size: 12px;
   color: var(--muted-1-color);
   flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gp-side-nav-item--btn.is-open .gp-side-nav-arrow {
+  transform: rotate(180deg);
 }
 
 .gp-side-nav-sub { padding: 0 0 6px 12px; }
@@ -893,6 +936,50 @@ export default {
   .gp-side-layout__body {
     max-width: 1480px;
     padding: 10px 0 0;
+  }
+}
+
+.gp-back-top {
+  position: fixed;
+  right: 22px;
+  bottom: 56px;
+  z-index: 1050;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid var(--gp-surface-border, rgba(52, 68, 73, 0.1));
+  border-radius: 12px;
+  background: var(--gp-surface-bg, var(--background, #fff));
+  color: var(--theme-color, #5f7d80);
+  box-shadow: var(--gp-surface-shadow-hover, 0 6px 18px rgba(52, 68, 73, 0.12));
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gp-back-top:hover {
+  transform: translateY(-4px);
+  background: var(--theme-color-muted, rgba(95, 125, 128, 0.14));
+  color: var(--theme-color, #5f7d80);
+}
+
+.gp-back-top:active {
+  transform: translateY(-1px) scale(0.96);
+}
+
+.gp-back-top .svg-icon {
+  width: 20px;
+  height: 20px;
+}
+
+@media screen and (max-width: 576px) {
+  .gp-back-top {
+    right: 12px;
+    bottom: 48px;
+    width: 38px;
+    height: 38px;
   }
 }
 </style>

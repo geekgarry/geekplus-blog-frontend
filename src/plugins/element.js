@@ -1,10 +1,9 @@
 /**
- * Element UI 按需注册（博客首屏 + 全局服务）
- * 重型组件见 element-admin.js，由管理端壳 / 用到的业务页再引入。
+ * Element UI 首屏核心（博客壳 + 登录/表单/消息）
+ * 表格/日期/上传/菜单/轮播等见 element-admin.js，由管理端或业务页再引入。
  *
- * 依赖 babel-plugin-component：普通组件从 'element-ui' 具名导入即可自动带样式。
  * Loading / Message / MessageBox / Notification / InfiniteScroll 须直连 lib，
- * 否则 babel-plugin-component 会把绑定改成 _Loading 等导致运行时 ReferenceError。
+ * 否则 babel-plugin-component 会改成 _Loading 等导致 ReferenceError。
  */
 import Vue from 'vue'
 import { _getCookie } from '@/utils/storage'
@@ -16,12 +15,7 @@ import {
   Dropdown,
   DropdownMenu,
   DropdownItem,
-  Menu,
-  Submenu,
-  MenuItem,
-  MenuItemGroup,
   Input,
-  InputNumber,
   Radio,
   RadioGroup,
   RadioButton,
@@ -36,40 +30,24 @@ import {
   ButtonGroup,
   Popover,
   Tooltip,
-  Breadcrumb,
-  BreadcrumbItem,
   Form,
   FormItem,
   Tabs,
   TabPane,
   Tag,
   Alert,
-  Slider,
   Icon,
   Row,
   Col,
-  Progress,
-  Badge,
   Card,
-  Carousel,
-  CarouselItem,
-  Collapse,
-  CollapseItem,
-  Container,
-  Header,
-  Aside,
-  Main,
-  Footer,
   Link,
   Divider,
   Image,
   Avatar,
   Drawer,
   Empty,
-  PageHeader,
   Scrollbar
 } from 'element-ui'
-import CollapseTransition from 'element-ui/lib/transitions/collapse-transition'
 
 import Loading from 'element-ui/lib/loading'
 import MessageBox from 'element-ui/lib/message-box'
@@ -80,11 +58,8 @@ import 'element-ui/lib/theme-chalk/loading.css'
 import 'element-ui/lib/theme-chalk/message-box.css'
 import 'element-ui/lib/theme-chalk/message.css'
 import 'element-ui/lib/theme-chalk/notification.css'
-
 import 'element-ui/lib/theme-chalk/display.css'
 import '@/styles/element-icons-font-display.css'
-// input/textarea 覆盖必须在 theme-chalk/input.css 之后，否则按需引入会盖掉站点样式
-// import '@/styles/element-input-overrides.css'
 
 const components = [
   Pagination,
@@ -92,12 +67,7 @@ const components = [
   Dropdown,
   DropdownMenu,
   DropdownItem,
-  Menu,
-  Submenu,
-  MenuItem,
-  MenuItemGroup,
   Input,
-  InputNumber,
   Radio,
   RadioGroup,
   RadioButton,
@@ -112,39 +82,23 @@ const components = [
   ButtonGroup,
   Popover,
   Tooltip,
-  Breadcrumb,
-  BreadcrumbItem,
   Form,
   FormItem,
   Tabs,
   TabPane,
   Tag,
   Alert,
-  Slider,
   Icon,
   Row,
   Col,
-  Progress,
-  Badge,
   Card,
-  Carousel,
-  CarouselItem,
-  Collapse,
-  CollapseItem,
-  Container,
-  Header,
-  Aside,
-  Main,
-  Footer,
   Link,
   Divider,
   Image,
   Avatar,
   Drawer,
   Empty,
-  PageHeader,
-  Scrollbar,
-  CollapseTransition
+  Scrollbar
 ]
 
 let installed = false
@@ -173,7 +127,6 @@ export function setupElement() {
   Vue.prototype.$notify = Notification
   Vue.prototype.$message = Message
 
-  // 对齐全量 Vue.use(ElementUI, { size, i18n })
   Vue.prototype.$ELEMENT = {
     size: _getCookie('size') || 'medium',
     zIndex: 2000,

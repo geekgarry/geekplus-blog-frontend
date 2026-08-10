@@ -1,0 +1,58 @@
+/**
+ * 博客前台关键壳样式（进首包 app.css）
+ * 目的：异步布局 chunk 的 scoped CSS 未到时，页面仍有基本排版，减轻 FOUC。
+ */
+
+#app {
+  min-height: 100vh;
+  color: var(--text-color, #58666e);
+  background: var(--gp-page-wash, var(--background-color, #f0f3f4));
+}
+
+/* 顶栏壳占位，避免异步 CSS 未到时正文顶到最上 */
+.navbar-content {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 60px;
+  background: var(--navbarBackground, rgba(255, 255, 255, 0.92));
+  box-shadow: var(--gp-nav-shadow, 0 1px 4px rgba(52, 68, 73, 0.06));
+}
+
+.gp-blog-main {
+  box-sizing: border-box;
+  min-height: 50vh;
+  background: var(--gp-page-wash, var(--background-color, #f0f3f4));
+}
+
+/* 侧栏壳基础，细节仍由布局组件补全 */
+.gp-side-layout {
+  min-height: 100vh;
+  background: var(--gp-page-wash, var(--background-color, #f0f3f4));
+  color: var(--text-color-2, #344449);
+}
+
+.gp-side-layout__aside {
+  background: var(--gp-aside-bg, var(--gp-surface-bg, #f7f9fa));
+  color: var(--text-color-2, #344449);
+}
+
+.gp-side-layout__main {
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.gp-side-layout__body {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.gp-surface-card,
+.box-card {
+  background: var(--gp-surface-bg, #fff);
+  border: 1px solid var(--gp-surface-border, rgba(52, 68, 73, 0.08));
+  border-radius: var(--gp-surface-radius, 12px);
+  box-shadow: var(--gp-surface-shadow, 0 1px 3px rgba(52, 68, 73, 0.04));
+}

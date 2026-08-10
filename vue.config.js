@@ -171,21 +171,20 @@ module.exports = {
     // Vue CLI 已对 src 配置 babel；需强制转译的包请用 transpileDependencies
   },
   chainWebpack(config) {
-    // config.entry.app=["babel-polyfill","./src/main.js"];
-    // it can improve the speed of the first screen, it is recommended to turn on preload
-    // config.plugin('preload').tap(() => [
-    //   {
-    //     rel: 'preload',
-    //     // to ignore runtime.js
-    //     // https://github.com/vuejs/vue-cli/blob/dev/packages/@vue/cli-service/lib/config/app.js#L171
-    //     fileBlacklist: [/\.map$/, /hot-update\.js$/, /runtime\..*\.js$/],
-    //     include: 'initial'
-    //   }
-    // ])
-
-    config.plugins.delete("preload"); // TODO: need test
-    // when there are many pages, it will cause too many meaningless requests
-    config.plugins.delete("prefetch");
+    // Vue CLI 5 默认已不再注册 preload/prefetch 插件；对其 .tap() 会直接报错。
+    // FOUC 靠 index.html gp-booting + bootLoader.waitForStylesheets 处理即可。
+    if (config.plugins.has("preload")) {
+      config.plugin("preload").tap(() => [
+        {
+          rel: "preload",
+          fileBlacklist: [/\.map$/, /hot-update\.js$/, /runtime\..*\.js$/],
+          include: "initial",
+        },
+      ]);
+    }
+    if (config.plugins.has("prefetch")) {
+      config.plugins.delete("prefetch");
+    }
 
     // pdfjs-dist 等 .mjs 包
     config.module
@@ -387,7 +386,7 @@ module.exports = {
   pwa: {
     name: "极客普拉斯",
     // 应用程序的主题颜色，通常会影响到地址栏的颜色和启动画面的颜色，青绿色：#4DBA87
-    themeColor: "#0badb6",
+    themeColor: "#5f7d80",
     // 针对 Windows 设备上显示的图标的背景颜色
     msTileColor: "#000000",
     // 指示是否将 PWA 作为全屏应用在 iOS 上运行

@@ -37,23 +37,25 @@
           <span class="gp-nav-menu__text">{{ item.label }}</span>
         </button>
 
-        <div
-          v-if="item.children && item.children.length && openKey === item.key"
-          class="gp-nav-menu__panel"
-          :style="panelStyle"
-          @click.stop
-        >
-          <button
-            v-for="(child, cIdx) in item.children"
-            :key="cIdx"
-            type="button"
-            class="gp-nav-menu__panel-item"
-            @click="navigate(childPath(item, child))"
+        <transition name="gp-drop">
+          <div
+            v-if="item.children && item.children.length && openKey === item.key"
+            class="gp-nav-menu__panel"
+            :style="panelStyle"
+            @click.stop
           >
-            <svg-icon v-if="child.icon" class="gp-nav-menu__icon" :icon-class="child.icon" />
-            <span>{{ child.categoryName || child.label }}</span>
-          </button>
-        </div>
+            <button
+              v-for="(child, cIdx) in item.children"
+              :key="cIdx"
+              type="button"
+              class="gp-nav-menu__panel-item"
+              @click="navigate(childPath(item, child))"
+            >
+              <svg-icon v-if="child.icon" class="gp-nav-menu__icon" :icon-class="child.icon" />
+              <span>{{ child.categoryName || child.label }}</span>
+            </button>
+          </div>
+        </transition>
       </li>
 
       <!-- 溢出折叠：菜单过多时收入「更多」，保证顶栏单行不挤压 -->
@@ -72,41 +74,43 @@
           <span class="gp-nav-menu__text">更多</span>
           <i class="el-icon-arrow-down gp-nav-menu__caret" />
         </button>
-        <div
-          v-if="openKey === 'more'"
-          class="gp-nav-menu__panel gp-nav-menu__panel--more"
-          :style="panelStyle"
-          @click.stop
-        >
-          <template v-for="(item, idx) in overflowItems">
-            <div v-if="item.children && item.children.length" :key="'g-' + idx" class="gp-nav-menu__group">
-              <div class="gp-nav-menu__group-title">
-                <svg-icon v-if="item.icon" class="gp-nav-menu__icon" :icon-class="item.icon" />
-                {{ item.label }}
+        <transition name="gp-drop">
+          <div
+            v-if="openKey === 'more'"
+            class="gp-nav-menu__panel gp-nav-menu__panel--more"
+            :style="panelStyle"
+            @click.stop
+          >
+            <template v-for="(item, idx) in overflowItems">
+              <div v-if="item.children && item.children.length" :key="'g-' + idx" class="gp-nav-menu__group">
+                <div class="gp-nav-menu__group-title">
+                  <svg-icon v-if="item.icon" class="gp-nav-menu__icon" :icon-class="item.icon" />
+                  {{ item.label }}
+                </div>
+                <button
+                  v-for="(child, cIdx) in item.children"
+                  :key="'c-' + idx + '-' + cIdx"
+                  type="button"
+                  class="gp-nav-menu__panel-item"
+                  @click="navigate(childPath(item, child))"
+                >
+                  <svg-icon v-if="child.icon" class="gp-nav-menu__icon" :icon-class="child.icon" />
+                  <span>{{ child.categoryName || child.label }}</span>
+                </button>
               </div>
               <button
-                v-for="(child, cIdx) in item.children"
-                :key="'c-' + idx + '-' + cIdx"
+                v-else
+                :key="'i-' + idx"
                 type="button"
                 class="gp-nav-menu__panel-item"
-                @click="navigate(childPath(item, child))"
+                @click="navigate(item.path)"
               >
-                <svg-icon v-if="child.icon" class="gp-nav-menu__icon" :icon-class="child.icon" />
-                <span>{{ child.categoryName || child.label }}</span>
+                <svg-icon v-if="item.icon" class="gp-nav-menu__icon" :icon-class="item.icon" />
+                <span>{{ item.label }}</span>
               </button>
-            </div>
-            <button
-              v-else
-              :key="'i-' + idx"
-              type="button"
-              class="gp-nav-menu__panel-item"
-              @click="navigate(item.path)"
-            >
-              <svg-icon v-if="item.icon" class="gp-nav-menu__icon" :icon-class="item.icon" />
-              <span>{{ item.label }}</span>
-            </button>
-          </template>
-        </div>
+            </template>
+          </div>
+        </transition>
       </li>
     </ul>
 
@@ -171,14 +175,16 @@
           <i :class="openIndexes.includes(index) ? 'el-icon-arrow-up' : 'el-icon-arrow-down'" />
         </button>
       </div>
-      <ul v-if="item.children && item.children.length && openIndexes.includes(index)" class="gp-nav-drawer__sub">
-        <li v-for="(child, cIdx) in item.children" :key="cIdx">
-          <button type="button" class="gp-nav-drawer__link is-sub" @click="navigate(childPath(item, child))">
-            <svg-icon v-if="child.icon" class="gp-nav-menu__icon" :icon-class="child.icon" />
-            <span>{{ child.categoryName || child.label }}</span>
-          </button>
-        </li>
-      </ul>
+      <transition name="gp-menu-expand">
+        <ul v-if="item.children && item.children.length && openIndexes.includes(index)" class="gp-nav-drawer__sub">
+          <li v-for="(child, cIdx) in item.children" :key="cIdx">
+            <button type="button" class="gp-nav-drawer__link is-sub" @click="navigate(childPath(item, child))">
+              <svg-icon v-if="child.icon" class="gp-nav-menu__icon" :icon-class="child.icon" />
+              <span>{{ child.categoryName || child.label }}</span>
+            </button>
+          </li>
+        </ul>
+      </transition>
     </li>
   </ul>
   </div>
@@ -560,7 +566,7 @@ export default {
   flex-shrink: 0;
   font-size: 12px;
   opacity: 0.7;
-  transition: transform 0.2s ease;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .gp-nav-menu__item.is-open .gp-nav-menu__caret {
@@ -589,6 +595,7 @@ export default {
   border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
   border-radius: var(--gp-surface-radius-sm, 10px);
   box-shadow: var(--gp-surface-shadow-hover, 0 6px 18px rgba(15, 23, 42, 0.06));
+  will-change: opacity, transform;
 }
 
 .gp-nav-menu__panel--more {
@@ -733,6 +740,11 @@ export default {
   background: transparent;
   color: inherit;
   cursor: pointer;
+  transition: background 0.15s ease, transform 0.2s ease;
+}
+
+.gp-nav-drawer__item.is-open .gp-nav-drawer__arrow i {
+  transition: transform 0.22s ease;
 }
 
 .gp-nav-drawer__arrow:hover {

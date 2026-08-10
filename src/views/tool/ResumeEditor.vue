@@ -662,7 +662,7 @@ export default {
 }
 
 .resume-editor-pane {
-  background: var(--background-color, #fff);
+  background: var(--background-1, #fff);
   border-radius: 12px;
   padding: 8px;
   max-height: none;

@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-cn">
+<html lang="zh-cn" class="gp-booting">
 
 <head>
   <meta charset="utf-8">
   <meta name="renderer" content="webkit">
   <meta name="mobile-web-app-capable" content="yes">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <!-- <meta name="referrer" content="no-referrer" /> -->
   <meta name="renderer" content="webkit">
   <meta name="force-rendering" content="webkit">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,109 +28,365 @@
     content="极客普拉斯,梦极客园,极客普拉斯,梦极客园,极客普拉斯&梦极客园,极客嘉年华,极客格子,格子嘉,geekplus,极客普拉科技有限公司,源代码,资源下载，免费，互联网信息共享">
   <meta name="author" content="GeekPlus">
   <meta name="robots" content="GeekPlus博客,极客普拉斯,梦极客园,前端,blog,个人博客,Plus的博客,web,VUE">
-  <!-- <script src="https://cdn.bootcss.com/animejs/2.2.0/anime.min.js"></script> -->
-  <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.12.4/jquery.min.js"></script> -->
-  <!-- <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script> -->
-  <!-- <script src="https://cdn.bootcdn.net/ajax/libs/wow/1.1.2/wow.min.js"></script> -->
-  <!-- <script src="https://cdn.bootcdn.net/ajax/libs/highlightjs-line-numbers.js/2.8.0/highlightjs-line-numbers.min.js"></script>
-  <script src="https://cdn.bootcdn.net/ajax/libs/clipboard.js/2.0.8/clipboard.js"></script> -->
+  <script>
+    (function () {
+      try {
+        var mode = localStorage.getItem('theme-mode') || '';
+        var hour = new Date().getHours();
+        var dark = mode.indexOf('dark') > -1;
+        if (!mode) dark = !(hour >= 6 && hour < 18);
+        var lightBg = '#f0f3f4';
+        var darkBg = '#2b2f3a';
+        var bg = dark ? darkBg : lightBg;
+        document.documentElement.style.backgroundColor = bg;
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        if (dark) document.documentElement.style.colorScheme = 'dark';
+        var tc = localStorage.getItem('themeColor') || '#5f7d80';
+        document.documentElement.style.setProperty('--theme-color', tc);
+        document.documentElement.style.setProperty('--gp-boot-bg', bg);
+        window.__gpBootTheme = { dark: dark, bg: bg, themeColor: tc };
+      } catch (e) { /* ignore */ }
+    })();
+  </script>
   <style media="screen" type="text/css">
-    /* 这是最简单实现黑暗模式切换，加上这行可实现所有颜色反转，白变黑 */
-    /* html{
-      filter: invert(1) hue-rotate(180deg);
-    } */
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--gp-boot-bg, #f0f3f4);
+    }
+
+    html[data-theme="dark"],
+    html[data-theme="dark"] body,
+    body[theme-mode="dark"] {
+      background: var(--gp-boot-bg, #2b2f3a);
+    }
+
+    /* FOUC 防护：样式未就绪前不露出 #app（骨架仍可见） */
+    html.gp-booting #app {
+      opacity: 0 !important;
+      pointer-events: none;
+    }
+
+    html:not(.gp-booting) #app {
+      opacity: 1;
+      transition: opacity 0.22s ease;
+    }
+
+    /* 顶栏进度：JS 下载/解析期间持续有反馈，避免「空屏」观感 */
+    #gp-boot-progress {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 1000001;
+      width: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--theme-color, #5f7d80), #8ea9a7);
+      transition: width 0.35s ease;
+      pointer-events: none;
+    }
+
     #loader-wrapper {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       z-index: 999999;
-      /* background: hsla(193, 74%, 36%, 0.678); */
-      background: hsla(0, 0%, 50%, 0.6);
-      -webkit-backdrop-filter: blur(20px);
-      backdrop-filter: blur(20px);
+      background: var(--gp-boot-bg, #f0f3f4);
+      display: flex;
+      flex-direction: column;
+      transition: opacity 0.36s ease, visibility 0.36s ease;
+      overflow: hidden;
     }
 
-    #pageInitLoading {
-      top: 50%;
-      left: 50%;
+    #loader-wrapper.is-hiding {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    #loader-wrapper.is-done {
+      display: none !important;
+    }
+
+    /* 骨架：模拟顶栏 + 内容卡，参考常见 Vue 博客 SPA 首屏做法 */
+    .gp-boot-shell {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      box-sizing: border-box;
+    }
+
+    .gp-boot-nav {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      background: rgba(255, 255, 255, 0.72);
+      border-bottom: 1px solid rgba(52, 68, 73, 0.08);
+      backdrop-filter: blur(8px);
+      box-sizing: border-box;
+    }
+
+    html[data-theme="dark"] .gp-boot-nav {
+      background: rgba(52, 57, 72, 0.88);
+      border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .gp-boot-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .gp-boot-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--theme-color, #5f7d80);
+      opacity: 0.85;
+    }
+
+    .gp-boot-title {
+      width: 96px;
+      height: 14px;
+      border-radius: 6px;
+      background: rgba(95, 125, 128, 0.22);
+    }
+
+    .gp-boot-nav-right {
+      display: flex;
+      gap: 10px;
+    }
+
+    .gp-boot-pill {
+      width: 52px;
+      height: 12px;
+      border-radius: 6px;
+      background: rgba(95, 125, 128, 0.14);
+    }
+
+    .gp-boot-main {
+      flex: 1;
+      width: min(1100px, 92%);
+      margin: 28px auto 40px;
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 18px;
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 860px) {
+      .gp-boot-main { grid-template-columns: 1fr; }
+      .gp-boot-nav-right { display: none; }
+    }
+
+    .gp-boot-card {
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(52, 68, 73, 0.07);
+      box-shadow: 0 2px 12px rgba(52, 68, 73, 0.04);
+      padding: 18px;
+      box-sizing: border-box;
+      overflow: hidden;
+      position: relative;
+    }
+
+    html[data-theme="dark"] .gp-boot-card {
+      background: rgba(52, 57, 72, 0.9);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .gp-boot-card::after {
+      content: "";
       position: absolute;
-      -webkit-transform: translateY(-50%) translateX(-50%);
-      transform: translateY(-50%) translateX(-50%);
-      z-index: 1001;
+      inset: 0;
+      background: linear-gradient(
+        100deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.28) 50%,
+        transparent 70%
+      );
+      transform: translateX(-100%);
+      animation: gp-boot-shimmer 1.4s ease-in-out infinite;
     }
 
-    @-webkit-keyframes ball-beat {
-      50% {
-        opacity: 0.2;
-        -webkit-transform: scale(0.75);
-        -ms-transform: scale(0.75);
-        transform: scale(0.75);
-      }
-
-      100% {
-        opacity: 1;
-        -webkit-transform: scale(1);
-        -ms-transform: scale(1);
-        transform: scale(1);
-      }
+    html[data-theme="dark"] .gp-boot-card::after {
+      background: linear-gradient(
+        100deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.06) 50%,
+        transparent 70%
+      );
     }
 
-    @keyframes ball-beat {
-      50% {
-        opacity: 0.2;
-        -webkit-transform: scale(0.75);
-        -ms-transform: scale(0.75);
-        transform: scale(0.75);
-      }
-
-      100% {
-        opacity: 1;
-        -webkit-transform: scale(1);
-        -ms-transform: scale(1);
-        transform: scale(1);
-      }
+    @keyframes gp-boot-shimmer {
+      100% { transform: translateX(100%); }
     }
 
-    .ball-beat>div {
-      /* 背景色: #4080ff */
-      background-color: #0badb6;
-      width: 15px;
-      height: 15px;
+    .gp-boot-line {
+      height: 12px;
+      border-radius: 6px;
+      background: rgba(95, 125, 128, 0.14);
+      margin-bottom: 12px;
+    }
+
+    .gp-boot-line.lg { height: 160px; margin-bottom: 16px; }
+    .gp-boot-line.w60 { width: 60%; }
+    .gp-boot-line.w80 { width: 80%; }
+    .gp-boot-line.w40 { width: 40%; }
+
+    .gp-boot-center {
+      position: absolute;
+      left: 50%;
+      top: 42%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .ball-beat > div {
+      background-color: var(--theme-color, #5f7d80);
+      width: 12px;
+      height: 12px;
       border-radius: 100% !important;
-      margin: 2px;
-      -webkit-animation-fill-mode: both;
-      animation-fill-mode: both;
+      margin: 3px;
       display: inline-block;
-      -webkit-animation: ball-beat 0.7s 0s infinite linear;
       animation: ball-beat 0.7s 0s infinite linear;
     }
 
-    .ball-beat>div:nth-child(2n-1) {
-      -webkit-animation-delay: 0.35s !important;
+    .ball-beat > div:nth-child(2n-1) {
       animation-delay: 0.35s !important;
+    }
+
+    @keyframes ball-beat {
+      50% { opacity: 0.2; transform: scale(0.75); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .boot-tip {
+      margin-top: 12px;
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      color: var(--theme-color, #5f7d80);
+      opacity: 0.8;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     }
   </style>
 </head>
 
 <body>
+  <script>
+    (function () {
+      try {
+        var boot = window.__gpBootTheme;
+        if (boot && boot.dark) document.body.setAttribute('theme-mode', 'dark');
+        else if (boot) document.body.removeAttribute('theme-mode');
+      } catch (e) { /* ignore */ }
+
+      window.__gpBootLoaderHidden = false;
+      var progress = 8;
+      var progressTimer = null;
+      var ready = false;
+
+      function setProgress(p) {
+        progress = Math.max(progress, Math.min(100, p));
+        var bar = document.getElementById('gp-boot-progress');
+        if (bar) bar.style.width = progress + '%';
+      }
+
+      function tickProgress() {
+        if (ready) return;
+        // 渐进逼近 86%，留给真实就绪再冲到 100%
+        if (progress < 86) setProgress(progress + Math.max(0.6, (86 - progress) * 0.08));
+      }
+
+      progressTimer = window.setInterval(tickProgress, 280);
+      window.setTimeout(function () { setProgress(22); }, 120);
+      window.setTimeout(function () { setProgress(40); }, 600);
+
+      window.__gpHideBootLoader = function (delayMs) {
+        var el = document.getElementById('loader-wrapper');
+        var bar = document.getElementById('gp-boot-progress');
+        document.documentElement.classList.remove('gp-booting');
+        if (!el || el.classList.contains('is-done') || el.classList.contains('is-hiding')) {
+          window.__gpBootLoaderHidden = true;
+          return;
+        }
+        ready = true;
+        if (progressTimer) {
+          clearInterval(progressTimer);
+          progressTimer = null;
+        }
+        setProgress(100);
+        var wait = typeof delayMs === 'number' ? delayMs : 160;
+        el.classList.add('is-hiding');
+        window.setTimeout(function () {
+          el.classList.add('is-done');
+          el.setAttribute('aria-hidden', 'true');
+          if (bar) bar.style.opacity = '0';
+          window.setTimeout(function () {
+            if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
+          }, 320);
+          window.__gpBootLoaderHidden = true;
+        }, Math.max(0, wait));
+      };
+
+      window.__gpMarkBootReady = function () {
+        window.__gpHideBootLoader(180);
+      };
+
+      // 兜底：极端慢网也不永久挡交互
+      window.setTimeout(function () {
+        if (typeof window.__gpHideBootLoader === 'function') window.__gpHideBootLoader(0);
+      }, 12000);
+    })();
+  </script>
   <noscript>
     <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled.
         Please enable it to continue.</strong>
   </noscript>
-  <div id="app">
-    <div id="loader-wrapper">
-      <div id="pageInitLoading">
-        <div class="loader-inner ball-beat">
-          <div></div>
-          <div></div>
-          <div></div>
+
+  <div id="gp-boot-progress" aria-hidden="true"></div>
+  <div id="loader-wrapper" role="status" aria-live="polite" aria-label="页面加载中">
+    <div class="gp-boot-shell">
+      <div class="gp-boot-nav">
+        <div class="gp-boot-brand">
+          <div class="gp-boot-logo"></div>
+          <div class="gp-boot-title"></div>
+        </div>
+        <div class="gp-boot-nav-right">
+          <div class="gp-boot-pill"></div>
+          <div class="gp-boot-pill"></div>
+          <div class="gp-boot-pill"></div>
+        </div>
+      </div>
+      <div class="gp-boot-main">
+        <div class="gp-boot-card">
+          <div class="gp-boot-line lg"></div>
+          <div class="gp-boot-line w80"></div>
+          <div class="gp-boot-line w60"></div>
+          <div class="gp-boot-line w40"></div>
+        </div>
+        <div class="gp-boot-card">
+          <div class="gp-boot-line w60"></div>
+          <div class="gp-boot-line"></div>
+          <div class="gp-boot-line w80"></div>
+          <div class="gp-boot-line w40"></div>
+          <div class="gp-boot-line"></div>
         </div>
       </div>
     </div>
+    <div class="gp-boot-center">
+      <div class="loader-inner ball-beat">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <div class="boot-tip">LOADING</div>
+    </div>
   </div>
-  <!-- built files will be auto injected -->
+  <div id="app"></div>
   <script>
     (function () {
       var ua = navigator.userAgent || "";
@@ -147,7 +402,4 @@
     })();
   </script>
 </body>
-<!-- <script>
-  new WOW().init();
-</script> -->
 </html>

@@ -15,7 +15,6 @@ import { setupElement } from "@/plugins/element";
 setupElement();
 
 import App from "./App.vue";
-import "./registerServiceWorker";
 import router from "./router";
 import store from "./store";
 import common from "./utils/common";
@@ -29,6 +28,18 @@ import "@/icons";
 import '@/permission'
 import i18n from './lang/index'
 
+// Service Worker 不挡首屏：空闲后再注册
+function registerSwWhenIdle() {
+  import("./registerServiceWorker").catch(() => {})
+}
+if (typeof window !== 'undefined') {
+  if (window.requestIdleCallback) {
+    window.requestIdleCallback(registerSwWhenIdle, { timeout: 5000 })
+  } else {
+    window.setTimeout(registerSwWhenIdle, 2500)
+  }
+}
+
 import { parseTime, dateFormat, resetForm, addDateRange, selectDictLabel, selectDictLabels, download, handleTree, firstUpperCase } from "@/utils/gputil";
 
 import "./styles/index.scss";
@@ -38,8 +49,24 @@ import "./styles/index.scss";
 import AdsenseWidget from '@/components/Adsense/index.vue';
 
 import "./assets/css/color.css";
+import "./assets/css/gp-critical.css";
 import "./assets/css/index.css";
 import "./assets/css/gp-blog-ui.css";
+import "./assets/css/gp-motion.css";
+import { hideBootLoader } from "@/utils/bootLoader";
+
+// 尽早预取当前博客外壳，缩短 BlogShell 空窗
+;(function prefetchBlogLayout() {
+  try {
+    const mode = (typeof localStorage !== 'undefined' && localStorage.getItem('blogLayout')) || 'top'
+    if (mode === 'side') {
+      import(/* webpackChunkName: "blog-layout-side" */ '@/layout/blog/horizontal/index').catch(() => {})
+    } else {
+      import(/* webpackChunkName: "blog-layout-top" */ '@/layout/blog/vertical/index').catch(() => {})
+    }
+  } catch (e) { /* ignore */ }
+})()
+
 // animation / tocbot 非首屏关键，空闲后再注入，减轻 render-blocking CSS
 function loadNonCriticalCss() {
   import("./assets/css/animation.css").catch(() => {});
@@ -184,4 +211,11 @@ new Vue({
   store,
   i18n,
   render: (h) => h(App),
+  mounted() {
+    // 勿过早关掉骨架：BlogShell/管理端 Layout 就绪后会 markBootReady
+    // 此处仅作慢网兜底，避免永远挡交互
+    this.$nextTick(() => {
+      window.setTimeout(() => hideBootLoader(120), 4000)
+    })
+  },
 }).$mount("#app");

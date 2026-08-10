@@ -8,7 +8,7 @@
 </template>
 <script>
 const version = require('element-ui/package.json').version // element-ui version from node_modules
-const ORIGINAL_THEME = '#6e8b8e' // 默认雾霾青绿（莫兰迪）
+const ORIGINAL_THEME = '#5f7d80' // 默认雾霾青绿（略加深，提升浅色对比）
 
 export default {
   name: 'App',
@@ -23,9 +23,9 @@ export default {
     // this.preloadLibraries();
     console.log('当前时间：%O', new Date());
     console.log("%c"+window.location.host, "background-image:-webkit-gradient( linear, left top, right top, color-stop(0, #f22), color-stop(0.15, #f2f), color-stop(0.3, #22f), color-stop(0.45, #2ff), color-stop(0.6, #25e),color-stop(0.75, #4f2), color-stop(0.9, #f2f), color-stop(1, #f22) );color:transparent;-webkit-background-clip: text;font-size:2em;")
-    // 旧版亮青主题迁移到莫兰迪默认色
+    // 旧版亮青 / 上一版默认色迁移到当前默认主题色
     const storedTheme = localStorage.getItem('themeColor')
-    if (!storedTheme || /^#0badb6$/i.test(storedTheme) || /^#13c2c2$/i.test(storedTheme)) {
+    if (!storedTheme || /^#0badb6$/i.test(storedTheme) || /^#13c2c2$/i.test(storedTheme) || /^#6e8b8e$/i.test(storedTheme)) {
       localStorage.setItem('themeColor', ORIGINAL_THEME)
       this.$store && this.$store.dispatch('settings/changeSetting', { key: 'themeColor', value: ORIGINAL_THEME })
     }

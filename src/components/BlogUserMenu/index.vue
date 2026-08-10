@@ -10,30 +10,32 @@
         height="32"
       />
     </button>
-    <div v-if="open" class="gp-user-menu__panel" :style="panelStyle" @click.stop>
-      <template v-if="loggedIn">
-        <!-- <button type="button" class="gp-user-menu__item" @click="go('/admin')">
-          <i class="el-icon-house" aria-hidden="true"></i>
-          <span>管理中心</span>
-        </button> -->
-        <button type="button" class="gp-user-menu__item" @click="go('/user/center')">
-          <i class="el-icon-user" aria-hidden="true"></i>
-          <span>个人中心</span>
+    <transition name="gp-drop">
+      <div v-if="open" class="gp-user-menu__panel" :style="panelStyle" @click.stop>
+        <template v-if="loggedIn">
+          <!-- <button type="button" class="gp-user-menu__item" @click="go('/admin')">
+            <i class="el-icon-house" aria-hidden="true"></i>
+            <span>管理中心</span>
+          </button> -->
+          <button type="button" class="gp-user-menu__item" @click="go('/user/center')">
+            <i class="el-icon-user" aria-hidden="true"></i>
+            <span>个人中心</span>
+          </button>
+          <button type="button" class="gp-user-menu__item" @click="go('/write')">
+            <i class="el-icon-edit" aria-hidden="true"></i>
+            <span>写文章</span>
+          </button>
+          <button type="button" class="gp-user-menu__item" @click="onLogout">
+            <i class="el-icon-switch-button" aria-hidden="true"></i>
+            <span>退出登录</span>
+          </button>
+        </template>
+        <button v-else type="button" class="gp-user-menu__item" @click="onLogin">
+          <i class="fa fa-sign-in" aria-hidden="true"></i>
+          <span>登录</span>
         </button>
-        <button type="button" class="gp-user-menu__item" @click="go('/write')">
-          <i class="el-icon-edit" aria-hidden="true"></i>
-          <span>写文章</span>
-        </button>
-        <button type="button" class="gp-user-menu__item" @click="onLogout">
-          <i class="el-icon-switch-button" aria-hidden="true"></i>
-          <span>退出登录</span>
-        </button>
-      </template>
-      <button v-else type="button" class="gp-user-menu__item" @click="onLogin">
-        <i class="fa fa-sign-in" aria-hidden="true"></i>
-        <span>登录</span>
-      </button>
-    </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -139,6 +141,11 @@ export default {
   background: transparent;
   cursor: pointer;
   border-radius: 50%;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.gp-user-menu__trigger:active {
+  transform: scale(0.94);
 }
 
 .gp-user-menu__avatar {
@@ -161,6 +168,7 @@ export default {
   border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
   border-radius: var(--gp-surface-radius-sm, 10px);
   box-shadow: var(--gp-surface-shadow-hover, 0 6px 18px rgba(15, 23, 42, 0.06));
+  will-change: opacity, transform;
 }
 
 .gp-user-menu__item {

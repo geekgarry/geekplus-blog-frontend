@@ -345,6 +345,7 @@
 </template>
 
 <script>
+import '@/plugins/element-admin'
 import QRCode from 'qrcode'; // 引入二维码生成库
 
 import PostBreadcrumb from '@/layout/components/Breadcrumb/primary'

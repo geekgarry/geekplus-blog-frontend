@@ -288,7 +288,7 @@ body {
 
 .el-date-table td.in-range div,
 .el-date-table td.in-range div:hover {
-  background-color: var(--gp-surface-bg, var(--background, #f2f6fc)) !important;
+  background-color: var(--background-origin, #f2f6fc) !important;
 }
 
 .el-picker-panel__icon-btn {
@@ -358,7 +358,7 @@ body {
 
 /* el-badge提示红点*/
 .el-badge .redPoint:hover {
-  background: var(--gp-surface-bg, var(--background, transparent)) !important;
+  background: var(--background-origin, transparent) !important;
 }
 
 /* element UI轮播图 */
@@ -1633,7 +1633,7 @@ code.hljs {
 }
 
 .el-dropdown-menu__item--divided:before {
-  background-color: var(--gp-surface-bg, var(--background, #fafafa)) !important;
+  background-color: var(--background-origin, #fafafa) !important;
 }
 
 .el-dropdown-menu__item:hover div {
@@ -1651,7 +1651,7 @@ code.hljs {
 }
 
 .el-dropdown-menu.el-popper {
-  background-color: var(--gp-surface-bg, var(--background, #fafafa)) !important;/* background-color: hsla(0, 0%, 100%, .3137254901960784);
+  background-color: var(--background-origin, #fafafa) !important;/* background-color: hsla(0, 0%, 100%, .3137254901960784);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px); */
   border-color: var(--border-color, #e6ebf5) !important;
@@ -1665,7 +1665,7 @@ code.hljs {
 }
 
 .el-dropdown-menu.el-popper .popper__arrow::after {
-  border-bottom-color: var(--gp-surface-bg, var(--background, #fafafa)) !important;
+  border-bottom-color: var(--background-origin, #fafafa) !important;
 }
 
 /*管理端表格，分页和其他输入框样式*/
@@ -1707,7 +1707,7 @@ code.hljs {
 
 .el-table__body tr.hover-row>td.el-table__cell,
 .el-table__body tr.hover-row.current-row>td.el-table__cell {
-  background-color: var(--gp-surface-bg, var(--background, #f5f7fa)) !important;
+  background-color: var(--background-origin, #f5f7fa) !important;
   color: var(--text-color, #606266) !important;
 }
 
@@ -1716,14 +1716,14 @@ code.hljs {
 .el-table--border::after {
   content: "" !important;
   position: absolute !important;
-  background-color: var(--gp-surface-bg, var(--background, #e6ebf5)) !important;
+  background-color: var(--background-origin, #e6ebf5) !important;
   z-index: 1 !important;
 }
 
 .el-table .el-table__header-wrapper th,
 .el-table .el-table__fixed-header-wrapper th {
   word-break: break-word !important;
-  background-color: var(--gp-surface-bg, var(--background, #f8f8f9)) !important;
+  background-color: var(--background-origin, #f8f8f9) !important;
   color: var(--text-color, #515a6e) !important;
   height: 40px !important;
   font-size: 13px !important;
@@ -1755,7 +1755,7 @@ code.hljs {
   bottom: 0 !important;
   width: 100% !important;
   height: 1px !important;
-  background-color: var(--gp-surface-bg, var(--background, #e6ebf5)) !important;
+  background-color: var(--background-origin, #e6ebf5) !important;
   z-index: 4 !important;
 }
 
@@ -1829,8 +1829,6 @@ code.hljs {
 
 /******管理端侧边折叠菜单样式*******/
 .el-select-dropdown {
-  position: absolute !important;
-  z-index: 1001 !important;
   border: solid 1px var(--border-color-2, #dfe4ed) !important;
   border-radius: 4px !important;
   background-color: var(--background, #FFFFFF) !important;
@@ -1851,7 +1849,7 @@ code.hljs {
 .el-select-dropdown__item {
   font-size: 14px !important;
   padding: 0 20px !important;
-  position: relative !important;
+  position: relative;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -1956,7 +1954,7 @@ code.hljs {
 /* 搜索框样式 */
 .el-input-number__increase,
 .el-input-number__decrease {
-  background: var(--gp-surface-bg, var(--background, #fafafa)) !important;
+  background: var(--background-origin, #fafafa) !important;
   color: var(--text-color, #606266) !important;
 }
 
@@ -2146,7 +2144,7 @@ code.hljs {
 
 .el-card {
   margin-bottom: 14px !important;
-  background-color: var(--gp-surface-bg, var(--background, #fafafa)) !important;
+  background-color: var(--background-origin, #fafafa) !important;
   color: var(--text-color-2) !important;
   border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05)) !important;
   border-radius: var(--gp-surface-radius, 12px) !important;
@@ -2233,7 +2231,7 @@ code.hljs {
 .el-pagination.is-background .btn-next,
 .el-pagination.is-background .el-pager li {
   margin: 0 5px !important;
-  background-color: var(--gp-surface-bg, var(--background, #f4f4f5)) !important;
+  background-color: var(--background-origin, #f4f4f5) !important;
   color: var(--text-color, #606266) !important;
   min-width: 30px !important;
   border-radius: 2px !important;

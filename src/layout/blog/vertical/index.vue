@@ -120,11 +120,11 @@
     </transition>
 
     <div class="gp-blog-main" :style="{ paddingTop: navbarHeight + 'px' }">
-      <!-- <transition name="fade-transform" mode="out-in"> -->
-      <keep-alive>
-        <router-view :key="keyMenuPath"></router-view>
-      </keep-alive>
-      <!-- </transition> -->
+      <transition name="gp-page">
+        <keep-alive>
+          <router-view :key="keyMenuPath"></router-view>
+        </keep-alive>
+      </transition>
     </div>
 
     <!--    <div href="#" class="cd-top" v-if="isMobile" @click="toTop()"></div>-->
@@ -309,7 +309,8 @@ export default {
       //如果滑动距离超过屏幕高度三分之一视为进入页面，背景改为白色
       let enter = scrollTop > window.innerHeight / 2;
       const top = scrollTop < this.navbarHeight || scrollTop - oldScrollTop < 0;
-      let isShow = scrollTop - window.innerHeight > 30;
+      // 下滑约一屏的 1/3 后显示回到顶部（与侧栏布局一致）
+      let isShow = scrollTop > Math.max(320, window.innerHeight * 0.35);
       this.toolButton = isShow;
       if (isShow && !this.isMobile) {
         if (window.innerHeight > 950) {

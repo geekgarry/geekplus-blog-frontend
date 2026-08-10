@@ -660,6 +660,7 @@
 </template>
 
 <script>
+import '@/plugins/element-admin'
 import draggable from 'vuedraggable';
 import { generateResumeAI } from '@/api/resume';
 import { createEmptyResumeData } from './types';
