@@ -12,16 +12,14 @@ const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
 // const renderer = PrerenderSPAPlugin.PuppeteerRenderer;//这个和下面一样，任选一个
 // 可选
 // const renderer = require("@prerenderer/renderer-puppeteer");
-const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+// 需要分析包体积时再解开：npm i -D webpack-bundle-analyzer
+// const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 const CompressionPlugin = require("compression-webpack-plugin");
-// const BrotliPlugin = require('brotli-webpack-plugin');
-// const ImageMinimizerPlugin = require('image-minimizer-webpack-plugin');
-// const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const productionGzipExtensions = /\.(js|css|txt|html|ico|svg)(\?.*)?$/i;
-// const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
-// const { EsbuildPlugin } = require('esbuild-loader')
-// const { VueLoaderPlugin } = require('vue-loader');
+
+/** IE11 适配：总开关见 ie11-compat/enabled.js；不需要时可改 false 或注释本 require和使用的的代码 */
+const ie11 = require("./ie11-compat");
 
 function resolve(dir) {
   return path.join(__dirname, dir);
@@ -40,8 +38,15 @@ module.exports = {
   lintOnSave: false, //process.env.NODE_ENV === 'development',//取消语法检测保存
   productionSourceMap: false, // 生产环境是否生成 sourceMap 文件，一般情况不建议打开
   // filenameHashing: true,
-  // 1. 强制转译 jspdf 和相关依赖，确保 Babel 处理其中的 require/import 混合代码
-  transpileDependencies: ['jspdf', 'canvg', '@babel/runtime'],
+  // IE 开启时转译全部依赖；关闭时仅转译下列包（jodit 已 alias 预编译包）
+  transpileDependencies: ie11.transpileDependencies([
+    "element-ui",
+    "jspdf",
+    "pdfjs-dist",
+    "pdf-lib",
+    "canvg",
+    "@babel/runtime",
+  ]),
   devServer: {
     port: port,
     open: false,
@@ -53,6 +58,7 @@ module.exports = {
         target: `http://127.0.0.1:8443`, //后端URI地址3443
         changeOrigin: true, // 是否改变源地址
         secure: false, //确保使用https，在使用https时可以选择开启
+        ws: true, // 聊天 /websocket 走同一前缀代理
         pathRewrite: {
           ["^" + process.env.VUE_APP_BASE_API]: "",
         }, // 重写路径
@@ -97,39 +103,25 @@ module.exports = {
       },
     },
   },
-  configureWebpack: {
-    // provide the app's title in webpack's name field, so that
-    // it can be accessed in index.html to inject the correct title.
-    name: name,
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, 'src'),
-        // 强制使用 umd 版本，避免 esm 转换问题
-        // 'jspdf': 'jspdf/dist/jspdf.umd.min.js',
-        // 'static': resolve('static') // 增加这一行代码
+  configureWebpack: (config) => {
+    config.name = name;
+    config.resolve = config.resolve || {};
+    config.resolve.alias = Object.assign({}, config.resolve.alias, {
+      '@': path.resolve(__dirname, 'src'),
       // Exact match only ($); 用预编译 jodit.min，避免 Babel 转译整包 ES 源码拖慢构建/增大产物
       jodit$: path.resolve(__dirname, 'node_modules/jodit/es2021/jodit.min.js'),
-      },
-    },
-    cache: {
-      type: 'filesystem', // 启用持久化缓存
-      buildDependencies: {
-        config: [__filename],
-      },
-    },
-    // output: {
-    //   path: path.resolve(__dirname, './dist'),
-    //   filename: `static/js/[name].[contenthash].js`,
-    //   chunkFilename: `static/js/[name].[contenthash].js`,
-    //   //配置资产的hash，确保长期缓存
-    //   assetModuleFilename: 'static/js/[name].[contenthash][ext][query]',
-    // },
-    //1.关闭webpack的性能提示
-    // performance : {
-    //   hints : false
-    // },
-    //2.通过改变入口和生成文件的大小来解决,这种最好
-    performance: {
+    });
+    // 未开 IE 时的默认缓存；开启 IE 时由 ie11-compat 覆盖为 modern/legacy 分缓存
+    if (!ie11.isEnabled()) {
+      config.cache = {
+        type: 'filesystem',
+        name: 'gp-default',
+        buildDependencies: {
+          config: [__filename],
+        },
+      };
+    }
+    config.performance = {
       hints: 'warning',
       // 入口起点的最大体积
       maxEntrypointSize: 50000000,
@@ -138,10 +130,9 @@ module.exports = {
       // 只给出 js 文件的性能提示
       assetFilter: function (assetFilename) {
         return assetFilename.endsWith('.js') || assetFilename.endsWith('.css');
-      }
-    },
-    plugins: [
-      // Quill / resize 由 quill-loader 注册（Quill 2 + quill-resize-module），勿全局 Provide 拖进首包
+      },
+    };
+    config.plugins = (config.plugins || []).concat([
       new NodePolyfillPlugin(),
       // new BundleAnalyzerPlugin(),
       /* *******************************************
@@ -152,23 +143,20 @@ module.exports = {
       *
       ********************************************/
       new CompressionPlugin({
-        // filename: "[path][base].gz",
-        filename: '[path][base].gz[query]', //  使得多个.gz文件合并成一个文件，这种方式压缩后的文件少，建议使用
+        filename: '[path][base].gz[query]',
         algorithm: "gzip",
-        test: /\.(js|css|html)?$/i, // 使用正则给匹配{RegExp}到的文件/资产做压缩,压缩文件格式
-        threshold: 102400, // 只处理大于此大小的资产。以字节为单位
-        minRatio: 0.8, //只有压缩好这个比率的资产才能被处理
-        deleteOriginalAssets: false, //是否删除原资源
+        test: /\.(js|css|html)?$/i,
+        threshold: 102400,
+        minRatio: 0.8,
+        deleteOriginalAssets: false,
       }),
-      // new BrotliPlugin({
-      //   asset: '[path][base].br[query]',
-      //   test: productionGzipExtensions,
-      //   threshold: 10240,
-      //   minRatio: 0.8
-      // })
-    ],
-    // 不要在这里对全部 .js 套 babel-loader（会转译 node_modules/jodit/esm 并报错）
-    // Vue CLI 已对 src 配置 babel；需强制转译的包请用 transpileDependencies
+    ]);
+
+    // IE11：ES5 runtime / 分缓存（ie11-compat/enabled.js=false 时为 no-op）
+    ie11.applyConfigureWebpack(config, {
+      cacheNamePrefix: "gp",
+      configFile: __filename,
+    });
   },
   chainWebpack(config) {
     // Vue CLI 5 默认已不再注册 preload/prefetch 插件；对其 .tap() 会直接报错。
@@ -186,7 +174,7 @@ module.exports = {
       config.plugins.delete("prefetch");
     }
 
-    // pdfjs-dist 等 .mjs 包
+    // pdfjs-dist@4 含私有字段/方法且不支持 IE；勿走 babel（见下方 chainWebpack 末尾 exclude 重写）
     config.module
       .rule("mjs")
       .test(/\.mjs$/)
@@ -370,6 +358,7 @@ module.exports = {
         from: path.resolve(__dirname, "./public/robots.txt"), //防爬虫文件
         to: "./", //到根目录下
       };
+      // 默认 Terser；开启 IE 时由下方 ie11.applyChainWebpack 覆盖 legacy 为 ecma5
       config.optimization.minimizer('terser').use(TerserPlugin, [{
         parallel: true,
         terserOptions: {
@@ -378,9 +367,46 @@ module.exports = {
           },
         },
       }]);
-      //压缩代码配置，和上面的plugins中的配置二选一
-      // config.plugin("compression").use();
     });
+
+    // IE11：polyfill 入口 / 语法修复 / legacy Terser（放最后；关闭 enabled.js 后为 no-op）
+    ie11.applyChainWebpack(config, {
+      TerserPlugin,
+      dropConsole: true,
+      injectPolyfills: true,
+      syntaxFix: true,
+    });
+
+    // 必须放在 chainWebpack 末尾：覆盖 Vue CLI 的 exclude 函数。
+    // transpileDependencies===true 时原逻辑会对全部 node_modules 走 babel，
+    // 而 pdfjs-dist@4 的 class private methods 无法在「开发 browserslist」下安全转译。
+    config.module
+      .rule("js")
+      .exclude.clear()
+      .add((filepath) => {
+        const SKIP = true; // 不经 babel
+        const RUN = false; // 走 babel
+        if (!filepath) return SKIP;
+        // 电子签 PDF 引擎：现代浏览器直接跑 ESM，IE 本就不支持
+        if (/[\\/]node_modules[\\/]pdfjs-dist[\\/]/.test(filepath)) return SKIP;
+        if (/\.vue\.jsx?$/.test(filepath)) return RUN;
+        if (/[\\/]node_modules[\\/]@babel[\\/]runtime[\\/]/.test(filepath)) {
+          return process.env.VUE_CLI_TRANSPILE_BABEL_RUNTIME ? RUN : SKIP;
+        }
+        if (ie11.isEnabled()) {
+          const nonTranspile =
+            /[\\/]node_modules[\\/](core-js|webpack|webpack-4|css-loader|mini-css-extract-plugin|promise-polyfill|html-webpack-plugin|whatwg-fetch)([\\/]|$)/;
+          if (nonTranspile.test(filepath)) return SKIP;
+          return RUN; // 其余含 node_modules 一律转译（IE 模式）
+        }
+        // 非 IE：仅转译配置的依赖列表
+        if (/[\\/]node_modules[\\/]/.test(filepath)) {
+          const allow =
+            /[\\/]node_modules[\\/](element-ui|jspdf|canvg|@babel[\\/]runtime)([\\/]|$)/;
+          return allow.test(filepath) ? RUN : SKIP;
+        }
+        return RUN;
+      });
   },
   // pwa网站应用配置
   pwa: {

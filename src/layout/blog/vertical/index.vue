@@ -6,12 +6,14 @@
       <div class="drawer-header">
         <div class="drawer-header-title">
           <div class="navbar-title">
-            <router-link class="drawer-user-center" :to="!$common.isEmpty(username) ? '/user/center' : '/'">
+            <div class="drawer-user-center" @click="!$common.isEmpty(username) ? ($router.push('/user/center'), isDrawerOpen = false) : ($router.push('/'), isDrawerOpen = false)">
               <img class="drawer-user-avatar" :src="!$common.isEmpty(username) ? userAvatar : iLogo">
-            </router-link>
+            </div>
             <span class="web-title">{{ nickname || 'GeekPlus' }}</span>
           </div>
-          <button class="close-button" @click="toggleDrawer">×</button>
+          <button class="close-button" @click="toggleDrawer">
+            <svg-icon icon-class="close" />
+          </button>
         </div>
         <div class="drawer-header-login">
           <div class="nav-menu-login">
@@ -34,7 +36,8 @@
         <div class="search-drawer__main">
           <div class="search-drawer__header">
             <div class="search-drawer__close-btn" @click="toggleSearch">
-              <i class="el-icon-close"></i>
+              <!-- <i class="el-icon-close"></i> -->
+              <svg-icon icon-class="close" />
             </div>
           </div>
           <div class="drawer__search-container">
@@ -47,7 +50,8 @@
                 @keyup.enter="searchArticles"
               >
               <button type="button" class="gp-btn gp-btn--append" @click="searchArticles">
-                <i class="el-icon-search"></i>
+                <!-- <i class="el-icon-search"></i> -->
+                <svg-icon icon-class="search" />
               </button>
             </div>
           </div>
@@ -143,9 +147,11 @@
         <div class="my-setting">
           <div title="切换主题">
             <!-- 太阳按钮 -->
-            <i v-if="isDarkMode" class="el-icon-sunny iconRotate" @click="changeColor()"></i>
+            <!-- <i v-if="isDarkMode" class="el-icon-sunny iconRotate" @click="changeColor()"></i> -->
+            <svg-icon v-if="isDarkMode" class="iconRotate" icon-class="sun" aria-hidden="true" @click="changeColor()" />
             <!-- 月亮按钮 -->
-            <i v-else class="el-icon-moon" aria-hidden="true" @click="changeColor()"></i>
+            <!-- <i v-else class="el-icon-moon" aria-hidden="true" @click="changeColor()"></i> -->
+            <svg-icon v-else icon-class="moon" aria-hidden="true" @click="changeColor()" />
           </div>
           <div :title="blogLayoutToggleTitle">
             <!-- <i
@@ -158,10 +164,16 @@
             </i>
           </div>
           <div :title="mouseAnimation ? '关闭点击飘字' : '开启点击飘字'">
-            <i class="el-icon-magic-stick" aria-hidden="true" @click="changeMouseAnimation()"></i>
+            <i>
+              <svg-icon icon-class="magic-stick" aria-hidden="true" @click="changeMouseAnimation()" />
+            </i>
+            <!-- <i class="el-icon-magic-stick" aria-hidden="true" @click="changeMouseAnimation()"></i> -->
           </div>
-          <div title="阅读进度复位">
-            <i class="el-icon-reading" aria-hidden="true" @click="toTop()"></i>
+          <div title="在线沟通" v-if="!$common.isEmpty(username)">
+            <!-- <i class="el-icon-reading" aria-hidden="true" @click="toTop()"></i> -->
+            <i>
+              <svg-icon icon-class="comment" aria-hidden="true" @click="isChatOpen = true" />
+            </i>
           </div>
         </div>
       </el-popover>
@@ -184,6 +196,7 @@
     <el-dialog append-to-body :visible.sync="showLoginSignup" :center="true" :close-on-click-modal="false">
       <login-signup></login-signup>
     </el-dialog>
+    <realtime-chat-entry :fab="false" :value="isChatOpen" />
   </div>
 </template>
 
@@ -192,11 +205,13 @@ import { mapState } from 'vuex'
 import LoginSignup from '@/components/LoginSignup/index'
 import BlogNavMenu from '@/components/BlogNavMenu/index'
 import BlogUserMenu from '@/components/BlogUserMenu/index'
+import RealtimeChatEntry from '@/components/RealtimeChat/Entry.vue'
 import { getGpWebTitleInfo, selectGpArticlesListByKeyWords, getMostViewedArticle } from '@/api/geekplus/geekplus'
 import { enableClickFloat, disableClickFloat, setClickFloatWords } from '@/utils/clickFloat'
 import { getCachedClickTextWords, refreshClickTextWords } from '@/utils/plusTool'
 import { runWhenIdle, cancelIdle } from '@/utils/deferRequest'
 import blogLayoutMixin from '@/layout/blog/blogLayoutMixin'
+import router from '@/router'
 // import '@/utils/TweenMax.min.js';
 // import '@/utils/paopaoScript.js';
 
@@ -205,7 +220,8 @@ export default {
   components: {
     LoginSignup,
     BlogNavMenu,
-    BlogUserMenu
+    BlogUserMenu,
+    RealtimeChatEntry
   },
   data() {
     return {
@@ -253,7 +269,9 @@ export default {
       }],
       iLogo: require("@/assets/logo.png"),
       //网站背景音乐是否在播放
-      bgMusicPlaying: false
+      bgMusicPlaying: false,
+      //在线沟通是否打开
+      isChatOpen: false
     }
   },
   created() {

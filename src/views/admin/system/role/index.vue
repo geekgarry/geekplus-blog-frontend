@@ -761,6 +761,7 @@ export default {
         });
       });
     },
+    /** 加载角色自定部门树（后端已按操作者可见部门裁剪） */
     loadRoleDeptTree(roleId) {
       roleDeptTreeselect(roleId)
         .then((res) => {

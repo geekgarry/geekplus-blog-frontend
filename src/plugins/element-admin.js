@@ -95,6 +95,25 @@ export function setupElementAdmin() {
       Vue.component(comp.name, comp)
     }
   })
+
+  // 按需 CSS（Table/Menu 等）注入后重申主题，避免 #409EFF 盖掉全站色
+  const reassert = () => {
+    import(/* webpackChunkName: "element-theme" */ '@/utils/elementTheme')
+      .then((m) => {
+        m.reassertElementTheme()
+        // 再等一帧：部分 chunk 的 <link> 稍晚挂上
+        if (typeof window !== 'undefined') {
+          window.setTimeout(() => m.bumpElementThemeStyles(), 0)
+          window.setTimeout(() => m.bumpElementThemeStyles(), 120)
+        }
+      })
+      .catch(() => {})
+  }
+  if (typeof window !== 'undefined' && window.requestAnimationFrame) {
+    window.requestAnimationFrame(reassert)
+  } else {
+    reassert()
+  }
 }
 
 setupElementAdmin()

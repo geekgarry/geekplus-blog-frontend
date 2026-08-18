@@ -56,6 +56,12 @@ export const blogChildrenRoutes = [
     component: () => import(/* webpackChunkName: "blog-user-center" */ '@/views/blog/UserCenter.vue')
   },
   {
+    path: '/user/center/edit',
+    name: 'userProfileEdit',
+    meta: { title: '编辑资料', icon: '', requiresAuth: true },
+    component: () => import(/* webpackChunkName: "blog-user-profile-edit" */ '@/views/blog/UserProfileEdit.vue')
+  },
+  {
     path: '/user/comments',
     name: 'userComments',
     meta: { title: '留言管理', icon: '', requiresAuth: true },
@@ -244,6 +250,12 @@ export const constantRoutes = [
     name: 'AIChat',
     meta: { title: 'AI聊天助手', icon: '' },
     component: () => import('@/views/chatbot/index.vue'),
+  },
+  {
+    path: '/im',
+    name: 'RealtimeIM',
+    meta: { title: '在线沟通', icon: '', requiresAuth: true },
+    component: () => import(/* webpackChunkName: "realtime-im" */ '@/views/im/index.vue'),
   },
   //这个*匹配必须放在最后，将改路由配置放到所有路由的配置信息的最后，否则会其他路由path匹配造成影响。
   // { path: '*', redirect: '/404', type: 'error', hidden: true }

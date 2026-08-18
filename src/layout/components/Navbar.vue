@@ -81,6 +81,9 @@
           <el-dropdown-item @click.native="setting = true">
             <span><i class="el-icon-magic-stick"></i>{{ $t('navbar.layoutSettings') || '布局设置'}}</span>
           </el-dropdown-item>
+          <el-dropdown-item @click.native="onRealtimeChat=true">
+            <span><i class="el-icon-phone-outline"></i>在线沟通</span>
+          </el-dropdown-item>
           <el-dropdown-item @click.native="onAiChatBot=true">
             <span><i class="el-icon-chat-dot-round"></i>AI</span>
           </el-dropdown-item>
@@ -91,12 +94,15 @@
       </el-dropdown>
     </div>
     <ai-chat-popup v-model="onAiChatBot" title="AI 助手" />
+    <realtime-chat-entry v-model="onRealtimeChat" :fab="false" />
   </div>
 </template>
 
 <script>
 
 import websocket from '@/utils/wesocket'
+// SSE 仍可用于轻量通知；聊天实时通道改回 WebSocket
+import ssePush from '@/utils/ssePush'
 import { mapGetters, mapState } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
@@ -106,9 +112,10 @@ import Search from '@/components/HeaderSearch'
 import Langs from "./Lang"
 import Topbar from "./Topbar"
 import NotificationMsg from "./NotificationMsg"
+import RealtimeChatEntry from '@/components/RealtimeChat/Entry.vue'
 import headPic from "@/assets/mai.jpg";
 import { getOnlineUserCount } from "@/api/monitor/online"
-import { refreshUserAuth } from '@/api/system/user'
+import { resetRouter } from '@/router'
 //权限检查js方法
 import {checkPermi, checkRole} from "@/utils/permission"
 
@@ -121,7 +128,8 @@ export default {
     Search,
     Langs,
     Topbar,
-    NotificationMsg
+    NotificationMsg,
+    RealtimeChatEntry
   },
   data() {
     return {
@@ -135,25 +143,27 @@ export default {
       baseApi: process.env.VUE_APP_BASE_API,
       prefixUrl: process.env.VUE_APP_BASE_API,
       onAiChatBot: false,//AI助手显示
+      onRealtimeChat: false,
+      refreshingPerms: false,
     };
   },
   created: function () {
-    //从localStorage中获取用户信息,是登陆状态则能够进行webSocket重连
-    // let onlineUser = localStorage.getItem("onlineUser");
     let hasSomePerms=this.checkHasPermi(['system:notice:list'])||this.checkHasPermi(['system:operLog:list'])||this.checkHasPermi(['monitor:online:list']);
-    // console.log(onlineUser)
     if (hasSomePerms) {
       let userId=this.$store.getters.userId;
       if (null != userId) {
-        this.initWebsocket(userId);
+        this.initSsePush(userId);
       }
     }
-    //this.onlineUserCount=this.getOnlineUser();//this.getCookie("onlineUserCount");
-    //this.getOnlineUser();
   },
   mounted(){
-    // 添加socket通知监听
     window.addEventListener('onmessageWS', this.getSocketData)
+    window.addEventListener('onmessageSSE', this.getSocketData)
+  },
+  beforeDestroy: function() {
+    this.sseClose();
+    window.removeEventListener('onmessageWS', this.getSocketData)
+    window.removeEventListener('onmessageSSE', this.getSocketData)
   },
   computed: {
     ...mapGetters([
@@ -212,20 +222,58 @@ export default {
       // this.$router.push(`/login?redirect=${this.$route.fullPath}`)
     },
     async showNotice() {
-      console.log(this.notifyMsg);
+      // console.log(this.notifyMsg);
       this.msgSuccess(this.notifyMsg);
     },
-    refreshUserPerms(){
-      refreshUserAuth().then((res) => {
-        this.msgSuccess(res.msg);
-      })
+    async refreshUserPerms(){
+      if (this.refreshingPerms) {
+        return
+      }
+      this.refreshingPerms = true
+      try {
+        await this.$store.dispatch('user/refreshAuth')
+        resetRouter()
+        this.$store.commit('navMenu/SET_ROUTES_REGISTERED', false)
+        const addRoutes = await this.$store.dispatch('generateRoutes', {
+          routes: this.$store.state.user.menus
+        })
+        ;(addRoutes || []).forEach((item) => {
+          if (!item || !item.path || item.path === '*') {
+            return
+          }
+          this.$router.addRoute(item)
+        })
+        // * 必须最后挂，与 permission.js 一致，避免吞掉后台直链
+        if (typeof this.$router.hasRoute === 'function' && this.$router.hasRoute('CatchAll404')) {
+          this.$router.removeRoute('CatchAll404')
+        }
+        this.$router.addRoute({
+          path: '*',
+          redirect: '/404',
+          type: 'error',
+          hidden: true,
+          name: 'CatchAll404'
+        })
+        this.msgSuccess('权限已刷新')
+        const fullPath = this.$route.fullPath
+        await this.$router.replace('/redirect' + fullPath).catch(() =>
+          this.$router.replace(fullPath).catch(() => {})
+        )
+      } catch (e) {
+        this.msgError((e && (e.message || e.msg)) || '刷新权限失败')
+      } finally {
+        this.refreshingPerms = false
+      }
     },
-    //调用方法
-    initWebsocket(tokenId){
+    // 聊天/预警：优先 WebSocket（双向、低延迟）；SSE 作可选补充
+    initSsePush(tokenId){
       websocket.Init(tokenId)
+      // 若仍需 SSE 并存可取消下一行注释
+      // ssePush.Init(tokenId)
     },
-    websocketClose(){
+    sseClose(){
       websocket.CloseWebscoket()
+      ssePush.Close()
     },
     getOnlineUser(){
       // return this.websocket.getOnlineUserCount();
@@ -243,9 +291,6 @@ export default {
     checkHasPermi(value){
       return checkPermi(value);
     }
-  },
-  beforeDestroy: function() {
-    this.websocketClose();
   }
 }
 </script>

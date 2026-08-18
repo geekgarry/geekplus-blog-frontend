@@ -1,16 +1,12 @@
 module.exports = {
+  compact: false, // 压缩代码，false对所有取消大小限制
   presets: [
     ["@vue/cli-plugin-babel/preset", {
       useBuiltIns: 'usage',
       corejs: { version: 3, proposals: true },
-      targets: {
-        chrome: '64',
-        firefox: '67',
-        safari: '12',
-        edge: '79',
-        ios: '12',
-        android: '8'
-      },
+      // 交给 package.json browserslist。
+      // 需要 IE11 时：browserslist 加 "IE 11" + ie11-compat/enabled.js=true（见 ie11-compat/README.md）
+      // 不要在此写死仅现代浏览器的 targets，否则 legacy 差分转译会失效。
     }, "cli-plugin-babel-preset"]
   ],
   // 切勿启用 babel-plugin-dynamic-import-node（会把 import() 转成同步 require，毁掉按需分包）

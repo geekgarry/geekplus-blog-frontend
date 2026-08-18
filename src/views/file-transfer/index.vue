@@ -481,7 +481,7 @@ export default {
 }
 
 .gp-btn--primary {
-  background: var(--theme-color, #6e8b8e);
+  background: var(--theme-color-muted, #6e8b8e);
   border-color: var(--theme-color, #6e8b8e);
   color: #fff;
 }

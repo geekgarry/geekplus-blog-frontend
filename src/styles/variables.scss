@@ -1,31 +1,30 @@
-// base color
-$blue:#324157;
-$light-blue:#3A71A8;
-$red:#C03639;
+/**
+ * 管理端侧栏等布局尺寸变量（结构用，不是站点主题色）
+ * 菜单高亮色由 JS / --theme-color 驱动；此处仅作无主题时的回退。
+ */
+// base color（按钮色块 btn.scss 用，固定色不跟换肤）
+$blue: #324157;
+$light-blue: #3A71A8;
+$red: #C03639;
 $pink: #E65D6E;
 $green: #30B08F;
 $tiffany: #4AB7BD;
-$yellow:#FEC171;
+$yellow: #FEC171;
 $panGreen: #30B08F;
 
-// sidebar
-$menuText:#bfcbd9;
-$menuActiveText:#409EFF;
-$subMenuActiveText:#f4f4f5; // https://github.com/ElemeFE/element/issues/12951
-
-$menuBg:#304156;
-$menuHover:#263445;
-
-$subMenuBg:#1f2d3d;
-$subMenuHover:#001528;
-
+// sidebar 结构色
+$menuText: #bfcbd9;
+$menuActiveText: #5f7d80; // 回退；运行时优先 store / --theme-color
+$subMenuActiveText: #f4f4f5;
+$menuBg: #304156;
+$menuHover: #263445;
+$subMenuBg: #1f2d3d;
+$subMenuHover: #001528;
 $sideBarWidth: 210px;
 
-//框架默认主题色
+// 管理端布局尺度
 $base-color-default: #5470c6;
-//默认层级
 $base-z-index: 999;
-//字体大小配置
 $base-font-size-small: 12px;
 $base-font-size-default: 14px;
 $base-font-size-big: 16px;
@@ -43,10 +42,5 @@ $base-color-gray: rgba(0, 0, 0, 0.65);
 $base-main-width: 1279px;
 $base-border-radius: 4px;
 $base-border-color: #dcdfe6;
-//输入框高度
 $base-input-height: 32px;
-//默认paddiing
 $base-padding: 20px;
-// the :export 已迁至 variables.module.scss，供 JS import；本文件只保留 Sass 变量给 @import
-// （Vue CLI 5 起普通 .scss 不再自动当 CSS Modules，直接 import 会报 module has no exports）
-

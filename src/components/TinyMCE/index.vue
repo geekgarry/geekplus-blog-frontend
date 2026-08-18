@@ -1,11 +1,47 @@
 <template>
-  <Editor
-    id="tinymce"
-    name="tinymce"
-    v-model="content"
-    :init="init"
-    model-events="change keydown blur focus paste"
-  ></Editor>
+  <div class="gp-tinymce">
+    <div class="gp-tinymce__chrome">
+      <span class="gp-tinymce__chrome-label">皮肤</span>
+      <el-select
+        v-model="skinId"
+        size="mini"
+        class="gp-tinymce__select"
+        placeholder="皮肤"
+        @change="onChromeChange"
+      >
+        <el-option
+          v-for="opt in skinOptions"
+          :key="opt.id"
+          :label="opt.label"
+          :value="opt.id"
+        />
+      </el-select>
+      <span class="gp-tinymce__chrome-label">表情</span>
+      <el-select
+        v-model="emojiPackId"
+        size="mini"
+        class="gp-tinymce__select gp-tinymce__select--wide"
+        placeholder="表情包"
+        @change="onChromeChange"
+      >
+        <el-option
+          v-for="opt in emojiOptions"
+          :key="opt.id"
+          :label="opt.label"
+          :value="opt.id"
+        />
+      </el-select>
+      <span class="gp-tinymce__chrome-tip">切换会保留正文并重载编辑器</span>
+    </div>
+    <Editor
+      :key="'tinymce-' + editorKey"
+      id="tinymce"
+      name="tinymce"
+      v-model="content"
+      :init="init"
+      model-events="change keydown blur focus paste"
+    />
+  </div>
   <!-- @blur="focusOutEditor"
   @focus="focusOnEditor" -->
 </template>
@@ -14,59 +50,72 @@
 import tinymce from "tinymce";
 import Editor from "@tinymce/tinymce-vue";
 import "tinymce/themes/silver/theme";
+import "tinymce/icons/default/icons";
+import "tinymce/themes/silver";
+// —— 工具栏 / plugins 实际用到的官方插件 ——
 import "tinymce/plugins/image";
 import "tinymce/plugins/link";
 import "tinymce/plugins/code";
 import "tinymce/plugins/table";
 import "tinymce/plugins/lists";
 import "tinymce/plugins/wordcount";
-import "tinymce/icons/default/icons";
-import "tinymce/themes/silver";
 import "tinymce/plugins/media";
-import "tinymce/plugins/contextmenu";
-import "tinymce/plugins/colorpicker";
-import "tinymce/plugins/textcolor";
 import "tinymce/plugins/preview";
 import "tinymce/plugins/advlist";
 import "tinymce/plugins/codesample";
-import "tinymce/plugins/hr";
 import "tinymce/plugins/fullscreen";
 import "tinymce/plugins/textpattern";
 import "tinymce/plugins/searchreplace";
 import "tinymce/plugins/autolink";
-import "tinymce/plugins/directionality";
-import "tinymce/plugins/visualblocks";
 import "tinymce/plugins/visualchars";
 import "tinymce/plugins/template";
 import "tinymce/plugins/charmap";
-import "tinymce/plugins/nonbreaking";
 import "tinymce/plugins/insertdatetime";
-import "tinymce/plugins/imagetools";
 import "tinymce/plugins/autosave";
 import "tinymce/plugins/save";
-import "tinymce/plugins/autoresize";
 import "tinymce/plugins/paste";
 import "tinymce/plugins/print";
 import "tinymce/plugins/quickbars";
-import "tinymce/plugins/bbcode";
-import "tinymce/plugins/tabfocus";
 import "tinymce/plugins/toc";
-import "tinymce/plugins/fullpage";
-import "tinymce/plugins/importcss";
 import "tinymce/plugins/legacyoutput";
 import "tinymce/plugins/emoticons";
 import "tinymce/plugins/anchor";
-// 扩展插件
+// 以下插件暂未出现在 plugins/toolbar，注释掉以减小 chunk-tinymce（文件仍在 node_modules，可随时恢复）
+// import "tinymce/plugins/contextmenu";
+// import "tinymce/plugins/colorpicker";
+// import "tinymce/plugins/textcolor";
+// import "tinymce/plugins/hr";
+// import "tinymce/plugins/directionality";
+// import "tinymce/plugins/visualblocks";
+// import "tinymce/plugins/nonbreaking";
+// import "tinymce/plugins/imagetools";
+// import "tinymce/plugins/autoresize";
+// import "tinymce/plugins/bbcode";
+// import "tinymce/plugins/tabfocus";
+// import "tinymce/plugins/fullpage";
+// import "tinymce/plugins/importcss";
+// 扩展插件（public 保留，按需 import）
 import "/public/tinymce/plugins/formatpainter";
-import "/public/tinymce/plugins/lineheight";
-import "/public/tinymce/plugins/letterspacing";
-import "/public/tinymce/plugins/layout";
 import "/public/tinymce/plugins/upfile";
 import "/public/tinymce/plugins/attachment";
-import "/public/tinymce/plugins/importword";
-import "/public/tinymce/plugins/indent2em";
+// import "/public/tinymce/plugins/lineheight";
+// import "/public/tinymce/plugins/letterspacing";
+// import "/public/tinymce/plugins/layout";
+// import "/public/tinymce/plugins/importword";
+// import "/public/tinymce/plugins/indent2em";
 
 import { uploadFileForArticle, deleteFile, deleteFileList } from "@/api/common";
+import {
+  TINYMCE_SKIN_OPTIONS,
+  TINYMCE_EMOJI_OPTIONS,
+  loadSkinId,
+  loadEmojiPackId,
+  saveSkinId,
+  saveEmojiPackId,
+  skinUrls,
+  emojiDatabaseUrl,
+} from "./tinymceChrome";
+
 export default {
   name: "TinyEditor",
   components: { Editor },
@@ -86,8 +135,16 @@ export default {
   },
   data() {
     let self = this  // 加上这一句就OK了
+    const skinId = loadSkinId();
+    const emojiPackId = loadEmojiPackId();
+    const chrome = skinUrls(skinId);
     return {
       content: this.value,
+      skinId,
+      emojiPackId,
+      skinOptions: TINYMCE_SKIN_OPTIONS,
+      emojiOptions: TINYMCE_EMOJI_OPTIONS,
+      editorKey: 0,
       //fileList: [],
       allImageList: [],
       allMyWebImageSize: -1,
@@ -100,8 +157,8 @@ export default {
         // auto_focus: 'element1',
         language: "zh_CN", //语言类型
         // webpack 打包后 tinymce 会误以 /static/js/ 为 base，必须显式指定皮肤路径，否则 content.css MIME 报错
-        skin_url: "/tinymce/skins/ui/oxide",
-        content_css: "/tinymce/skins/content/default/content.css",
+        skin_url: chrome.skin_url,
+        content_css: chrome.content_css,
         height: 680, //编辑器高度
         min_height: 380,
         // min_width: 700,
@@ -139,9 +196,9 @@ export default {
           [0x2601, 'cloud'],
         ],
         plugins:
-          "image link code codesample table lists wordcount autosave save autolink insertdatetime upfile attachment " +
+          "image link code codesample table lists advlist wordcount autosave save autolink insertdatetime upfile attachment " +
           "preview media fullscreen quickbars print template paste visualchars emoticons textpattern formatpainter legacyoutput " +
-          "searchreplace toc charmap", //就可以增加上面引入的插件，加入下面这一行就可以在toolbar栏显示相应插件。
+          "searchreplace toc charmap anchor",
         branding: false, //是否禁用“Powered by TinyMCE”
         toolbar: [
           {
@@ -205,57 +262,8 @@ export default {
             items: ["preview", "print", "emoticons", "fullscreen"],
           },
         ],
-        //toolbar: "undo redo | fontselect fontsizeselect link autolink lineheight | forecolor backcolor | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | image imagetools | code | h1 h2 h3 h4 h5 blockquote table numlist bullist outdent indent preview fullscreen", //工具栏
-        // toolbar_groups: {
-        //     formatting: {
-        //     icon: 'bold',
-        //     tooltip: 'Formatting',
-        //     items: 'bold italic underline | superscript subscript'
-        //     }
-        // },
-        // content_style: '.left { text-align: left; } ' +
-        //   'img.left { float: left; } ' +
-        //   'table.left { float: left; } ' +
-        //   '.right { text-align: right; } ' +
-        //   'img.right { float: right; } ' +
-        //   'table.right { float: right; } ' +
-        //   '.center { text-align: center; } ' +
-        //   'img.center { display: block; margin: 0 auto; } ' +
-        //   'table.center { display: block; margin: 0 auto; } ' +
-        //   '.full { text-align: justify; } ' +
-        //   'img.full { display: block; margin: 0 auto; } ' +
-        //   'table.full { display: block; margin: 0 auto; } ' +
-        //   '.bold { font-weight: bold; } ' +
-        //   '.italic { font-style: italic; } ' +
-        //   '.underline { text-decoration: underline; } ' +
-        //   '.tablerow1 { background-color: #D3D3D3; }',
-        // formats: {
-        //   alignleft: { selector: 'p,h1,h2,h3,h4,h5,h6,td,th,div,ul,ol,li,table,img,audio,video', classes: 'left' },
-        //   aligncenter: { selector: 'p,h1,h2,h3,h4,h5,h6,td,th,div,ul,ol,li,table,img,audio,video', classes: 'center' },
-        //   alignright: { selector: 'p,h1,h2,h3,h4,h5,h6,td,th,div,ul,ol,li,table,img,audio,video', classes: 'right' },
-        //   alignfull: { selector: 'p,h1,h2,h3,h4,h5,h6,td,th,div,ul,ol,li,table,img,audio,video', classes: 'full' },
-        //   bold: { inline: 'span', classes: 'bold' },
-        //   italic: { inline: 'span', classes: 'italic' },
-        //   underline: { inline: 'span', classes: 'underline', exact: true },
-        //   strikethrough: { inline: 'del' },
-        //   customformat: { inline: 'span', styles: { color: '#00ff00', fontSize: '20px' }, attributes: { title: 'My custom format'} , classes: 'example1'}
-        // },
-        // style_formats: [
-        //   { title: 'Custom format', format: 'customformat' },
-        //   { title: 'Align left', format: 'alignleft' },
-        //   { title: 'Align center', format: 'aligncenter' },
-        //   { title: 'Align right', format: 'alignright' },
-        //   { title: 'Align full', format: 'alignfull' },
-        //   { title: 'Bold text', inline: 'strong' },
-        //   { title: 'Red text', inline: 'span', styles: { color: '#ff0000' } },
-        //   { title: 'Red header', block: 'h1', styles: { color: '#ff0000' } },
-        //   { title: 'Badge', inline: 'span', styles: { display: 'inline-block', border: '1px solid #2276d2', 'border-radius': '5px', padding: '2px 5px', margin: '0 2px', color: '#2276d2' } },
-        //   { title: 'Table row 1', selector: 'tr', classes: 'tablerow1' },
-        //   { title: 'Image formats' },
-        //   { title: 'Image Left', selector: 'img', styles: { 'float': 'left', 'margin': '0 10px 0 10px' } },
-        //   { title: 'Image Right', selector: 'img', styles: { 'float': 'right', 'margin': '0 0 10px 10px' } },
-        // ],
-        emoticons_database_url: '/tinymce/plugins/emoticons/js/emojis.js',
+        // 默认精简表情；完整包文件仍保留在 public，可在上方下拉切换
+        emoticons_database_url: emojiDatabaseUrl(emojiPackId),
         //attachment_max_size: 100 * 1024 * 1024,
         toolbar_mode: "sliding",
         toolbar_sticky: true,
@@ -533,6 +541,16 @@ export default {
     });
   },
   methods: {
+    /** 切换皮肤 / 表情包：更新 init 后 remount，正文走 v-model 保留 */
+    onChromeChange() {
+      const chrome = skinUrls(this.skinId);
+      this.init.skin_url = chrome.skin_url;
+      this.init.content_css = chrome.content_css;
+      this.init.emoticons_database_url = emojiDatabaseUrl(this.emojiPackId);
+      saveSkinId(this.skinId);
+      saveEmojiPackId(this.emojiPackId);
+      this.editorKey += 1;
+    },
     // file_picker_callback: function(callback, value, meta) {
     //     // Provide file and text for the link dialog
     //     if (meta.filetype == 'file') {
@@ -765,5 +783,56 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
+.gp-tinymce {
+  width: 100%;
+}
+
+.gp-tinymce__chrome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  background: #f5f7fa;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.gp-tinymce__chrome-label {
+  font-size: 12px;
+  color: #606266;
+  white-space: nowrap;
+  margin-right: 6px;
+}
+
+.gp-tinymce__select {
+  width: 140px;
+  margin-right: 12px;
+}
+
+.gp-tinymce__select--wide {
+  width: 180px;
+  margin-right: 12px;
+}
+
+.gp-tinymce__chrome-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-left: 4px;
+}
+
+body[theme-mode="dark"] .gp-tinymce__chrome,
+html[data-theme="dark"] .gp-tinymce__chrome {
+  background: #2b2f3a;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+body[theme-mode="dark"] .gp-tinymce__chrome-label,
+html[data-theme="dark"] .gp-tinymce__chrome-label,
+body[theme-mode="dark"] .gp-tinymce__chrome-tip,
+html[data-theme="dark"] .gp-tinymce__chrome-tip {
+  color: #a8abb2;
+}
 </style>

@@ -1767,7 +1767,7 @@ code.hljs {
   box-sizing: border-box !important;
   width: 14px !important;
   height: 14px !important;
-  background-color: var(--background-origin, #FFFFFF) !important;
+  background-color: var(--theme-color, #FFFFFF);
   z-index: 1 !important;
   transition: border-color 0.25s cubic-bezier(0.71, -0.46, 0.29, 1.46), background-color 0.25s cubic-bezier(0.71, -0.46, 0.29, 1.46) !important;
 }
@@ -1866,7 +1866,7 @@ code.hljs {
   border-radius: 100% !important;
   width: 14px !important;
   height: 14px !important;
-  background-color: var(--background-origin, #FFFFFF) !important;
+  background-color: var(--theme-color, #FFFFFF) !important;
   position: relative !important;
   cursor: pointer !important;
   display: inline-block !important;
@@ -2373,11 +2373,6 @@ code.hljs {
   padding: 10px;
 }
 
-.el-dialog {
-  width: 95% !important;
-  min-width: 150px !important;
-}
-
 aside {
   padding: 0 10px;
   background: transparent;
@@ -2432,10 +2427,6 @@ aside {
     height: 160px !important;
   }
 
-  .el-dialog {
-    width: 480px !important;
-  }
-
   /* 首页轮播图 */
   .index-carousel-wrapper .el-carousel__container {
     max-height: 280px !important;
@@ -2458,10 +2449,6 @@ aside {
   /***桌面首页网站profile展示widget***/
   .profile-image-wrapper {
     height: 150px !important;
-  }
-
-  .el-dialog {
-    width: 560px !important;
   }
 
   /* 首页轮播图 */
@@ -2489,10 +2476,6 @@ aside {
     height: 172px !important;
   }
 
-  .el-dialog {
-    width: 600px !important;
-  }
-
   /* 首页轮播图 */
   .index-carousel-wrapper .el-carousel__container {
     max-height: 360px !important;
@@ -2511,10 +2494,6 @@ aside {
     width: 91%;
     max-width: 1600px;
     margin: 0 auto;
-  }
-
-  .el-dialog {
-    max-width: 700px !important;
   }
 
   /* 首页轮播图 */

@@ -1,12 +1,12 @@
 import defaultSettings from '@/settings'
-import variables from '@/styles/element-variables.module.scss'
+import { DEFAULT_THEME } from '@/utils/elementTheme'
 // import sidebarVariables from '@/styles/variables.scss'
 
-const { showSettings, leftMenuBar, tagsView, fixedHeader, sidebarLogo, webGrey, blogLayout } = defaultSettings
+const { showSettings, leftMenuBar, tagsView, fixedHeader, sidebarLogo, webGrey, blogLayout, adminWatermark } = defaultSettings
 
 const state = {
   webGrey: JSON.parse(localStorage.getItem('webGrey')) || webGrey,
-  themeColor: localStorage.getItem('themeColor') || variables.themeColor, //|| '#0badb6'
+  themeColor: localStorage.getItem('themeColor') || DEFAULT_THEME,
   showSettings: showSettings,
   leftMenuBar: localStorage.getItem('leftMenuBar') || (leftMenuBar ? '1' : '0'),
   tagsView: localStorage.getItem('tagsView') || (tagsView ? '1' : '0'),
@@ -14,6 +14,10 @@ const state = {
   sidebarLogo: localStorage.getItem('sidebarLogo') || (sidebarLogo ? '1' : '0'),
   /** top | side —— 博客前台 BlogShell 布局偏好 */
   blogLayout: localStorage.getItem('blogLayout') || blogLayout || 'top',
+  /** 管理端水印 */
+  adminWatermark: localStorage.getItem('adminWatermark') != null
+    ? localStorage.getItem('adminWatermark')
+    : (adminWatermark ? '1' : '0'),
   showLogin: false
 }
 

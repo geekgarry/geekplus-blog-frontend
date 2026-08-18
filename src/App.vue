@@ -7,31 +7,35 @@
   </div>
 </template>
 <script>
-const version = require('element-ui/package.json').version // element-ui version from node_modules
-const ORIGINAL_THEME = '#5f7d80' // 默认雾霾青绿（略加深，提升浅色对比）
+import {
+  applyElementTheme,
+  DEFAULT_THEME,
+  resolveStoredThemeColor
+} from '@/utils/elementTheme'
 
 export default {
   name: 'App',
   data() {
     return {
-      chalk: '', // content of theme-chalk css
-      themeColor: '',
       gpPlayerComponent: null,
     }
   },
   created() {
-    // this.preloadLibraries();
     console.log('当前时间：%O', new Date());
     console.log("%c"+window.location.host, "background-image:-webkit-gradient( linear, left top, right top, color-stop(0, #f22), color-stop(0.15, #f2f), color-stop(0.3, #22f), color-stop(0.45, #2ff), color-stop(0.6, #25e),color-stop(0.75, #4f2), color-stop(0.9, #f2f), color-stop(1, #f22) );color:transparent;-webkit-background-clip: text;font-size:2em;")
-    // 旧版亮青 / 上一版默认色迁移到当前默认主题色
+
+    // 旧版默认色迁移
     const storedTheme = localStorage.getItem('themeColor')
     if (!storedTheme || /^#0badb6$/i.test(storedTheme) || /^#13c2c2$/i.test(storedTheme) || /^#6e8b8e$/i.test(storedTheme)) {
-      localStorage.setItem('themeColor', ORIGINAL_THEME)
-      this.$store && this.$store.dispatch('settings/changeSetting', { key: 'themeColor', value: ORIGINAL_THEME })
+      localStorage.setItem('themeColor', DEFAULT_THEME)
+      this.$store && this.$store.dispatch('settings/changeSetting', { key: 'themeColor', value: DEFAULT_THEME })
     }
-    document.documentElement.style.setProperty('--theme-color', localStorage.getItem('themeColor') || ORIGINAL_THEME)
+
+    // 同步 CSS 变量 + 轻量覆盖；chalk 空闲再加载，不挡首屏
+    applyElementTheme(resolveStoredThemeColor(), { defer: true })
+
     var key = "theme-mode";
-    const themeMode = localStorage.getItem(key);//"light"
+    const themeMode = localStorage.getItem(key);
     if (themeMode) {
       if(themeMode.includes("dark")) {
         document.body.setAttribute(key, themeMode);
@@ -47,7 +51,6 @@ export default {
     }
   },
   mounted() {
-    // 延后加载拖拽浮层与播放器，避免和首屏抢带宽
     const bootExtras = () => {
       import("plus-draggable-element").then(({ default: DraggableComponent }) => {
         new DraggableComponent({
@@ -67,80 +70,8 @@ export default {
     isDay() {
       return this.isLightDay();
     },
-    storageThemeColor() {
-      return localStorage.getItem("themeColor");
-    }
-  },
-  watch: {
-    async themeColor(val) {
-      const oldVal = this.chalk ? this.themeColor : ORIGINAL_THEME
-      if (typeof val !== 'string') return
-      const themeCluster = this.getThemeCluster(val.replace('#', ''))
-      const originalCluster = this.getThemeCluster(oldVal.replace('#', ''))
-
-      const getHandler = (variable, id) => {
-        return () => {
-          const originalCluster = this.getThemeCluster(ORIGINAL_THEME.replace('#', ''))
-          const newStyle = this.updateStyle(this[variable], originalCluster, themeCluster)
-
-          let styleTag = document.getElementById(id)
-          if (!styleTag) {
-            styleTag = document.createElement('style')
-            styleTag.setAttribute('id', id)
-            document.head.appendChild(styleTag)
-          }
-          styleTag.innerText = newStyle
-        }
-      }
-
-      if (!this.chalk) {
-        const url = `https://unpkg.com/element-ui@${version}/lib/theme-chalk/index.css`
-        await this.getCSSString(url, 'chalk')
-      }
-
-      const chalkHandler = getHandler('chalk', 'chalk-style')
-
-      chalkHandler()
-
-      const styles = [].slice.call(document.querySelectorAll('style'))
-        .filter(style => {
-          const text = style.innerText
-          return new RegExp(oldVal, 'i').test(text) && !/Chalk Variables/.test(text)
-        })
-      styles.forEach(style => {
-        const { innerText } = style
-        if (typeof innerText !== 'string') return
-        style.innerText = this.updateStyle(innerText, originalCluster, themeCluster)
-      })
-
-      //把更换的颜色设置为全局css变量
-      document.documentElement.style.setProperty('--theme-color', val);
-    }
   },
   methods: {
-    async preloadLibraries() {
-      // 预加载 vue-google-adsense，避免其代码进入首屏主包
-      try {
-        const Ads = await import('vue-google-adsense');
-        const AdsModule = Ads.default;
-        // 全局注册组件
-        Vue.component('Adsense', AdsModule.Adsense);
-        Vue.component('InArticleAdsense', AdsModule.InArticleAdsense);
-        Vue.component('InFeedAdsense', AdsModule.InFeedAdsense);
-      } catch (error) {
-        console.error('Failed to preload vue-google-adsense:', error);
-      }
-      // try {
-      //   const Ads = await import('vue-google-adsense');
-      //   const AdsModule = Ads.default;
-      //   // 注册组件
-      //   this.$options.components.Adsense = AdsModule.Adsense;
-      //   this.$options.components.InArticleAdsense = AdsModule.InArticleAdsense;
-      //   this.$options.components.InFeedAdsense = AdsModule.InFeedAdsense;
-      // } catch (error) {
-      //   console.error('Failed to load vue-google-adsense:', error);
-      // }
-    },
     async loadGpPlayer() {
       try {
         const module = await import('@/components/ApMusic/GpPlayer.vue')
@@ -150,14 +81,6 @@ export default {
       }
     },
     isMusicPlaying(playing) {
-      // const articlePage = document.getElementsByClassName('plus-blog-article article-container');
-      // const audios = document.getElementsByTagName('audio');
-      // for (let i = 0; i < audios.length; i++) {
-      //   if (audios[i].currentSrc) {
-      //     return true;
-      //   }
-      // }
-      // iconRotate
       if (playing && playing === true) {
         document.getElementsByClassName("bg-music-buoy")[0].classList.add("iconRotate");
         this.bgMusicPlaying = true;
@@ -166,72 +89,6 @@ export default {
         this.bgMusicPlaying = false;
       }
     },
-    updateStyle(style, oldCluster, newCluster) {
-      let newStyle = style
-      oldCluster.forEach((color, index) => {
-        newStyle = newStyle.replace(new RegExp(color, 'ig'), newCluster[index])
-      })
-      return newStyle
-    },
-
-    getCSSString(url, variable) {
-      return new Promise(resolve => {
-        const xhr = new XMLHttpRequest()
-        xhr.onreadystatechange = () => {
-          if (xhr.readyState === 4 && xhr.status === 200) {
-            this[variable] = xhr.responseText.replace(/@font-face{[^}]+}/, '')
-            resolve()
-          }
-        }
-        xhr.open('GET', url)
-        xhr.send()
-      })
-    },
-
-    getThemeCluster(theme) {
-      const tintColor = (color, tint) => {
-        let red = parseInt(color.slice(0, 2), 16)
-        let green = parseInt(color.slice(2, 4), 16)
-        let blue = parseInt(color.slice(4, 6), 16)
-
-        if (tint === 0) { // when primary color is in its rgb space
-          return [red, green, blue].join(',')
-        } else {
-          red += Math.round(tint * (255 - red))
-          green += Math.round(tint * (255 - green))
-          blue += Math.round(tint * (255 - blue))
-
-          red = red.toString(16)
-          green = green.toString(16)
-          blue = blue.toString(16)
-
-          return `#${red}${green}${blue}`
-        }
-      }
-
-      const shadeColor = (color, shade) => {
-        let red = parseInt(color.slice(0, 2), 16)
-        let green = parseInt(color.slice(2, 4), 16)
-        let blue = parseInt(color.slice(4, 6), 16)
-
-        red = Math.round((1 - shade) * red)
-        green = Math.round((1 - shade) * green)
-        blue = Math.round((1 - shade) * blue)
-
-        red = red.toString(16)
-        green = green.toString(16)
-        blue = blue.toString(16)
-
-        return `#${red}${green}${blue}`
-      }
-
-      const clusters = [theme]
-      for (let i = 0; i <= 9; i++) {
-        clusters.push(tintColor(theme, Number((i / 10).toFixed(2))))
-      }
-      clusters.push(shadeColor(theme, 0.1))
-      return clusters
-    }
   }
 }
 </script>

@@ -147,15 +147,24 @@
       :class="{ 'is-open': openIndexes.includes(index) }"
     >
       <div class="gp-nav-drawer__row">
-        <button
-          v-if="item.children && item.children.length"
+        <div class="gp-nav-drawer__link" v-if="item.children && item.children.length" @click="toggleDrawerItem(index)">
+          <button
           type="button"
-          class="gp-nav-drawer__link"
-          @click="toggleDrawerItem(index)"
-        >
-          <svg-icon v-if="item.icon" class="gp-nav-menu__icon" :icon-class="item.icon" />
-          <span>{{ item.label }}</span>
-        </button>
+          class="gp-nav-drawer__button"
+          >
+            <svg-icon v-if="item.icon" class="gp-nav-menu__icon" :icon-class="item.icon" />
+            <span>{{ item.label }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="gp-nav-drawer__arrow"
+            :aria-expanded="openIndexes.includes(index) ? 'true' : 'false'"
+            @click.stop="toggleDrawerItem(index)"
+          >
+            <i :class="openIndexes.includes(index) ? 'el-icon-arrow-up' : 'el-icon-arrow-down'" />
+          </button>
+        </div>
         <button
           v-else
           type="button"
@@ -164,15 +173,6 @@
         >
           <svg-icon v-if="item.icon" class="gp-nav-menu__icon" :icon-class="item.icon" />
           <span>{{ item.label }}</span>
-        </button>
-        <button
-          v-if="item.children && item.children.length"
-          type="button"
-          class="gp-nav-drawer__arrow"
-          :aria-expanded="openIndexes.includes(index) ? 'true' : 'false'"
-          @click="toggleDrawerItem(index)"
-        >
-          <i :class="openIndexes.includes(index) ? 'el-icon-arrow-up' : 'el-icon-arrow-down'" />
         </button>
       </div>
       <transition name="gp-menu-expand">
@@ -731,10 +731,29 @@ export default {
   color: var(--theme-color, #6e8b8e);
 }
 
+.gp-nav-drawer__button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
 .gp-nav-drawer__arrow {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  /* width: 36px;
+  height: 36px; */
   border: none;
   border-radius: 8px;
   background: transparent;

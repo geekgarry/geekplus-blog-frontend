@@ -8,6 +8,11 @@ module.exports = {
   webGrey: false,
 
   /**
+   * 管理后台页面水印（仅 admin Layout）
+   */
+  adminWatermark: false,
+
+  /**
    * 是否系统布局配置
    */
   showSettings: false,

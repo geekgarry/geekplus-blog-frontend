@@ -1,7 +1,7 @@
 /**
  * 应用入口
  * 性能约定：
- * 1) polyfill 交给 babel useBuiltIns:'usage'，不要再 import 'core-js/stable'
+ * 1) polyfill 交给 babel useBuiltIns:'usage'；IE11 由 ie11-compat 自动注入（见 ie11-compat/enabled.js）
  * 2) 重型插件（广告、v-viewer、html2canvas 等）延后或路由内 import()
  * 3) '@/permission' 会预取前台栏目菜单，保证直链动态路由可注册
  *
@@ -43,7 +43,7 @@ if (typeof window !== 'undefined') {
 import { parseTime, dateFormat, resetForm, addDateRange, selectDictLabel, selectDictLabels, download, handleTree, firstUpperCase } from "@/utils/gputil";
 
 import "./styles/index.scss";
-// geekplusadmin.scss / element-admin 仅在管理端 Layout 中加载
+// 管理端 admin.scss / sidebar / element-admin 仅在 layout 中加载，避免博客首屏打入
 
 // 广告组件同步注册，杜绝首屏 Unknown custom element: <Adsense>
 import AdsenseWidget from '@/components/Adsense/index.vue';

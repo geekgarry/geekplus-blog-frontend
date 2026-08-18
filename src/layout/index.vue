@@ -12,6 +12,8 @@
       <right-panel v-if="showSettings">
         <settings />
       </right-panel>
+      <admin-watermark />
+      <realtime-chat-entry />
       <!-- <right-panel v-if="false">
       </right-panel> -->
     </div>
@@ -22,8 +24,11 @@
 import { Navbar, Sidebar, Topbar, AppMain, TagsView, Settings } from './components'
 import ResizeMixin from './mixin/ResizeHandler'
 import RightPanel from '@/components/RightPanel'
+import AdminWatermark from '@/components/AdminWatermark/index.vue'
+import RealtimeChatEntry from '@/components/RealtimeChat/Entry.vue'
 import { markBootReady } from '@/utils/bootLoader'
-import '@/styles/geekplusadmin.scss'
+import { reassertElementTheme, bumpElementThemeStyles } from '@/utils/elementTheme'
+import '@/styles/admin.scss'
 import '@/styles/sidebar.scss'
 import '@/plugins/element-admin'
 
@@ -37,10 +42,15 @@ export default {
     RightPanel,
     TagsView,
     Settings,
+    AdminWatermark,
+    RealtimeChatEntry
   },
   mixins: [ResizeMixin],
   mounted() {
+    // 管理端 CSS chunk 可能已在其它页预加载过：模块不会重跑，这里再申明一次主题
+    reassertElementTheme()
     this.$nextTick(() => {
+      bumpElementThemeStyles()
       if (typeof requestAnimationFrame === 'function') {
         requestAnimationFrame(() => markBootReady())
       } else {
@@ -95,8 +105,7 @@ export default {
 <style lang="scss" scoped>
   @import "~@/styles/mixin.scss";
   @import "~@/styles/variables.scss";
-  /* @import 'element-theme-dark/lib/index.css'; */
-  @import "~@/styles/sidebar.scss";
+  /* 侧栏样式已在 script 中全局引入；此处不再重复 @import sidebar */
 
   .app-wrapper {
     @include clearfix;

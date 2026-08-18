@@ -60,6 +60,7 @@ import 'element-ui/lib/theme-chalk/message.css'
 import 'element-ui/lib/theme-chalk/notification.css'
 import 'element-ui/lib/theme-chalk/display.css'
 import '@/styles/element-icons-font-display.css'
+import '@/styles/element-input-overrides.css'
 
 const components = [
   Pagination,

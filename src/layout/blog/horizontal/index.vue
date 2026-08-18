@@ -239,6 +239,7 @@
         <svg-icon icon-class="backToTopArrow" />
       </button>
     </transition>
+    <realtime-chat-entry />
   </div>
 </template>
 
@@ -250,6 +251,7 @@
  */
 import { mapGetters } from 'vuex'
 import blogLayoutMixin from '@/layout/blog/blogLayoutMixin'
+import RealtimeChatEntry from '@/components/RealtimeChat/Entry.vue'
 
 const COLLAPSE_KEY = 'gp-side-collapsed'
 /** 滚动超过该距离（px）后显示回到顶部 */
@@ -258,6 +260,7 @@ const BACK_TOP_OFFSET = 320
 export default {
   name: 'HorizontalBlogLayout',
   mixins: [blogLayoutMixin],
+  components: { RealtimeChatEntry },
   data() {
     return {
       isDrawerOpen: false,

@@ -106,7 +106,7 @@
 import store from "@/store";
 import { VueCropper } from "vue-cropper";
 import { uploadAvatar, getAvatarImageList, updateUserAvatar } from "@/api/system/user";
-import { deleteFile } from "@/api/common";
+import { deleteFile, deleteFileList } from "@/api/common";
 import { isBlogSiteAdmin } from "@/utils/blogAdmin";
 
 const DEFAULT_AVATAR = require("@/assets/mai.jpg");
@@ -266,6 +266,7 @@ export default {
           this.visible = false;
           this.avatarBroken = false;
           const url = resolveAvatarUrl(response.imgUrl || (response.data && response.data.imgUrl));
+          deleteFileList([this.options.img]);
           this.options.img = url;
           store.commit("user/SET_AVATAR", url);
           this.msgSuccess("修改成功");

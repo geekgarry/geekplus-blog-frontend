@@ -26,7 +26,10 @@ export function getDept(queryParams) {
   })
 }
 
-// 查询部门下拉树结构
+/**
+ * 部门下拉树（用户管理筛选/表单、个人资料选部门等）。
+ * 后端按当前用户 data_scope 裁剪可见节点；系统管理员返回全树。
+ */
 export function deptTreeSelect() {
   return request({
     url: '/sys/dept/getSysDeptTree',
@@ -34,7 +37,10 @@ export function deptTreeSelect() {
   })
 }
 
-// 根据角色ID查询部门树结构
+/**
+ * 角色「自定数据权限」勾选：部门树 + checkedKeys。
+ * 树同样受操作者可见部门限制，避免越权授权。
+ */
 export function roleDeptTreeselect(roleId) {
   return request({
     url: '/sys/dept/roleDeptTreeselect/' + roleId,

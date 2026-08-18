@@ -316,7 +316,7 @@ import PlusDrawer from '@/utils/plus-drawer.js'
 const marked = require('marked'); //9.1.6
 import { geminiAI, geminiAIChat, getHistoryMessage, getAllHistoryMessage, getOneHistoryMessage, deleteOneHistoryMessage, getGeminiTTS, uploadVoiceBlob, geminiStreamChat } from "@/api/chatbot/chatbot"
 import LoginSignup from '@/components/LoginSignup/index'
-
+import { base64ToBlob, fileToBase64 } from '@/utils/gputil.js'
 export default {
   name: "ChatBot",
   components: {
@@ -1173,7 +1173,7 @@ export default {
         //     $('#chatDataModal').modal();
         // }
         if (file.type.indexOf('image') !== -1 && file.type.indexOf('adobe') === -1) {
-          this.chatDataPrompt.mediaData = await this.fileToBase64(file);
+          this.chatDataPrompt.mediaData = await fileToBase64(file);
           // this.tempFileUrl = tempURL;
           // 显示裁剪框，传入配置选项
           PlusCropper.show({
@@ -1186,10 +1186,10 @@ export default {
             // 可以在这里将裁剪后的图片数据上传到服务器或者进行其他操作
             this.chatDataPrompt.mediaData = croppedImageDataURL;
             URL.revokeObjectURL(this.tempFileUrl);
-            this.tempFileUrl = URL.createObjectURL(this.base64ToBlob(croppedImageDataURL));
+            this.tempFileUrl = URL.createObjectURL(base64ToBlob(croppedImageDataURL));
           });
         } else if ((file.type.indexOf('json') !== -1 || file.type.indexOf('xml') !== -1 || file.type.indexOf('text') !== -1)) {
-          this.chatDataPrompt.mediaData = await this.fileToBase64(file);
+          this.chatDataPrompt.mediaData = await fileToBase64(file);
           // this.tempFileUrl = tempURL;
           const domObject = '<object controls height="100%" width="100%" data="' + tempURL + '">' +
             '<source src="' + tempURL + '" type="audio/mpeg">' +
@@ -1204,7 +1204,7 @@ export default {
           // PlusDialog.show({ onlyCloseBtn: true });
           this.fileDialogVisible = true;
         } else if ((file.type.indexOf('audio') !== -1 || file.type.indexOf('video') !== -1)) {
-          this.chatDataPrompt.mediaData = await this.fileToBase64(file);
+          this.chatDataPrompt.mediaData = await fileToBase64(file);
           // this.tempFileUrl = tempURL;
           const tempFile = '<video controls height="50" width="100%" data="' + tempURL + '">' +
             '<source src="' + tempURL + '" type="audio/mpeg">' +
@@ -1273,7 +1273,7 @@ export default {
               // 在这里处理base64数据
               const base64 = e.target.result;
               this.chatDataPrompt.mediaData = base64;
-              // const fileData = this.base64ToBlob(base64);
+              // const fileData = base64ToBlob(base64);
               // let clip = new CropImg({width: 300, height:220}) // 设置裁剪的比例
               // clip.init(fileData, res => { // 需要将裁剪的图片文件传入，既可以触发裁剪
               //     // 裁剪按钮 点击后会触发此函数，传入的res是裁剪后的文件,可以上传，也可以自己手动转成url显示
@@ -1297,7 +1297,7 @@ export default {
                 // 可以在这里将裁剪后的图片数据上传到服务器或者进行其他操作
                 this.chatDataPrompt.mediaData = croppedImageDataURL;
                 URL.revokeObjectURL(this.tempFileUrl);
-                this.tempFileUrl = URL.createObjectURL(this.base64ToBlob(croppedImageDataURL));
+                this.tempFileUrl = URL.createObjectURL(base64ToBlob(croppedImageDataURL));
               });
             };
             reader.readAsDataURL(file);
@@ -1386,87 +1386,6 @@ export default {
       //console.log(blob);
       this.tempFileUrl = window.URL.createObjectURL(blob);
       this.chatDataPrompt.mediaData = base64;
-    },
-    //blob 和 base64 类型转换
-    base64ToBlob(base64) {
-      let arr = base64.split(',')
-      let type = arr[0].match(/:(.*?);/)[1]
-      let bstr = atob(arr[1])
-      let n = bstr.length
-      const u8arr = new Uint8Array(n)
-      while (n--) {
-        u8arr[n] = bstr.charCodeAt(n)
-      }
-      return new Blob([u8arr], { type: type })
-    },
-    //blob 和 base64 类型转换
-    blobToBase64(blob) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.readAsDataURL(blob)
-        reader.onload = (e) => {
-          resolve(e.target.result)
-        }
-      })
-    },
-    //File 和 base64 类型转换
-    base64ToFile(base64, filename) {
-      const arr = base64.split(',')
-      const type = arr[0].match(/:(.*?);/)[1]
-      const bstr = atob(arr[1])
-      let n = bstr.length
-      const u8arr = new Uint8Array(n)
-      while (n--) {
-        u8arr[n] = bstr.charCodeAt(n)
-      }
-      return new File([u8arr], filename, { type: type })
-    },
-    //File 和 base64 类型转换
-    fileToBase64(data) {
-      return new Promise((resolve, reject) => {
-        const fileReader = new FileReader()
-        fileReader.onload = (e) => {
-          resolve(e.target.result)
-        }
-        fileReader.readAsDataURL(data)
-        fileReader.onerror = () => {
-          reject(new Error('文件流异常'))
-        }
-      })
-    },
-    //blob 和 File 类型转换
-    blobToFile(blob, fileName) {
-      const file = new File([blob], fileName, { type: blob.type });
-      return file;
-    },
-    //File 转 blob
-    fileToBlob(data) {
-      return new Promise((resolve, reject) => {
-        const fileReader = new FileReader()
-        fileReader.onload = (e) => {
-          const blob = new Blob([e.target.result], { type: data.type })
-          resolve(blob)
-        }
-        fileReader.readAsDataURL(data)
-        fileReader.onerror = () => {
-          reject(new Error('文件流异常'))
-        }
-      })
-    },
-    //获取input上传的File 转 Byte
-    fileToByte(data) {
-      return new Promise((resolve, reject) => {
-        const fileReader = new FileReader()
-        fileReader.onload = (e) => {
-          const binaryData = e.target.result;
-          // 在这里返回binaryData
-          resolve(binaryData)
-        }
-        fileReader.readAsArrayBuffer(data);
-        fileReader.onerror = () => {
-          reject(new Error('文件流异常'))
-        }
-      })
     },
     toggleMenu() {
       // const menuDrawer = document.getElementById("menuDrawer");

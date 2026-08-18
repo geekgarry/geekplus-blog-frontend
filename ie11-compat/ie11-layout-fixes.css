@@ -1,0 +1,42 @@
+/**
+ * IE11 布局兜底（不支持 inset / flex gap / 部分 grid 时的最低可用样式）
+ * 仅通过 polyfills 在 IE 下动态引入；体积小，也可被现代浏览器忽略加载路径。
+ */
+
+/* inset: 0 → 四向定位 */
+.gp-ie11 #loader-wrapper,
+.gp-ie11 [style*="inset"],
+html.gp-ie11 #loader-wrapper {
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+}
+
+/* 常见全屏遮罩 */
+.gp-ie11 .el-dialog__wrapper,
+.gp-ie11 .v-modal,
+.gp-ie11 .el-drawer__wrapper {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/* flex gap 在 IE 无效：给首屏常见横向/纵向 flex 一点外边距兜底（不能覆盖所有 gap） */
+.gp-ie11 .gp-boot-shell,
+.gp-ie11 .gp-page,
+.gp-ie11 .el-row {
+  /* 占位：具体 gap 需业务侧用 margin；此处避免完全塌陷 */
+}
+
+/* IE 对 :not() 复杂选择器支持有限时，确保 #app 可见 */
+html.gp-ie11 #app {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+html.gp-ie11.gp-booting #app {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

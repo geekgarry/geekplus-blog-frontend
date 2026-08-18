@@ -346,7 +346,7 @@
 /* 博客页内残留 Element：柔化官方蓝，对齐站点主题 */
 .gp-page .el-button--text,
 .gp-page .el-button--primary.is-plain {
-  color: var(--theme-color) !important;
+  color: var(--text-color-2,#fbfafa);
 }
 .gp-page .el-button--primary {
   background-color: var(--theme-color) !important;

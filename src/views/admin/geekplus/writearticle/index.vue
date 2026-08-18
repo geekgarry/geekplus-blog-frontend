@@ -673,7 +673,6 @@ export default {
   padding: 5px;
   font-size: 12px;
   display: none;
-  background-color: #f0f0f0;
   border: 1px solid #dcdcdc;
   border-radius: 4px;
 }

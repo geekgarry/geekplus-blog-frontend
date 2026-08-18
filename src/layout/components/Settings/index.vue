@@ -30,19 +30,25 @@
       </div>
 
       <!--增加切换按钮-->
-      <div class="drawer-item hidden-sm-and-down">
+      <div class="drawer-item">
         <span>{{ $t("settings.leftMenuBar") }}</span>
         <el-switch active-value="1" inactive-value="0" v-model="leftMenuBar" class="drawer-switch" />
       </div>
 
-      <!--增加黑白主题切换按钮-->
       <div class="drawer-item">
-        <div class="dark-setting">
-          <!-- 太阳按钮 -->
-          <i v-if="isDarkMode" class="el-icon-sunny" @click="changeColor"></i>
-          <!-- 月亮按钮 -->
-          <i v-else class="el-icon-moon" aria-hidden="true" @click="changeColor"></i>
-        </div>
+        <span>管理端水印</span>
+        <el-switch active-value="1" inactive-value="0" v-model="adminWatermark" class="drawer-switch" />
+      </div>
+
+      <!-- 黑/亮色：与其它布局项一样用 switch -->
+      <div class="drawer-item">
+        <span>深色模式</span>
+        <el-switch
+          :active-value="true"
+          :inactive-value="false"
+          v-model="isDarkMode"
+          class="drawer-switch"
+        />
       </div>
     </div>
   </div>
@@ -109,7 +115,6 @@ export default {
         })
       }
     },
-    // 增加绑定的leftMenuBar值
     leftMenuBar: {
       get() {
         return this.$store.state.settings.leftMenuBar
@@ -121,11 +126,32 @@ export default {
         })
       }
     },
-    isDarkMode: {
+    adminWatermark: {
       get() {
-        return this.$store.state.darkMode != null ? this.$store.state.darkMode : !this.isDay;
+        return this.$store.state.settings.adminWatermark
+      },
+      set(val) {
+        this.$store.dispatch('settings/changeSetting', {
+          key: 'adminWatermark',
+          value: val
+        })
       }
     },
+    /** 深色模式：true=暗色，false=亮色（与 body[theme-mode] / localStorage 同步） */
+    isDarkMode: {
+      get() {
+        return this.$store.state.darkMode === true
+      },
+      set(val) {
+        const dark = val === true
+        if (dark) {
+          document.body.setAttribute('theme-mode', 'dark')
+        } else {
+          document.body.removeAttribute('theme-mode')
+        }
+        this.$store.dispatch('changeDarkMode', dark)
+      }
+    }
   },
   methods: {
     setWebGrey(val) {
@@ -140,16 +166,6 @@ export default {
         key: 'themeColor',
         value: val
       })
-    },
-    changeColor() {
-      var isDark = !this.isDarkMode;
-      if (isDark) {
-        document.body.setAttribute("theme-mode", "dark");
-        this.$store.commit("changeDarkMode", isDark);
-      } else {
-        document.body.removeAttribute("theme-mode", "dark");
-        this.$store.commit("changeDarkMode", isDark);
-      }
     }
   }
 }
@@ -177,17 +193,6 @@ export default {
 
   .drawer-switch {
     float: right
-  }
-
-  .dark-setting {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .dark-setting i {
-    padding: 5px;
-    cursor: pointer;
   }
 }
 </style>

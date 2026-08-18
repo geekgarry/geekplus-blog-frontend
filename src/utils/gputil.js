@@ -161,7 +161,7 @@ export function firstTitleUpperLowerCase(str) {
 }
 
 //字符串第一个单词首字母大写，其余单词首字母小写
-export function firstTitleUpperCase(str) {    
+export function firstTitleUpperCase(str) {
 	var newStr = str.split(" ");
 	for(var i = 0; i<newStr.length; i++){
 		newStr[i] = newStr[i].slice(0,1).toUpperCase() + newStr[i].slice(1).toLowerCase();
@@ -195,4 +195,87 @@ export function handleTree(data, id, parentId, children, rootId) {
 		return father[parentId] === rootId;
 	});
 	return treeData != '' ? treeData : data;
+}
+
+//blob 和 base64 类型转换
+export function base64ToBlob(base64) {
+  let arr = base64.split(',')
+  let type = arr[0].match(/:(.*?);/)[1]
+  let bstr = atob(arr[1])
+  let n = bstr.length
+  const u8arr = new Uint8Array(n)
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n)
+  }
+  return new Blob([u8arr], { type: type })
+}
+
+//blob 和 base64 类型转换
+export function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(blob)
+    reader.onload = (e) => {
+      resolve(e.target.result)
+    }
+  })
+}
+//File 和 base64 类型转换
+export function base64ToFile(base64, filename) {
+  const arr = base64.split(',')
+  const type = arr[0].match(/:(.*?);/)[1]
+  const bstr = atob(arr[1])
+  let n = bstr.length
+  const u8arr = new Uint8Array(n)
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n)
+  }
+  return new File([u8arr], filename, { type: type })
+}
+//File 和 base64 类型转换
+export function fileToBase64(data) {
+  return new Promise((resolve, reject) => {
+    const fileReader = new FileReader()
+    fileReader.onload = (e) => {
+      resolve(e.target.result)
+    }
+    fileReader.readAsDataURL(data)
+    fileReader.onerror = () => {
+      reject(new Error('文件流异常'))
+    }
+  })
+}
+//blob 和 File 类型转换
+export function blobToFile(blob, fileName) {
+  const file = new File([blob], fileName, { type: blob.type });
+  return file;
+}
+//File 转 blob
+export function fileToBlob(data) {
+  return new Promise((resolve, reject) => {
+    const fileReader = new FileReader()
+    fileReader.onload = (e) => {
+      const blob = new Blob([e.target.result], { type: data.type })
+      resolve(blob)
+    }
+    fileReader.readAsDataURL(data)
+    fileReader.onerror = () => {
+      reject(new Error('文件流异常'))
+    }
+  })
+}
+//获取input上传的File 转 Byte
+export function fileToByte(data) {
+  return new Promise((resolve, reject) => {
+    const fileReader = new FileReader()
+    fileReader.onload = (e) => {
+      const binaryData = e.target.result;
+      // 在这里返回binaryData
+      resolve(binaryData)
+    }
+    fileReader.readAsArrayBuffer(data);
+    fileReader.onerror = () => {
+      reject(new Error('文件流异常'))
+    }
+  })
 }

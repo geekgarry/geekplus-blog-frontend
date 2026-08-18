@@ -439,7 +439,7 @@ export default {
     this.getListDeptOptions();
   },
   methods: {
-    /** 查询部门下拉树结构 Treeselect*/
+    /** 查询部门下拉树（后端已按 data_scope 裁剪可见部门） */
     getListDeptOptions() {
       deptTreeSelect().then(res => {
         this.deptOptions = res.data;//this.handleTree(res.rows, "deptId")

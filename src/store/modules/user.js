@@ -1,7 +1,5 @@
-import { login, logout, getInfo, getMenuTree } from '@/api/system/user'
-import { getToken, setTokenExpires, setToken, removeToken } from '@/utils/auth'
-import { resetRouter } from '@/router'
-import store from '..'
+import { login, logout, getInfo, getMenuTree, refreshUserAuth } from '@/api/system/user'
+import { getToken, setTokenExpires, removeToken } from '@/utils/auth'
 
 const getDefaultState = () => {
   return {
@@ -28,6 +26,35 @@ const state = getDefaultState()
 
 /** 模块级 Promise，避免 rematch 并发重复打 /sys/user/getMenu */
 let menuTreeLoadingPromise = null
+
+/** 将 getMenu / refreshUserAuth 返回的权限包写入 store */
+function applyMenuPayload(commit, data) {
+  const menus = data && data.menuList
+  if (!menus) {
+    return Promise.reject(new Error('Verification failed, please Login again.'))
+  }
+  const avatar = data.avatar === '' ? require('@/assets/mai.jpg') : data.avatar
+  commit('SET_MENUS', menus)
+  commit('SET_PERMISSIONS', data.permsSet)
+  commit('SET_USERNAME', data.username)
+  commit('SET_NICKNAME', data.nickname)
+  commit('SET_USERID', data.userId)
+  commit('SET_AVATAR', avatar)
+  commit('SET_ROLES', data.roles)
+  if (data.roleNames) {
+    commit('SET_ROLE_NAMES', data.roleNames)
+  }
+  if (data.userType != null || data.sysUser) {
+    commit('SET_USER', data.sysUser || {
+      userId: data.userId,
+      username: data.username,
+      nickname: data.nickname,
+      userType: data.userType,
+      deptId: data.deptId
+    })
+  }
+  return Promise.resolve(menus)
+}
 
 const mutations = {
   RESET_STATE: (state) => {
@@ -122,45 +149,21 @@ const actions = {
     })
   },
 
-  getMenu({ commit, state }) {
-    // 路由 rematch / 并发守卫可能短时间多次 dispatch，合并为一次请求
+  getMenu({ commit }) {
     if (menuTreeLoadingPromise) {
       return menuTreeLoadingPromise
     }
-    menuTreeLoadingPromise = new Promise((resolve, reject) => {
-      getMenuTree().then(response => {
-        const { data } = response;
-        const menus = data.menuList;
-        if (!menus) {
-          return reject('Verification failed, please Login again.')
-        }
-        const avatar = data.avatar == "" ? require("@/assets/mai.jpg") : data.avatar;
-        commit('SET_MENUS', menus)
-        commit('SET_PERMISSIONS', data.permsSet)
-        commit('SET_USERNAME', data.username)
-        commit('SET_NICKNAME', data.nickname)
-        commit('SET_USERID', data.userId)
-        commit('SET_AVATAR', avatar)
-        commit('SET_ROLES', data.roles)
-        if (data.roleNames) {
-          commit('SET_ROLE_NAMES', data.roleNames)
-        }
-        if (data.userType != null || data.sysUser) {
-          commit('SET_USER', data.sysUser || {
-            userId: data.userId,
-            username: data.username,
-            nickname: data.nickname,
-            userType: data.userType
-          })
-        }
-        resolve(menus)
-      }).catch(error => {
-        reject(error)
-      }).finally(() => {
+    menuTreeLoadingPromise = getMenuTree()
+      .then((response) => applyMenuPayload(commit, response.data))
+      .finally(() => {
         menuTreeLoadingPromise = null
       })
-    })
     return menuTreeLoadingPromise
+  },
+
+  /** 设置「刷新权限」：后端返回与 getMenu 同结构权限包并写入 store */
+  refreshAuth({ commit }) {
+    return refreshUserAuth().then((response) => applyMenuPayload(commit, response.data))
   },
 
   // user logout
@@ -195,4 +198,3 @@ export default {
   mutations,
   actions
 }
-

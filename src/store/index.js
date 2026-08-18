@@ -108,6 +108,10 @@ export default new Vuex.Store({
       state.mobileMode = mobileMode;
     }
   },
-  actions: {},
+  actions: {
+    changeDarkMode({ commit }, darkMode) {
+      commit('changeDarkMode', darkMode);
+    }
+  },
   modules: modules
 });
