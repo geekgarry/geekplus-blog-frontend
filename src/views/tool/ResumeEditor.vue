@@ -1,7 +1,7 @@
 <template>
   <div class="container-fluid re-wrap">
-    <div class="gp-page container re-page">
-      <div class="resume-editor-page">
+    <div class="gp-page container re-page gp-tool-page">
+      <div class="resume-editor-page gp-tool-app">
         <!-- 顶栏：桌面完整按钮 / 移动端图标栏 -->
         <header class="resume-toolbar no-print">
           <div class="toolbar-left">
@@ -81,6 +81,27 @@
           </div>
         </div>
 
+        <!-- 工作区页签：对齐 【简历制作】 的 builder / analysis / ppt，并新增岗位搜索 -->
+        <nav class="re-workspace-tabs no-print">
+          <button
+            type="button"
+            :class="{ active: workspace === 'builder' }"
+            @click="workspace = 'builder'"
+          >编辑简历</button>
+          <button
+            type="button"
+            :class="{ active: workspace === 'analysis' }"
+            @click="workspace = 'analysis'"
+          >岗位分析</button>
+          <button
+            type="button"
+            :class="{ active: workspace === 'jobs' }"
+            @click="workspace = 'jobs'"
+          >岗位搜索</button>
+          <!-- <router-link class="re-workspace-link" to="/tool/pptStudio">PPT 工作室</router-link> -->
+        </nav>
+
+        <div v-show="workspace === 'builder'">
         <!-- 移动端：编辑 / 预览切换 -->
         <div class="mobile-pane-tabs no-print" v-if="isMobile">
           <button
@@ -117,6 +138,21 @@
               :template="currentTemplateMeta"
             />
           </div>
+        </div>
+        </div>
+
+        <div v-show="workspace === 'analysis'" class="re-workspace-pane no-print">
+          <ResumeAnalysis
+            :key="'analysis-' + analysisReloadKey"
+            :resume-data="resumeData"
+            @apply-resume="onApplyOptimizedResume"
+          />
+        </div>
+        <div v-show="workspace === 'jobs'" class="re-workspace-pane no-print">
+          <ResumeJobSearch
+            :resume-data="resumeData"
+            @use-jd="onUseJdFromSearch"
+          />
         </div>
 
         <!-- Template picker -->
@@ -187,6 +223,7 @@
                 <i class="el-icon-plus"></i> 新建简历
               </button>
             </div>
+            <p class="re-list-hint">点击整张卡片打开内容编辑；铅笔图标仅修改简历名称。</p>
 
             <ul v-if="myResumeList.length" class="re-resume-list">
               <li
@@ -210,8 +247,22 @@
                   </p>
                 </div>
                 <div class="re-resume-card__actions" @click.stop>
-                  <button type="button" class="re-icon-act" title="打开编辑" @click="applyResumeRecord(row)">
-                    <i class="el-icon-edit"></i>
+                  <!-- 改名与打开编辑分离：整卡点击进内容编辑，铅笔只改标题 -->
+                  <button
+                    type="button"
+                    class="re-icon-act"
+                    title="修改名称"
+                    @click="renameResumeRecord(row)"
+                  >
+                    <i class="el-icon-edit-outline"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="re-icon-act"
+                    title="打开编辑内容"
+                    @click="applyResumeRecord(row)"
+                  >
+                    <i class="el-icon-document"></i>
                   </button>
                   <button type="button" class="re-icon-act danger" title="删除" @click="removeResumeRecord(row)">
                     <i class="el-icon-delete"></i>
@@ -222,11 +273,36 @@
             <p v-else-if="!myResumesLoading" class="empty-resumes">暂无云端简历，保存后会出现在这里。</p>
           </div>
 
-          <!-- PPT 占位（不改原简历功能） -->
-          <div v-show="myCenterTab === 'ppt'" class="re-center-pane re-placeholder">
-            <i class="el-icon-picture-outline"></i>
-            <p>PPT 作品集即将上线</p>
-            <span>当前版本专注简历编辑与云端保存</span>
+          <!-- PPT：与工作区 PPT 制作联动 -->
+          <div v-show="myCenterTab === 'ppt'" class="re-center-pane">
+            <div class="re-list-hd">
+              <h3>我的 PPT</h3>
+              <button type="button" class="re-new-btn" @click="openPptWorkspace">
+                <i class="el-icon-edit"></i> 去制作
+              </button>
+            </div>
+            <ul v-if="localPptList.length" class="re-resume-list">
+              <li
+                v-for="row in localPptList"
+                :key="row.id"
+                class="re-resume-card"
+                @click="openPptWorkspace"
+              >
+                <div class="re-resume-card__icon">
+                  <i class="el-icon-picture-outline"></i>
+                </div>
+                <div class="re-resume-card__body">
+                  <div class="re-resume-card__title-row">
+                    <strong>{{ row.title || '未命名演示文稿' }}</strong>
+                  </div>
+                  <p class="re-resume-card__meta">
+                    {{ row.slideCount || 0 }} 页 · 本地保存
+                    <span v-if="row.savedAt"> · {{ formatResumeTime(row.savedAt) }}</span>
+                  </p>
+                </div>
+              </li>
+            </ul>
+            <p v-else class="empty-resumes">暂无本地 PPT，可在「PPT 制作」中生成并保存。</p>
           </div>
 
           <!-- 账号设置快捷入口 -->
@@ -305,10 +381,13 @@ import {
   getResume,
   getMyResumeList,
   deleteResume,
+  renameResume,
 } from '@/api/resume'
 import {
   ResumePreview,
   ResumeFormEditor,
+  ResumeAnalysis,
+  ResumeJobSearch,
   createEmptyResumeData,
   DEFAULT_TEMPLATES,
 } from '@/components/resume'
@@ -321,14 +400,22 @@ import {
 } from '@/components/resume/export/exportUtils'
 import '@/components/resume/styles/tailwind.css'
 import '@/components/resume/styles/resume-print.css'
+import {
+  RESUME_EDITOR_CACHE_KEY,
+  RESUME_PPT_LOCAL_KEY,
+  RESUME_ANALYSIS_SESSION_KEY,
+} from '@/components/resume/constants'
+import { PPT_LOCAL_KEY } from '@/components/ppt/pptThemes'
 
-const CACHE_KEY = 'resume_editor_cache_v2'
+const CACHE_KEY = RESUME_EDITOR_CACHE_KEY
 
 export default {
   name: 'ResumeEditorPage',
   components: {
     ResumePreview,
     ResumeFormEditor,
+    ResumeAnalysis,
+    ResumeJobSearch,
   },
   props: {
     data: {
@@ -356,6 +443,10 @@ export default {
       myResumesLoading: false,
       myResumeList: [],
       myCenterTab: 'resume',
+      // builder | analysis | jobs
+      workspace: 'builder',
+      localPptList: [],
+      analysisReloadKey: 0,
     }
   },
   computed: {
@@ -397,6 +488,57 @@ export default {
     onMyCenterOpen() {
       this.myCenterTab = 'resume'
       this.loadMyResumes()
+      this.refreshLocalPptList()
+    },
+    refreshLocalPptList() {
+      try {
+        // 优先读独立工作室键，兼容旧 resume 内嵌键
+        const raw =
+          localStorage.getItem(PPT_LOCAL_KEY) ||
+          localStorage.getItem(RESUME_PPT_LOCAL_KEY)
+        if (!raw) {
+          this.localPptList = []
+          return
+        }
+        const obj = JSON.parse(raw)
+        this.localPptList = [
+          {
+            id: 'local-ppt',
+            title: obj.title || '本地演示文稿',
+            slideCount: Array.isArray(obj.slides) ? obj.slides.length : 0,
+            savedAt: obj.savedAt || Date.now(),
+          },
+        ]
+      } catch (e) {
+        this.localPptList = []
+      }
+    },
+    openPptWorkspace() {
+      this.myResumesVisible = false
+      this.$router.push('/tool/pptStudio').catch(() => {})
+    },
+    onPptSaved() {
+      this.refreshLocalPptList()
+    },
+    onApplyOptimizedResume(payload) {
+      if (!payload || typeof payload !== 'object') return
+      // Analysis 侧已 mergeResumeData；此处直接替换当前编辑数据
+      this.resumeData = payload
+      this.persistCache()
+      this.workspace = 'builder'
+    },
+    onUseJdFromSearch(text) {
+      // 岗位搜索 → 分析页：把 JD 塞进 session，切到分析页签
+      try {
+        const prev = sessionStorage.getItem(RESUME_ANALYSIS_SESSION_KEY)
+        const obj = prev ? JSON.parse(prev) : {}
+        obj.jobText = text
+        sessionStorage.setItem(RESUME_ANALYSIS_SESSION_KEY, JSON.stringify(obj))
+      } catch (e) {
+        /* ignore */
+      }
+      this.workspace = 'analysis'
+      this.analysisReloadKey += 1
     },
     handleResumeChange(data) {
       this.resumeData = data
@@ -508,6 +650,46 @@ export default {
           this.loadMyResumes()
         })
         .catch(() => {})
+    },
+    /**
+     * 仅改简历名称：弹窗输入 → PUT /api/resume/{id}/title，不加载正文、不关列表。
+     */
+    renameResumeRecord(row) {
+      if (!row || !row.id) {
+        this.$message.warning('该简历尚未保存到云端，无法改名')
+        return
+      }
+      this.$prompt('请输入新的简历名称', '修改名称', {
+        confirmButtonText: '保存',
+        cancelButtonText: '取消',
+        inputValue: row.title || '未命名简历',
+        inputPattern: /\S+/,
+        inputErrorMessage: '名称不能为空',
+        closeOnClickModal: false,
+      })
+        .then(({ value }) => {
+          const title = String(value || '').trim()
+          if (!title) return Promise.reject(new Error('empty'))
+          return renameResume(this.userId, row.id, title).then((res) => {
+            const saved = (res && res.data) || { title }
+            const nextTitle = saved.title || title
+            // 列表就地更新，避免整表闪烁
+            const hit = this.myResumeList.find((r) => r.id === row.id)
+            if (hit) {
+              hit.title = nextTitle
+              if (saved.updatedAt) hit.updatedAt = saved.updatedAt
+            }
+            if (this.currentResumeId === row.id) {
+              this.currentResumeTitle = nextTitle
+            }
+            this.$message.success('名称已更新')
+          })
+        })
+        .catch((err) => {
+          if (err === 'cancel' || err === 'close') return
+          if (err && err.message === 'empty') return
+          // 请求失败时 interceptor 多半已 tip；此处仅兜底
+        })
     },
     formatResumeTime(val) {
       if (!val) return '-'
@@ -768,6 +950,48 @@ export default {
   margin-bottom: 10px;
   font-size: 13px;
 }
+.re-workspace-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 4px;
+  background: var(--background-2, #fff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+}
+.re-workspace-tabs button {
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--re-muted, #6b7280);
+  cursor: pointer;
+}
+.re-workspace-tabs button.active {
+  background: var(--re-primary-soft, #dbeafe);
+  color: var(--re-primary, #2563eb);
+}
+.re-workspace-link {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-color);
+  text-decoration: none;
+  background: var(--theme-color-muted);
+  border: 1px solid var(--border-color-2);
+}
+.re-workspace-link:hover {
+  border-color: var(--borderHoverColor);
+}
+.re-workspace-pane {
+  min-height: 360px;
+}
 .current-resume-tip {
   margin-bottom: 10px;
   font-size: 13px;
@@ -874,7 +1098,12 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
+}
+.re-list-hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--re-muted, #909399);
 }
 .re-list-hd h3 {
   margin: 0;

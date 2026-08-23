@@ -46,7 +46,9 @@ export function blogProfileMenus({ isAdmin } = {}) {
         { key: 'categories', label: '分类浏览', icon: 'el-icon-menu', to: '/categories' },
         { key: 'tags', label: '热门标签', icon: 'el-icon-collection-tag', to: '/tags' },
         { key: 'search', label: '搜索文章', icon: 'el-icon-search', to: '/search' },
-        { key: 'resume', label: '简历生成', icon: 'el-icon-notebook-2', to: '/tool/resumeGenerator' }
+        { key: 'resume', label: '简历生成', icon: 'el-icon-notebook-2', to: '/tool/resumeGenerator' },
+        { key: 'ppt', label: 'PPT 工作室', icon: 'el-icon-picture-outline', to: '/tool/pptStudio' },
+        { key: 'skeleton', label: '骨架屏工作室', icon: 'el-icon-orange', to: '/tool/skeletonStudio' }
       ]
     },
     {

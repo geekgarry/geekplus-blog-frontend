@@ -170,6 +170,46 @@ Node 版本建议与团队现网一致（Vue CLI 5 / webpack 体系）。首次�
 
 > **约定**：以后每一次**重点优化 / 架构改动 / 体验向修复**，必须在本小节**置顶追加**一条（日期 + 摘要 + 关键路径）。日常文案微调可不记。
 
+### 2026-08-22
+
+- **骨架工作室排布**：工具栏分组 + 导出下拉；组件库分「布局/占位」双列；结构编辑与实时预览并排；侧栏 sticky。
+  - 代码：`SkeletonStudio.vue`
+- **骨架识别 P1→P2→P3**：工作室「识别导入」——粘贴/文件 HTML·JSON·Vue；URL 经 `/api/skeleton/fetch-url`；截图经 `/api/skeleton/from-image`。
+  - 代码：`src/components/skeleton/skeletonImport.js`、`SkeletonStudio.vue`、`src/api/skeleton.js`
+  - 后端文档：`GeekPlus-Blog-API/docs/14-骨架屏识别API.md`
+- **帖子内容列表模板 + 输入占位节点**：版块「帖子内容列表」；组件面板新增 `field`/`textarea`（外形占位，非真实表单控件）。
+  - 代码：`skeletonPresets.js`、`skeletonSchema.js`、导出/渲染同步
+
+### 2026-08-21
+
+- **文件管理大文本卡顿**：文本预览弃用 `el-input`+`v-model`，改原生 textarea（正文不进 Vue 响应式）；悬停摘要 `maxChars`；后端 &gt;5MB 拒绝全文读。
+  - 前端：`views/admin/system/file/index.vue`、`api/system/file-manager.js`
+  - 后端/文档：`FileService#readTextFile`、`docs/13-文件管理大文本读取优化.md`
+- **骨架屏 Schema 工作室（P0）**：独立路由 `/tool/skeletonStudio`；拖拽编辑 circle/line/lines/block/gap；CSS shimmer 预览；支持复制布局/样式/合并片段、导出 HTML+CSS 或 `.vue`。零新增 npm（复用 `vuedraggable`）。
+  - 代码：`components/skeleton/*`、`views/tool/SkeletonStudio.vue`
+  - 样式：`src/assets/css/index.css`（`.gp-skel` / `@keyframes gp-skel-shimmer`）
+- **骨架布局增强**：新增「横向行 / 纵向组」嵌套容器；支持左右布局、对齐/间距/flex 占比；一键插入「头像|文案」；导出 HTML/CSS 同步含 `.gp-skel-row` / `.gp-skel-stack`。
+- **骨架常用版块模板**：顶栏内容、侧栏主区、文章详情、双列卡片、商品三列、数据看板、评论列表、登录卡等；工具栏「套用版块模板」可替换/追加。
+- **后台系统工具入口**：菜单「表单构建」「骨架屏工作室」（SQL：`GeekPlus-Blog-API/.../migration_tool_build_skeleton_menu.sql`）；后台页 `views/admin/tool/skeleton/index.vue`。
+- **表单构建优化**：配色对齐后台 Token；布局组件新增「数据表格」；「整页模板 → 查询列表页」生成查询表单+表格+分页方法骨架（`pageMode=list`）。
+- **PPT 设置面板 + 工具页 UI 统一**：右侧设置（主题风格 / 色板 / 字体 / 切换动画 / 自动播放 / 显示选项）；简历与 PPT 共用 `gp-tool-*` 样式，输入框对齐站点 Token。
+  - 代码：`components/ppt/PptSettingsPanel.vue`、`pptThemes.js`、`PptStudio.vue`
+  - 样式：`src/assets/css/index.css`（`.gp-tool-page` / `.gp-settings-panel`）
+- **PPT 独立工作室**：从简历模块移出为 `/tool/pptStudio`；支持手输 / 上传文档 / 简历生成；主题动画、大纲脑图、激光笔、导出 HTML/MD；配色对齐 `color.css`。
+  - 前端：`components/ppt/PptStudio.vue`、`views/tool/PptStudio.vue`
+  - API：`POST /api/ppt/generate`（`tool/ppt`）
+- **岗位爬虫加深**：新增 RemoteOK、Arbeitnow 公开源；Worker 按源策略拉取。  
+- **后端分域 + 岗位爬虫**：`tool/resume`（CRUD/AI）与 `tool/job`（搜索/深链/Worker）拆分；`AiJsonParser` 统一 JSON 解析。  
+  - API：`/api/job/search`、`/api/job/crawl/run`；SQL：`db/job_posting.sql`  
+  - 文档：`GeekPlus-Blog-API/docs/12-模块拆分与岗位爬虫.md`
+- **前端消重**：`resumeAiPayload.js` / `constants.js`；废弃仓内 `backend/resume-service` stub 说明。
+- **简历上传空结果修复**：PDF/DOC 上传后 `code:200` 却返回空 basics/work——根因是 `mediaData` 传了 `File`，JSON 序列化丢附件。改为本地抽字（pdfjs/mammoth）+ base64 附件，并拦截空结构化结果。  
+  - 代码：`src/utils/resumeFileParse.js`、`src/components/resume/ResumeFormEditor.vue`  
+  - 后端：`Result.success((Object) text)`，避免正文进 `msg`  
+- **对齐 即刻简历 并扩展**：新增「岗位分析 / 岗位搜索」工作区；PPT 已独立成工作室。  
+  - 前端：`ResumeAnalysis.vue`、`ResumeJobSearch.vue`、`ResumeEditor.vue`  
+  - 文档：`GeekPlus-Blog-API/docs/11-简历工具AI扩展-解析分析岗位搜索PPT.md`
+
 ### 2026-08-04（登录 / 打包 / SSO / 会话）
 
 - **登录慢根因**：生产 `addressEnabled=true` 时登录会同步请求太平洋 IP 归属（超时原 20s）；已改为登录才查、超时 1.5s，Token 刷新不再查 IP。登录顺序改为先校验账号密码再写库。  

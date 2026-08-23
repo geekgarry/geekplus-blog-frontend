@@ -45,7 +45,7 @@
               </span>
             </div>
             <p v-if="uploadedFile" class="file-hint text-xs text-gray-500 mt-1">
-              文件已保存在本地；若后端暂不支持解析附件，仍会使用上方文字说明生成。
+              {{ uploadedParseHint || '已选文件，点击「立即生成」将解析正文并结构化填充。' }}
             </p>
           </div>
         </div>
@@ -665,15 +665,18 @@ import draggable from 'vuedraggable';
 import { generateResumeAI } from '@/api/resume';
 import { createEmptyResumeData } from './types';
 import { createResumeId } from './export/idUtils';
+import {
+  parseResumeUploadFile,
+  isEmptyResumePayload,
+} from '@/utils/resumeFileParse';
+import {
+  extractAiPayload,
+  parseAiJson,
+  mergeResumeData,
+} from '@/utils/resumeAiPayload';
+import { RESUME_UPLOAD_MIME } from './constants';
 
-const ALLOWED_FILE_TYPES = [
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'image/jpeg',
-  'image/png',
-  'image/jpg',
-];
+const ALLOWED_FILE_TYPES = RESUME_UPLOAD_MIME;
 
 const OPTIMIZE_LABELS = {
   summary: '个人介绍',
@@ -694,6 +697,9 @@ export default {
       activeCollapse: ['ai'],
       aiPrompt: '',
       uploadedFile: null,
+      // 本地解析提示（抽字成功/失败原因），避免用户以为「选了文件就已上传成功」
+      uploadedParseHint: '',
+      uploadedParseCache: null,
       isGenerating: false,
       aiLoadingKey: null,
       chatDataPrompt: {
@@ -967,10 +973,12 @@ export default {
         this.$refs.fileInput.click();
       }
     },
-    handleResumeFileUpload(e) {
+    async handleResumeFileUpload(e) {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
-      if (ALLOWED_FILE_TYPES.indexOf(file.type) === -1) {
+      // 部分浏览器 .doc 的 type 为空，放宽用扩展名校验
+      const nameOk = /\.(pdf|doc|docx|jpg|jpeg|png)$/i.test(file.name || '');
+      if (ALLOWED_FILE_TYPES.indexOf(file.type) === -1 && !nameOk) {
         this.$message.warning('只支持 PDF、DOC、DOCX、JPG、PNG 格式的文件');
         e.target.value = '';
         return;
@@ -981,145 +989,133 @@ export default {
         return;
       }
       this.uploadedFile = file;
+      this.uploadedParseHint = '正在本地解析文件…';
+      this.uploadedParseCache = null;
+      try {
+        // 选文件时预解析：生成时直接复用，并尽早发现扫描件空文本
+        const parsed = await parseResumeUploadFile(file);
+        this.uploadedParseCache = parsed;
+        this.uploadedParseHint = parsed.extractNote;
+      } catch (err) {
+        this.uploadedParseHint =
+          (err && err.message) || '本地预解析失败，生成时将重试';
+      }
     },
     removeUploadedFile() {
       this.uploadedFile = null;
+      this.uploadedParseHint = '';
+      this.uploadedParseCache = null;
       if (this.$refs.fileInput) {
         this.$refs.fileInput.value = '';
       }
     },
-    extractAiPayload(res) {
-      if (res == null) return null;
-      if (typeof res === 'string') return res;
-      if (typeof res.data === 'string' || (typeof res.data === 'object' && res.data !== null)) {
-        return res.data;
-      }
-      if (typeof res.msg === 'string' && res.code === 200) {
-        return res.msg;
-      }
-      return res;
-    },
-    tryParseResumeJson(text) {
-      if (typeof text !== 'string') return null;
-      const trimmed = text.trim();
-      if (!trimmed) return null;
-      try {
-        const parsed = JSON.parse(trimmed);
-        if (parsed && typeof parsed === 'object') return parsed;
-      } catch (err) {
-        const start = trimmed.indexOf('{');
-        const end = trimmed.lastIndexOf('}');
-        if (start !== -1 && end > start) {
-          try {
-            const parsed = JSON.parse(trimmed.slice(start, end + 1));
-            if (parsed && typeof parsed === 'object') return parsed;
-          } catch (innerErr) {
-            /* ignore */
-          }
-        }
-      }
-      return null;
-    },
-    normalizeListItems(list) {
-      if (!Array.isArray(list)) return list;
-      return list.map((item) => ({
-        ...item,
-        id: item.id || createResumeId(),
-        isHidden: !!item.isHidden,
-      }));
-    },
-    mergeAiIntoResume(current, generated) {
-      if (!generated || typeof generated !== 'object') {
-        return current;
-      }
-      const merged = {
-        ...current,
-        ...generated,
-        basics: {
-          ...current.basics,
-          ...(generated.basics || {}),
-        },
-        jobIntention: {
-          ...(current.jobIntention || createEmptyResumeData().jobIntention),
-          ...(generated.jobIntention || {}),
-        },
-        skills: generated.skills != null ? generated.skills : current.skills,
-        hobbies: generated.hobbies != null ? generated.hobbies : current.hobbies,
-      };
-      if (generated.education) merged.education = this.normalizeListItems(generated.education);
-      if (generated.work) merged.work = this.normalizeListItems(generated.work);
-      if (generated.projects) merged.projects = this.normalizeListItems(generated.projects);
-      if (generated.awards) merged.awards = this.normalizeListItems(generated.awards);
-      if (generated.certifications) {
-        merged.certifications = this.normalizeListItems(generated.certifications);
-      }
-      if (generated.portfolio) merged.portfolio = this.normalizeListItems(generated.portfolio);
-      return merged;
-    },
     applyAiGenerateResult(raw) {
-      const payload = this.extractAiPayload(raw);
+      const payload = extractAiPayload(raw);
       if (payload == null || payload === '') {
         this.$message.error('AI 未返回有效内容');
-        return;
+        return false;
       }
       if (typeof payload === 'object') {
-        this.emitUpdate(this.mergeAiIntoResume(this.resumeData, payload));
+        if (isEmptyResumePayload(payload)) {
+          this.$message.error(
+            '解析结果为空：未从文件中读到有效内容。请换可复制文字的 PDF/DOCX，或补充上方文字说明后再试。'
+          );
+          return false;
+        }
+        this.emitUpdate(mergeResumeData(this.resumeData, payload));
         this.$message.success('简历生成成功！');
-        return;
+        return true;
       }
-      const parsed = this.tryParseResumeJson(payload);
+      const parsed = parseAiJson(payload);
       if (parsed) {
-        this.emitUpdate(this.mergeAiIntoResume(this.resumeData, parsed));
+        if (isEmptyResumePayload(parsed)) {
+          this.$message.error(
+            '解析结果为空：未从文件中读到有效内容。请换可复制文字的 PDF/DOCX，或补充上方文字说明后再试。'
+          );
+          return false;
+        }
+        this.emitUpdate(mergeResumeData(this.resumeData, parsed));
         this.$message.success('简历生成成功！');
-        return;
+        return true;
       }
       this.emitUpdate({
         ...this.resumeData,
         basics: { ...this.resumeData.basics, summary: String(payload) },
       });
       this.$message.success('简历生成成功！');
+      return true;
     },
-    buildGeneratePrompt() {
-      // var resumeJson = `{
-      //   "basics": { "name": "", "email": "", "phone": "", "summary": "", "avatar": "" },
-      //   "work": [{ "id": "1", "company": "", "position": "", "duration": "", "description": "", "isHidden": false }],
-      //   "education": [{ "id": "1", "school": "", "degree": "", "year": "" }],
-      //   "jobIntention": { "targetJob": "", "targetCity": "", "expectedSalary": "" },
-      //   "projects": [{ "id": "1", "name": "", "role": "", "duration": "", "description": "", "technologies": "", "isHidden": false }],
-      //   "awards": [{ "id": "1", "name": "", "date": "", "description": "", "isHidden": false }],
-      //   "certifications": [{ "id": "1", "name": "", "date": "", "description": "", "isHidden": false }],
-      //   "portfolio": [{ "id": "1", "name": "", "url": "", "description": "", "isHidden": false }],
-      //   "skills": "",
-      //   "hobbies": ""
-      // }`;
-      let prompt = this.aiPrompt.trim();
-      prompt = `你是一个专业的简历生成专家。请根据用户输入的基本信息或上传的简历文件，生成一份结构化 JSON 简历数据。直接返回结构化 JSON 简历数据，不要包含多余的解释或前缀。输入的文字说明为：${this.aiPrompt}
-      必须严格返回 JSON 格式，不要包含任何 Markdown 标记（如 \`\`\`json）。
-      JSON 结构必须严格如下：
-      {basics: {name: string, email: string, phone: string, summary: string, avatar: string}, work: {id: string, company: string, position: string, duration: string, description: string, isHidden: boolean}[], education: {id: string, school: string, degree: string, year: string}[], jobIntention: {targetJob: string, targetCity: string, expectedSalary: string}, projects: {id: string, name: string, role: string, duration: string, description: string, technologies: string, isHidden: boolean}[], awards: {id: string, name: string, date: string, description: string, isHidden: boolean}[], certifications: {id: string, name: string, date: string, description: string, isHidden: boolean}[], portfolio: {id: string, name: string, url: string, description: string, isHidden: boolean}[], skills: string, hobbies: string}`;
+    /**
+     * 组装生成请求。关键修复：mediaData 必须是 base64 字符串（与聊天页一致），
+     * 不能直接塞 File——axios JSON 序列化后会变成 {}，后端收不到附件，AI 只能回空 schema。
+     */
+    async buildGeneratePrompt() {
+      const userNote = (this.aiPrompt || '').trim();
+      let extractedText = '';
+      let mediaData = null;
+      let mediaMimeType = null;
+      let mediaFileName = null;
+
       if (this.uploadedFile) {
-        // this.chatDataPrompt.mediaData = this.uploadedFile;
-        // this.chatDataPrompt.mediaMimeType = this.uploadedFile.type;
-        // this.chatDataPrompt.mediaFileName = this.uploadedFile.name;
-        // this.chatDataPrompt.tts = 0;
-        // this.chatDataPrompt.historyChatData = null;
-        // this.chatDataPrompt.userId = this.userId;
-        // this.chatDataPrompt.username = this.username;
-        // this.chatDataPrompt.historyChatData = null;
-        const note = `[用户已上传简历文件: ${this.uploadedFile.name}，请结合下方文字说明生成结构化 JSON 简历数据]`;
-        prompt = prompt ? `${note}\n${prompt}` : note;
-        this.chatDataPrompt.chatMsg = prompt;
-        return {chatMsg: prompt, mediaData: this.uploadedFile, mediaMimeType: this.uploadedFile.type, mediaFileName: this.uploadedFile.name, tts: 0, historyChatData: null, userId: this.userId, username: this.username};
+        let parsed = this.uploadedParseCache;
+        if (!parsed || parsed.fileName !== this.uploadedFile.name) {
+          parsed = await parseResumeUploadFile(this.uploadedFile);
+          this.uploadedParseCache = parsed;
+          this.uploadedParseHint = parsed.extractNote;
+        }
+        extractedText = parsed.text || '';
+        // Gemini 多模态需要 dataURL / 纯 base64；ChatGPT 侧会忽略 media，依赖下方抽字
+        mediaData = parsed.base64;
+        mediaMimeType = parsed.mimeType;
+        mediaFileName = parsed.fileName;
       }
-      // this.chatDataPrompt.chatMsg = prompt;
-      // this.chatDataPrompt.mediaData = null;
-      // this.chatDataPrompt.mediaMimeType = null;
-      // this.chatDataPrompt.mediaFileName = null;
-      // this.chatDataPrompt.tts = 0;
-      // this.chatDataPrompt.historyChatData = null;
-      // this.chatDataPrompt.userId = this.userId;
-      // this.chatDataPrompt.username = this.username;
-      return { chatMsg: prompt, mediaData: null, mediaMimeType: null, mediaFileName: null, tts: 0, historyChatData: null, userId: this.userId, username: this.username };
+
+      const schemaHint = [
+        '必须严格返回 JSON，不要 Markdown 代码块。字段：',
+        'basics{name,email,phone,summary,avatar},',
+        'work[{id,company,position,duration,description,isHidden}],',
+        'education[{id,school,degree,year}],',
+        'jobIntention{targetJob,targetCity,expectedSalary},',
+        'projects[{id,name,role,duration,description,technologies,isHidden}],',
+        'awards[{id,name,date,description,isHidden}],',
+        'certifications[{id,name,date,description,isHidden}],',
+        'portfolio[{id,name,url,description,isHidden}],',
+        'skills,hobbies。',
+        '规则：只填原文真实信息；没有的字段用空字符串或空数组，禁止编造；',
+        '禁止照抄空模板当结果——至少应能从材料中抽出姓名/经历之一。',
+      ].join('');
+
+      const parts = [
+        '你是专业简历解析与结构化专家。请根据材料输出一份完整结构化 JSON 简历。',
+        schemaHint,
+      ];
+      if (userNote) {
+        parts.push(`用户补充说明：\n${userNote}`);
+      }
+      if (extractedText) {
+        // 抽字成功时优先把正文塞进 prompt，兼容不支持附件的模型
+        const clipped =
+          extractedText.length > 28000
+            ? `${extractedText.slice(0, 28000)}\n…(正文已截断)`
+            : extractedText;
+        parts.push(`【简历文件正文】\n${clipped}`);
+      } else if (this.uploadedFile) {
+        parts.push(
+          `【已附带简历原文件：${this.uploadedFile.name}，请直接从附件识别内容并结构化】`
+        );
+      }
+
+      const chatMsg = parts.join('\n\n');
+      return {
+        chatMsg,
+        mediaData,
+        mediaMimeType,
+        mediaFileName,
+        tts: 0,
+        historyChatData: null,
+        userId: this.userId,
+        username: this.username,
+      };
     },
     async handleGenerateFullResume() {
       if (!this.aiPrompt.trim() && !this.uploadedFile) {
@@ -1128,15 +1124,15 @@ export default {
       }
       this.isGenerating = true;
       try {
-        const prompt = this.buildGeneratePrompt();
-        const templateKey =
-          this.template && this.template.id ? this.template.id : undefined;
-        // const res = await generateResumeAI({
-        //   action: 'generate',
-        //   prompt,
-        //   resumeData: this.resumeData,
-        //   templateKey,
-        // });
+        const prompt = await this.buildGeneratePrompt();
+        if (
+          this.uploadedFile &&
+          !prompt.mediaData &&
+          !(prompt.chatMsg && prompt.chatMsg.indexOf('【简历文件正文】') !== -1)
+        ) {
+          this.$message.error('附件未能编码，请重新选择文件后再试');
+          return;
+        }
         const res = await generateResumeAI(prompt);
         this.applyAiGenerateResult(res);
       } catch (err) {
@@ -1162,7 +1158,7 @@ export default {
         //   resumeData: this.resumeData,
         // });
         const res = await generateResumeAI({chatMsg: `你是一个专业的简历优化专家。请帮我润色简历内容，使其更加专业、有吸引力，突出重点成果。直接返回润色后的内容，不要包含多余的解释或前缀。请优化以下${label}，保持事实不变、语言更专业简洁：\n${content}`, mediaData: null, mediaMimeType: null, mediaFileName: null, tts: 0, historyChatData: null, userId: this.userId, username: this.username});
-        const payload = this.extractAiPayload(res);
+        const payload = extractAiPayload(res);
         const optimized =
           typeof payload === 'string'
             ? payload

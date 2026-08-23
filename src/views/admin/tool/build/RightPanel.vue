@@ -440,6 +440,30 @@
           <el-form-item v-if="activeData.tag === 'el-cascader'" label="可否筛选">
             <el-switch v-model="activeData.filterable" />
           </el-form-item>
+          <el-form-item v-if="activeData.tag === 'el-table'" label="数据字段">
+            <el-input v-model="activeData.dataKey" placeholder="tableData" />
+          </el-form-item>
+          <el-form-item v-if="activeData.tag === 'el-table'" label="边框">
+            <el-switch v-model="activeData.border" />
+          </el-form-item>
+          <el-form-item v-if="activeData.tag === 'el-table'" label="斑马纹">
+            <el-switch v-model="activeData.stripe" />
+          </el-form-item>
+          <el-form-item v-if="activeData.tag === 'el-table'" label="显示分页">
+            <el-switch v-model="activeData.showPagination" />
+          </el-form-item>
+          <el-form-item v-if="activeData.tag === 'el-table'" label="列配置">
+            <div v-for="(col, idx) in activeData.columns" :key="idx" class="table-col-row">
+              <el-input v-model="col.label" size="mini" placeholder="标题" style="width:72px;margin-right:4px" />
+              <el-input v-model="col.prop" size="mini" placeholder="prop" style="width:72px;margin-right:4px" />
+              <el-input v-model="col.width" size="mini" placeholder="宽" style="width:52px;margin-right:4px" />
+              <el-button type="text" icon="el-icon-delete" @click="activeData.columns.splice(idx, 1)" />
+            </div>
+            <el-button size="mini" icon="el-icon-plus" @click="addTableColumn">添加列</el-button>
+          </el-form-item>
+          <el-form-item v-if="activeData.tag === 'el-button'" label="点击方法">
+            <el-input v-model="activeData.btnAction" placeholder="如 handleQuery" />
+          </el-form-item>
           <el-form-item v-if="activeData.clearable !== undefined" label="能否清空">
             <el-switch v-model="activeData.clearable" />
           </el-form-item>
@@ -555,6 +579,12 @@
           </el-form-item>
           <el-form-item label="禁用表单">
             <el-switch v-model="formConf.disabled" />
+          </el-form-item>
+          <el-form-item label="页面模式">
+            <el-radio-group v-model="formConf.pageMode">
+              <el-radio-button label="form">纯表单</el-radio-button>
+              <el-radio-button label="list">查询列表</el-radio-button>
+            </el-radio-group>
           </el-form-item>
           <el-form-item label="表单按钮">
             <el-switch v-model="formConf.formBtns" />
@@ -746,6 +776,10 @@ export default {
         label: '',
         value: ''
       })
+    },
+    addTableColumn() {
+      if (!this.activeData.columns) this.$set(this.activeData, 'columns', [])
+      this.activeData.columns.push({ label: '列名', prop: 'field', width: '' })
     },
     addTreeItem() {
       ++this.idGlobal

@@ -5,7 +5,7 @@
         <div class="left-board">
           <div class="logo-wrapper">
             <div class="logo" :style="activeStyle()">
-              <img :src="logo" alt="logo"> Form Generator
+              <img :src="logo" alt="logo"> 表单构建
             </div>
           </div>
           <el-scrollbar class="left-scrollbar">
@@ -81,6 +81,14 @@
       <el-col :xs="24" :sm="8" :md="8" :lg="12" :xl="16">
         <div class="center-board">
           <div class="action-bar">
+            <el-dropdown size="mini" trigger="click" @command="applyPagePreset" style="margin-right:8px">
+              <el-button type="text" size="mini" icon="el-icon-document">
+                整页模板<i class="el-icon-arrow-down el-icon--right" />
+              </el-button>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item command="list-query">查询列表页（表单+表格+分页）</el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
             <el-button icon="el-icon-download" type="text" @click="download">
               导出vue文件
             </el-button>
@@ -164,6 +172,7 @@ import {
 import { makeUpJs } from '@/utils/generator/js'
 import { makeUpCss } from '@/utils/generator/css'
 import drawingDefalut from '@/utils/generator/drawingDefalut'
+import { createListPageDrawing } from '@/utils/generator/pagePresets'
 import logo from '@/assets/mai.jpg'
 import CodeTypeDialog from './CodeTypeDialog'
 import DraggableItem from './DraggableItem'
@@ -265,12 +274,18 @@ export default {
     cloneComponent(origin) {
       const clone = JSON.parse(JSON.stringify(origin))
       clone.formId = ++this.idGlobal
-      clone.span = formConf.span
+      clone.span = clone.span || formConf.span
       clone.renderKey = +new Date() // 改变renderKey后可以实现强制更新组件
       if (!clone.layout) clone.layout = 'colFormItem'
       if (clone.layout === 'colFormItem') {
-        clone.vModel = `field${this.idGlobal}`
-        clone.placeholder !== undefined && (clone.placeholder += clone.label)
+        // 表格保留 dataKey；按钮不改 placeholder
+        if (clone.tag === 'el-table') {
+          clone.vModel = clone.dataKey || 'tableData'
+          clone.dataKey = clone.dataKey || 'tableData'
+        } else if (clone.tag !== 'el-button') {
+          clone.vModel = `field${this.idGlobal}`
+          clone.placeholder !== undefined && (clone.placeholder += clone.label)
+        }
         tempActiveData = clone
       } else if (clone.layout === 'rowFormItem') {
         delete clone.label
@@ -279,6 +294,20 @@ export default {
         tempActiveData = clone
       }
       return tempActiveData
+    },
+    /** 套用整页模板：查询列表等 */
+    applyPagePreset(cmd) {
+      if (cmd !== 'list-query') return
+      this.$confirm('将用「查询列表页」模板替换当前画布？', '整页模板', { type: 'warning' })
+        .then(() => {
+          const pack = createListPageDrawing(this.idGlobal)
+          this.drawingList = pack.fields
+          this.idGlobal = pack.idGlobal
+          Object.assign(this.formConf, pack.formConfPatch)
+          if (this.drawingList.length) this.activeFormItem(this.drawingList[0])
+          this.$message.success('已套用查询列表页模板')
+        })
+        .catch(() => {})
     },
     AssembleFormData() {
       this.formData = {
@@ -511,7 +540,7 @@ input, textarea{
     margin-left: 6px;
   }
   .el-icon-plus{
-    color: #409EFF;
+    color: var(--theme-color, #5f7d80);
   }
   .el-icon-delete{
     color: #157a0c;
@@ -530,13 +559,15 @@ input, textarea{
   line-height: 1.2;
 }
 
-$selectedColor: #f6f7ff;
-$lighterBlue: var(--theme-color, #409EFF);
+$selectedColor: var(--theme-color-muted, rgba(95, 125, 128, 0.14));
+$lighterBlue: var(--theme-color, #5f7d80);
 
 .container {
   /* position: relative; */
   width: 100%;
   height: 100%;
+  background: var(--background-origin, #fffcf8);
+  color: var(--text-color-2, #303133);
 }
 
 .components-list {
@@ -555,10 +586,10 @@ $lighterBlue: var(--theme-color, #409EFF);
 }
 .components-title{
   font-size: 14px;
-  color: #222;
+  color: var(--navbarFont, #2c2a28);
   margin: 6px 2px;
   .svg-icon{
-    color: #666;
+    color: var(--theme-color, #5f7d80);
     font-size: 18px;
   }
 }
@@ -568,17 +599,18 @@ $lighterBlue: var(--theme-color, #409EFF);
   background: $selectedColor;
   font-size: 12px;
   cursor: move;
-  border: 1px dashed $selectedColor;
-  border-radius: 3px;
+  border: 1px dashed var(--border-color-2, #d4cfc8);
+  border-radius: 6px;
+  color: var(--text-color-2, #303133);
   .svg-icon{
-    color: #777;
+    color: var(--muted-1-color, #8a8580);
     font-size: 15px;
   }
   &:hover {
-    border: 1px dashed #787be8;
-    color: #787be8;
+    border: 1px dashed $lighterBlue;
+    color: $lighterBlue;
     .svg-icon {
-      color: #787be8;
+      color: $lighterBlue;
     }
   }
 }
@@ -597,9 +629,10 @@ $lighterBlue: var(--theme-color, #409EFF);
 .center-scrollbar {
   height: calc(100vh - 42px);
   overflow: hidden;
-  border-left: 1px solid #f1e8e8;
-  border-right: 1px solid #f1e8e8;
+  border-left: 1px solid var(--border-color, #ebe6e0);
+  border-right: 1px solid var(--border-color, #ebe6e0);
   box-sizing: border-box;
+  background: var(--background-2, #f3f0eb);
 }
 .center-board {
   height: 100vh;
@@ -613,9 +646,9 @@ $lighterBlue: var(--theme-color, #409EFF);
   left: 0;
   right: 0;
   text-align: center;
-  font-size: 18px;
-  color: #ccb1ea;
-  letter-spacing: 4px;
+  font-size: 16px;
+  color: var(--muted-1-color, #8a8580);
+  letter-spacing: 2px;
 }
 .action-bar{
   position: relative;
@@ -624,19 +657,20 @@ $lighterBlue: var(--theme-color, #409EFF);
   overflow: auto;
   text-align: right;
   padding: 0 15px;
-  box-sizing: border-box;;
-  border: 1px solid #f1e8e8;
+  box-sizing: border-box;
+  border: 1px solid var(--border-color, #ebe6e0);
   border-top: none;
   border-left: none;
+  background: var(--background-origin, #fffcf8);
   .delete-btn{
-    color: #F56C6C;
+    color: var(--red, #F56C6C);
   }
 }
 .logo-wrapper{
   position: relative;
   height: 42px;
-  background: #fff;
-  border-bottom: 1px solid #f1e8e8;
+  background: var(--background-origin, #fffcf8);
+  border-bottom: 1px solid var(--border-color, #ebe6e0);
   box-sizing: border-box;
 }
 .logo{
@@ -644,7 +678,7 @@ $lighterBlue: var(--theme-color, #409EFF);
   left: 12px;
   top: 6px;
   line-height: 30px;
-  color: #00afff;
+  color: var(--theme-color, #5f7d80);
   font-weight: 600;
   font-size: 17px;
   white-space: nowrap;
@@ -690,7 +724,7 @@ $lighterBlue: var(--theme-color, #409EFF);
       right: 0;
       top: 0;
       height: 3px;
-      background: rgb(89, 89, 223);
+      background: $lighterBlue;
       z-index: 2;
     }
   }

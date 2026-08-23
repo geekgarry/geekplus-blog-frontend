@@ -395,14 +395,40 @@
           style="width: 100%; margin-top: 0px;"></audio>
         <iframe v-else-if="previewType === 'document'" :src="previewUrl" frameborder="0"
           style="width: 100%; height: 65vh;"></iframe>
-        <div v-else-if="previewType === 'text'" style="width: 100%;">
-          <el-input type="textarea" :rows="20" v-model="previewText" placeholder="正在加载文本内容..."
-            style="width: 100%; min-height: 60vh;"></el-input>
+        <div v-else-if="previewType === 'text'" class="text-preview-wrap">
+          <!-- 大文件提示：避免误开超大文本卡死页面 -->
+          <div v-if="previewTextMeta.warn" class="text-preview-banner">
+            {{ previewTextMeta.warn }}
+          </div>
+          <!--
+            不用 el-input/v-model：大文本进 Vue 响应式后，滚动选区会频繁 diff 卡死。
+            原生 textarea + 直接写 value，内容放在 DOM，保存时再读取。
+          -->
+          <textarea
+            v-show="!previewTextMeta.blocked"
+            ref="previewTextarea"
+            class="text-preview-native"
+            spellcheck="false"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            :readonly="previewTextMeta.readonly"
+            placeholder="正在加载文本内容..."
+          />
+          <div v-if="previewTextMeta.blocked" class="text-preview-blocked">
+            <p>{{ previewTextMeta.blocked }}</p>
+            <el-button size="small" type="primary" @click="downloadFile(previewFileObj)">下载文件</el-button>
+          </div>
         </div>
       </div>
       <span slot="footer" class="dialog-footer" v-if="previewType === 'text'">
         <el-button @click="closePreview">取 消</el-button>
-        <el-button type="primary" :loading="previewSaveLoading" @click="savePreviewText">保存</el-button>
+        <el-button
+          type="primary"
+          :loading="previewSaveLoading"
+          :disabled="!!previewTextMeta.blocked || previewTextMeta.readonly"
+          @click="savePreviewText"
+        >保存</el-button>
       </span>
     </el-dialog>
 
@@ -498,7 +524,8 @@ export default {
       previewFileObj: null,
       previewUrl: '',
       previewType: '',
-      previewText: '',
+      // 仅元信息进 Vue；正文写在 textarea DOM，避免大文本响应式卡顿
+      previewTextMeta: { warn: '', blocked: '', readonly: false, length: 0 },
       previewSaveLoading: false,
       previewLoading: false,
       baseAPI: process.env.VUE_APP_BASE_API,
@@ -998,20 +1025,41 @@ export default {
     async openPreview(row, type) {
       this.previewFileObj = row;
       this.previewType = type;
-      this.previewText = '';
+      this.previewTextMeta = { warn: '', blocked: '', readonly: false, length: 0 };
       this.previewSaveLoading = false;
       this.previewUrl = '';
       this.previewLoading = false;
       this.previewDialogVisible = true;
 
       if (type === 'text') {
+        const size = Number(row.size) || 0;
+        // 与后端 TEXT_READ_MAX_BYTES(5MB) 对齐：过大直接引导下载
+        const MAX_EDIT = 5 * 1024 * 1024;
+        const WARN_AT = 512 * 1024;
+        if (size > MAX_EDIT) {
+          this.previewTextMeta.blocked = `文件约 ${this.formatSize(size)}，超过在线编辑上限（5MB）。请下载后本地打开。`;
+          return;
+        }
+        if (size > WARN_AT) {
+          this.previewTextMeta.warn = `文件较大（${this.formatSize(size)}），已用高性能编辑区打开；选区过长时建议分段操作。`;
+        }
         this.previewLoading = true;
         try {
-          const res = await read_text_file({ path: row.fullPath });
-          this.previewText = res.data || '';
+          const res = await read_text_file({ path: row.fullPath || row.path });
+          const text = (res && res.data != null) ? String(res.data) : '';
+          this.previewTextMeta.length = text.length;
+          // 等 dialog / textarea 挂载后再写 DOM，不经过 Vue 响应式
+          await this.$nextTick();
+          const ta = this.$refs.previewTextarea;
+          if (ta) {
+            ta.value = text;
+            // 重置滚动位置，避免沿用上一次打开的 scrollTop
+            ta.scrollTop = 0;
+          }
         } catch (error) {
-          this.$message.error(error.msg || '读取文本内容失败');
-          this.previewText = '无法读取文本内容';
+          const msg = (error && (error.msg || error.message)) || '读取文本内容失败';
+          this.$message.error(msg);
+          this.previewTextMeta.blocked = msg;
         } finally {
           this.previewLoading = false;
         }
@@ -1031,10 +1079,12 @@ export default {
       }
     },
     async savePreviewText() {
-      if (!this.previewFileObj) return;
+      if (!this.previewFileObj || this.previewTextMeta.blocked) return;
+      const ta = this.$refs.previewTextarea;
+      const content = ta ? ta.value : '';
       this.previewSaveLoading = true;
       try {
-        const res = await save_text_file({ path: this.previewFileObj.fullPath, content: this.previewText });
+        const res = await save_text_file({ path: this.previewFileObj.fullPath || this.previewFileObj.path, content });
         if (res.code === 200 || res.success) {
           this.$message.success('文本保存成功');
           this.previewDialogVisible = false;
@@ -1051,7 +1101,9 @@ export default {
       this.previewUrl = '';
       this.previewFileObj = null;
       this.previewType = '';
-      this.previewText = '';
+      this.previewTextMeta = { warn: '', blocked: '', readonly: false, length: 0 };
+      const ta = this.$refs.previewTextarea;
+      if (ta) ta.value = '';
       this.previewDialogVisible = false;
     },
     // 上传失败
@@ -1468,10 +1520,16 @@ export default {
     },
     async loadTextSnippet(row) {
       if (!this.isTextEditableType(row) || this.textSnippetCache[row.path]) return;
+      // 大文件悬停不再全量拉取（旧逻辑会 read 全文再 slice，极易卡顿）
+      const size = Number(row.size) || 0;
+      if (size > 2 * 1024 * 1024) {
+        this.$set(this.textSnippetCache, row.path, `大文件（${this.formatSize(size)}），请双击打开查看`);
+        return;
+      }
       try {
-        const res = await read_text_file({ path: row.path });
+        const res = await read_text_file({ path: row.fullPath || row.path, maxChars: 200 });
         const text = res.data || '';
-        this.$set(this.textSnippetCache, row.path, text.slice(0, 120).replace(/\n/g, ' '));
+        this.$set(this.textSnippetCache, row.path, text.slice(0, 120).replace(/\n/g, ' ') || '(空文件)');
       } catch (e) {
         this.$set(this.textSnippetCache, row.path, '获取预览失败');
       }
@@ -1635,6 +1693,58 @@ export default {
   min-height: 100px;
   border-radius: 4px;
   overflow: hidden;
+}
+
+/* 文本预览：独立滚动层，减轻大选区时的布局抖动 */
+.text-preview-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.text-preview-banner {
+  font-size: 12px;
+  color: var(--articleGreyFontColor, #6a6661);
+  background: var(--theme-color-muted, rgba(95, 125, 128, 0.14));
+  border: 1px solid var(--border-color-2, #d4cfc8);
+  border-radius: 6px;
+  padding: 8px 10px;
+  line-height: 1.4;
+}
+.text-preview-native {
+  display: block;
+  width: 100%;
+  height: 60vh;
+  min-height: 320px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color-2, #d4cfc8);
+  border-radius: 6px;
+  resize: vertical;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-color-2, #303133);
+  background: var(--background-origin, #fff);
+  white-space: pre;
+  tab-size: 2;
+  contain: content;
+}
+.text-preview-native:focus {
+  outline: none;
+  border-color: var(--theme-color, #5f7d80);
+}
+.text-preview-blocked {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--muted-1-color, #8a8580);
+  font-size: 14px;
 }
 
 .icon-view {

@@ -1,5 +1,7 @@
 export { default as ResumePreview } from './ResumePreview.vue';
 export { default as ResumeFormEditor } from './ResumeFormEditor.vue';
+export { default as ResumeAnalysis } from './ResumeAnalysis.vue';
+export { default as ResumeJobSearch } from './ResumeJobSearch.vue';
 export {
   createEmptyResumeData,
   DEFAULT_TEMPLATES,

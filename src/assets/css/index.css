@@ -202,6 +202,7 @@ body {
   transition: all 0.3s;
   -webkit-user-select: none;
   -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
 }
 
@@ -418,6 +419,7 @@ body {
   border-radius: 4px;
   -webkit-user-select: none;
   -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
   -webkit-user-drag: none;
   /* 禁止拖拽（适用于WebKit浏览器） */
@@ -823,8 +825,9 @@ audio {
   text-decoration: none;
   color: inherit;
   -webkit-user-select: none;
-  user-select: none;
   -moz-user-focus: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .right-navigation {
@@ -839,8 +842,10 @@ audio {
   text-decoration: none;
   color: inherit;
   -webkit-user-select: none;
+  -ms-user-select: none;
   user-select: none;
   -moz-user-focus: none;
+  -ms-user-focus: none;
 }
 
 .left-navigation .navigation-info {
@@ -1468,6 +1473,7 @@ code.hljs {
   font-size: 20px;
   -webkit-user-select: none;
   -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
   position: relative;
 }
@@ -1571,6 +1577,7 @@ code.hljs {
 }
 
 .el-dropdown.user-operate-center {
+  display: -ms-grid !important;
   display: grid !important;
 }
 
@@ -1654,14 +1661,14 @@ code.hljs {
   background-color: var(--background-origin, #fafafa) !important;/* background-color: hsla(0, 0%, 100%, .3137254901960784);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px); */
-  border-color: var(--border-color, #e6ebf5) !important;
+  border-color: var(--border-color-2, #e6ebf5) !important;
   transition: transform .3s cubic-bezier(.23, 1, .32, 1), opacity .3s cubic-bezier(.23, 1, .32, 1) !important;
   transform-origin: center top !important;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 0 2px 12px 0 rgba(0, 0, 0, .1) !important;/* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1), 0 5px 20px rgba(0, 0, 0, 0.2); */
 }
 
 .el-dropdown-menu.el-popper .popper__arrow {
-  border-bottom-color: var(--border-color, var(--border-color, #fafafa)) !important;
+  border-bottom-color: var(--border-color-2, var(--border-color-2, #fafafa)) !important;
 }
 
 .el-dropdown-menu.el-popper .popper__arrow::after {
@@ -1831,7 +1838,7 @@ code.hljs {
 .el-select-dropdown {
   border: solid 1px var(--border-color-2, #dfe4ed) !important;
   border-radius: 4px !important;
-  background-color: var(--background, #FFFFFF) !important;
+  background-color: var(--background-origin, #FFFFFF) !important;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1) !important;
   box-sizing: border-box !important;
   margin: 5px 0 !important;
@@ -1881,10 +1888,12 @@ code.hljs {
 
 .el-radio-button:first-child .el-radio-button__inner {
   border-left: 1px solid var(--border-color, #DCDFE6) !important;
-  border-radius: 4px 0 0 4px !important;
-  box-shadow: none !important;
+  box-shadow: none;
 }
-
+.el-radio-button:last-child .el-radio-button__inner {
+  border-right: 1px solid var(--border-color, #DCDFE6) !important;
+  box-shadow: none;
+}
 /*vue-tree组件，外部引用的组件样式*/
 .vue-treeselect__control {
   border: 1px solid var(--border-color, #ddd) !important;
@@ -2230,11 +2239,8 @@ code.hljs {
 .el-pagination.is-background .btn-prev,
 .el-pagination.is-background .btn-next,
 .el-pagination.is-background .el-pager li {
-  margin: 0 5px !important;
-  background-color: var(--background-origin, #f4f4f5) !important;
-  color: var(--text-color, #606266) !important;
-  min-width: 30px !important;
-  border-radius: 2px !important;
+  background-color: var(--background-origin, #f4f4f5);
+  color: var(--text-color, #606266);
 }
 
 
@@ -2243,7 +2249,7 @@ code.hljs {
 .el-popover {/* position: absolute; */
   background: var(--background-origin, #ffffff) !important;/* min-width: 150px;
     border-radius: 4px; */
-  border: 1px solid var(--border-color, #e6ebf5) !important;/* padding: 12px;
+  border: 1px solid var(--border-color-2, #e6ebf5) !important;/* padding: 12px;
     z-index: 2000; */
   color: var(--text-color-2, #606266) !important;/* line-height: 1.4;
     text-align: justify;
@@ -2252,7 +2258,7 @@ code.hljs {
 }
 
 .el-popper[x-placement^="left"] .popper__arrow {
-  border-left-color: var(--border-color, #e6ebf5) !important;
+  border-left-color: var(--border-color-2, #e6ebf5) !important;
 }
 
 .el-popper[x-placement^="left"] .popper__arrow::after {
@@ -2260,7 +2266,7 @@ code.hljs {
 }
 
 .el-popper[x-placement^="top"] .popper__arrow {
-  border-top-color: var(--border-color, #e6ebf5) !important;
+  border-top-color: var(--border-color-2, #e6ebf5) !important;
 }
 
 .el-popper[x-placement^="top"] .popper__arrow::after {
@@ -2268,7 +2274,7 @@ code.hljs {
 }
 
 .el-popper[x-placement^="right"] .popper__arrow {
-  border-right-color: var(--border-color, #e6ebf5) !important;
+  border-right-color: var(--border-color-2, #e6ebf5) !important;
 }
 
 .el-popper[x-placement^="right"] .popper__arrow::after {
@@ -2276,7 +2282,7 @@ code.hljs {
 }
 
 .el-popper[x-placement^="bottom"] .popper__arrow {
-  border-bottom-color: var(--border-color, #e6ebf5) !important;
+  border-bottom-color: var(--border-color-2, #e6ebf5) !important;
 }
 
 .el-popper[x-placement^="bottom"] .popper__arrow::after {
@@ -2298,7 +2304,7 @@ code.hljs {
 
 .el-dialog,
 .el-pager li {
-  background: var(--background-origin, #090909) !important;
+  background: var(--background-origin, #090909);
 }
 
 .el-dialog__title {
@@ -2337,6 +2343,16 @@ code.hljs {
   color: var(--text-color-2, #ffffff) !important;
 }
 
+.el-input-group--append .el-input__inner, .el-input-group__prepend {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.el-input-group__append button.el-button, .el-input-group__append div.el-select .el-input__inner, .el-input-group__append div.el-select:hover .el-input__inner, .el-input-group__prepend button.el-button, .el-input-group__prepend div.el-select .el-input__inner, .el-input-group__prepend div.el-select:hover .el-input__inner {
+  border-color: transparent !important;
+  background-color: transparent !important;
+  color: inherit !important;
+}
 
 /********通用响应式布局样式, 外部布局容器container**********/
 .container-fluid {
@@ -2529,4 +2545,109 @@ aside {
   .gp-surface-card {
     border-radius: 16px;
   }
+}
+
+/* ============================================================
+ * 骨架屏 Schema（P0）：编辑器预览 + 导出同源 class
+ * 站点内用 .gp-skel；导出 CSS 自带同名规则，可独立粘贴
+ * ============================================================ */
+
+.gp-skel-root {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin: 0 auto;
+  background: var(--background-origin, #fffcf8);
+}
+
+.gp-skel-root *,
+.gp-skel-root *::before,
+.gp-skel-root *::after {
+  box-sizing: border-box;
+}
+
+/* 横向行：左右并排 */
+.gp-skel-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  width: 100%;
+  min-width: 0;
+}
+
+/* 纵向组：嵌在 row 内组成「左图右文」等 */
+.gp-skel-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.gp-skel-lines {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.gp-skel-gap {
+  flex-shrink: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+.gp-skel {
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--border-color, #ebe6e0);
+  pointer-events: none;
+}
+
+.gp-skel--circle {
+  border-radius: 50%;
+}
+
+.gp-skel--line,
+.gp-skel--block {
+  max-width: 100%;
+}
+
+/* 输入框 / 文本域外形占位（非真实 input） */
+.gp-skel--field,
+.gp-skel--textarea {
+  max-width: 100%;
+  background: var(--background-2, #f3f0eb) !important;
+  box-shadow: inset 0 0 0 1px var(--border-color-2, #d4cfc8);
+}
+
+/* shimmer 扫光：与导出 CSS 动画名一致，便于预览=产物 */
+.gp-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    hsla(0, 0%, 100%, 0) 0%,
+    hsla(0, 0%, 100%, 0.45) 50%,
+    hsla(0, 0%, 100%, 0) 100%
+  );
+  animation: gp-skel-shimmer 1.35s ease-in-out infinite;
+}
+
+@keyframes gp-skel-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* 编辑器选中态（渲染器可选） */
+.gp-skel-root .is-active.gp-skel,
+.gp-skel-root .is-active.gp-skel-lines,
+.gp-skel-root .is-active.gp-skel-gap,
+.gp-skel-root .is-active.gp-skel-row,
+.gp-skel-root .is-active.gp-skel-stack {
+  outline: 2px solid var(--theme-color);
+  outline-offset: 2px;
 }

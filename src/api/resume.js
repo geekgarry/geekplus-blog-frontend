@@ -77,10 +77,67 @@ export function deleteResume(id) {
   })
 }
 
+/** 仅修改简历显示名称，不覆盖正文 */
+export function renameResume(userId, id, title) {
+  return request({
+    url: `/api/resume/${id}/title`,
+    method: 'put',
+    params: { userId },
+    data: { title }
+  })
+}
+
 export function generateResumeAI(payload) {
   return request({
     url: '/api/resume/ai/generate',
     method: 'post',
-    data: payload
+    data: payload,
+    // 附件 base64 较大，适当放宽超时
+    timeout: 120000,
   })
+}
+
+/** 岗位/行业分析、人岗匹配、按岗优化简历 */
+export function analyzeResumeAI(payload) {
+  return request({
+    url: '/api/resume/ai/analyze',
+    method: 'post',
+    data: payload,
+    timeout: 120000,
+  })
+}
+
+/** 岗位检索：优先新路径 /api/job/search，失败时可仍走旧 /api/resume/ai/job-search */
+export function searchJobsAI(payload) {
+  return request({
+    url: '/api/job/search',
+    method: 'post',
+    data: payload,
+    timeout: 90000,
+  }).catch((err) => {
+    // 旧后端未部署 job 模块时回退
+    return request({
+      url: '/api/resume/ai/job-search',
+      method: 'post',
+      data: payload,
+      timeout: 90000,
+    })
+  })
+}
+
+/** @deprecated 请用 @/api/ppt generatePpt */
+export function generatePptAI(payload) {
+  return request({
+    url: '/api/ppt/generate',
+    method: 'post',
+    data: payload,
+    timeout: 120000,
+  }).catch(() =>
+    request({
+      url: '/api/resume/ai/generate-ppt',
+      method: 'post',
+      data: payload,
+      timeout: 120000,
+    })
+  )
 }

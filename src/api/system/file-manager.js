@@ -100,6 +100,7 @@ export function delete_recycle_file(reqData) {
 }
 
 export function read_text_file(param) {
+  // param: { path, maxChars? } — maxChars 用于悬停摘要，避免大文件全量传输
   return request({
     url: "/sys/file-manager/read-text",
     method: "post",

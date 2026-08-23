@@ -101,7 +101,6 @@
       right: 0;
       bottom: 0;
       left: 0;
-      inset: 0;
       z-index: 999999;
       background: #f0f3f4;
       background: var(--gp-boot-bg, #f0f3f4);
@@ -138,6 +137,7 @@
       padding: 0 20px;
       background: rgba(255, 255, 255, 0.72);
       border-bottom: 1px solid rgba(52, 68, 73, 0.08);
+      -webkit-backdrop-filter: blur(8px);
       backdrop-filter: blur(8px);
       box-sizing: border-box;
     }
@@ -147,10 +147,24 @@
       border-bottom-color: rgba(255, 255, 255, 0.08);
     }
 
+    /* IE11 无 gap：子项 margin 模拟；现代浏览器 @supports 内用 gap */
     .gp-boot-brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+    }
+
+    .gp-boot-brand > * + * {
+      margin-left: 10px;
+    }
+
+    @supports (gap: 10px) {
+      .gp-boot-brand {
+        gap: 10px;
+      }
+
+      .gp-boot-brand > * + * {
+        margin-left: 0;
+      }
     }
 
     .gp-boot-logo {
@@ -170,7 +184,20 @@
 
     .gp-boot-nav-right {
       display: flex;
-      gap: 10px;
+    }
+
+    .gp-boot-nav-right > * + * {
+      margin-left: 10px;
+    }
+
+    @supports (gap: 10px) {
+      .gp-boot-nav-right {
+        gap: 10px;
+      }
+
+      .gp-boot-nav-right > * + * {
+        margin-left: 0;
+      }
     }
 
     .gp-boot-pill {
@@ -180,18 +207,68 @@
       background: rgba(95, 125, 128, 0.14);
     }
 
+    /* 首屏骨架主区：默认 flex（IE11 可读），现代浏览器在 @supports 内再切 Grid */
     .gp-boot-main {
       flex: 1;
-      width: min(1100px, 92%);
+      width: 92%;
+      max-width: 1100px;
       margin: 28px auto 40px;
-      display: grid;
-      grid-template-columns: 1.6fr 1fr;
-      gap: 18px;
+      display: flex;
+      flex-wrap: wrap;
       box-sizing: border-box;
     }
 
+    .gp-boot-main > .gp-boot-card {
+      flex: 1 1 0;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+
+    .gp-boot-main > .gp-boot-card:first-child {
+      flex-grow: 1.6;
+    }
+
+    .gp-boot-main > .gp-boot-card + .gp-boot-card {
+      margin-left: 18px;
+    }
+
+    @supports (display: grid) {
+      .gp-boot-main {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr;
+        gap: 18px;
+      }
+
+      .gp-boot-main > .gp-boot-card {
+        flex: unset;
+        min-width: unset;
+      }
+
+      .gp-boot-main > .gp-boot-card + .gp-boot-card {
+        margin-left: 0;
+      }
+    }
+
     @media (max-width: 860px) {
-      .gp-boot-main { grid-template-columns: 1fr; }
+      .gp-boot-main {
+        flex-direction: column;
+      }
+
+      .gp-boot-main > .gp-boot-card + .gp-boot-card {
+        margin-left: 0;
+        margin-top: 18px;
+      }
+
+      @supports (display: grid) {
+        .gp-boot-main {
+          grid-template-columns: 1fr;
+        }
+
+        .gp-boot-main > .gp-boot-card + .gp-boot-card {
+          margin-top: 0;
+        }
+      }
+
       .gp-boot-nav-right { display: none; }
     }
 
@@ -214,7 +291,10 @@
     .gp-boot-card::after {
       content: "";
       position: absolute;
-      inset: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
       background: linear-gradient(
         100deg,
         transparent 30%,

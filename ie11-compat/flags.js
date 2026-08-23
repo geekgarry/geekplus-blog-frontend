@@ -50,11 +50,14 @@ function warnIfBrowserslistMissingIe() {
   if (!isEnabled()) return;
   try {
     const browserslist = require("browserslist");
-    const list = browserslist();
+    // 必须查 production：serve 时 NODE_ENV=development，默认 browserslist() 读的是
+    // browserslist.development（通常只有 last 1 chrome…），会误报「未包含 IE 11」。
+    // Vue CLI 产出 nomodule legacy 包也是看 production 目标。
+    const list = browserslist(null, { env: "production" });
     const hasIe = list.some((b) => /^ie\s/i.test(b));
     if (!hasIe) {
       console.warn(
-        "[ie11-compat] enabled.js=true，但当前 browserslist 未包含 IE 11。\n" +
+        "[ie11-compat] enabled.js=true，但 browserslist.production 解析结果未包含 IE 11。\n" +
           "  → 请在 package.json browserslist.production 中加入 \"IE 11\"，并去掉 \"not dead\"。\n" +
           "  → 否则 Vue CLI 可能不会产出 nomodule legacy 包。"
       );

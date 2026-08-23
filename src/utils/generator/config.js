@@ -8,7 +8,9 @@ export const formConf = {
   gutter: 15,
   disabled: false,
   span: 24,
-  formBtns: true
+  formBtns: true,
+  /** form=纯表单；list=查询列表页（导出 app-container + 表格逻辑） */
+  pageMode: 'form',
 }
 
 export const inputComponents = [
@@ -421,6 +423,31 @@ export const layoutComponents = [
     size: 'medium',
     disabled: false,
     document: 'https://element.eleme.cn/#/zh-CN/component/button'
+  },
+  {
+    // 数据表格：用于整页列表配置，非传统表单项
+    layout: 'colFormItem',
+    label: '数据表格',
+    tag: 'el-table',
+    tagIcon: 'table',
+    span: 24,
+    labelWidth: 0,
+    changeTag: false,
+    border: true,
+    stripe: true,
+    size: 'small',
+    vModel: 'tableData',
+    dataKey: 'tableData',
+    columns: [
+      { label: '编号', prop: 'id', width: '80', align: 'center' },
+      { label: '名称', prop: 'name', minWidth: '120' },
+      { label: '操作', prop: 'action', width: '140', align: 'center' },
+    ],
+    showPagination: true,
+    pageKey: 'pageNum',
+    sizeKey: 'pageSize',
+    totalKey: 'total',
+    document: 'https://element.eleme.cn/#/zh-CN/component/table'
   }
 ]
 

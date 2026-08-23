@@ -28,8 +28,20 @@ export const blogChildrenRoutes = [
   {
     path: '/tool/resumeGenerator',
     name: 'ResumeEditor',
-    meta: { title: '简历生成器', icon: '' },
+    meta: { title: '即刻简历', icon: '' },
     component: () => import('@/views/tool/ResumeEditor.vue'),
+  },
+  {
+    path: '/tool/pptStudio',
+    name: 'PptStudio',
+    meta: { title: 'PPT 工作室', icon: '' },
+    component: () => import('@/views/tool/PptStudio.vue'),
+  },
+  {
+    path: '/tool/skeletonStudio',
+    name: 'SkeletonStudio',
+    meta: { title: '骨架屏工作室', icon: '' },
+    component: () => import('@/views/tool/SkeletonStudio.vue'),
   },
   {
     path: '/search',

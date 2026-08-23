@@ -89,13 +89,46 @@ const componentChild = {
 
 export default {
   render(h) {
+    const confClone = JSON.parse(JSON.stringify(this.conf))
+
+    // 画布预览：表格用演示行，避免把 columns 误传成 props 报错
+    if (confClone.tag === 'el-table') {
+      const cols = (confClone.columns || []).map(c =>
+        h('el-table-column', {
+          props: {
+            label: c.label,
+            prop: c.prop,
+            width: c.width,
+            minWidth: c.minWidth,
+            align: c.align || 'left',
+          },
+        })
+      )
+      const demo = [{}]
+      ;(confClone.columns || []).forEach(c => {
+        if (c.prop) demo[0][c.prop] = '—'
+      })
+      return h(
+        'el-table',
+        {
+          props: {
+            data: demo,
+            border: !!confClone.border,
+            stripe: !!confClone.stripe,
+            size: confClone.size || 'small',
+          },
+          style: { width: '100%' },
+        },
+        cols
+      )
+    }
+
     const dataObject = {
       attrs: {},
       props: {},
       on: {},
       style: {}
     }
-    const confClone = JSON.parse(JSON.stringify(this.conf))
     const children = []
 
     const childObjs = componentChild[confClone.tag]

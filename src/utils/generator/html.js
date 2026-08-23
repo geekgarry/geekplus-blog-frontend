@@ -15,6 +15,12 @@ export function dialogWrapper(str) {
 }
 
 export function vueTemplate(str) {
+  // 列表页已自带 app-container，避免再包一层空 div
+  if (String(str).indexOf('class="app-container"') !== -1) {
+    return `<template>
+${str}
+</template>`
+  }
   return `<template>
     <div>
       ${str}
@@ -114,10 +120,45 @@ const tags = {
     const type = el.type ? `type="${el.type}"` : ''
     const icon = el.icon ? `icon="${el.icon}"` : ''
     const size = el.size ? `size="${el.size}"` : ''
+    const click = el.btnAction ? `@click="${el.btnAction}"` : ''
     let child = buildElButtonChild(el)
 
     if (child) child = `\n${child}\n` // 换行
-    return `<${el.tag} ${type} ${icon} ${size} ${disabled}>${child}</${el.tag}>`
+    return `<${el.tag} ${type} ${icon} ${size} ${disabled} ${click}>${child}</${el.tag}>`
+  },
+  'el-table': el => {
+    const dataKey = el.dataKey || el.vModel || 'tableData'
+    const border = el.border ? 'border' : ''
+    const stripe = el.stripe ? 'stripe' : ''
+    const size = el.size ? `size="${el.size}"` : ''
+    const cols = (el.columns || []).map(c => {
+      const w = c.width ? `width="${c.width}"` : ''
+      const mw = c.minWidth ? `min-width="${c.minWidth}"` : ''
+      const align = c.align ? `align="${c.align}"` : ''
+      return `  <el-table-column label="${c.label || ''}" prop="${c.prop || ''}" ${w} ${mw} ${align} />`
+    }).join('\n')
+    let pager = ''
+    if (el.showPagination) {
+      const pageKey = el.pageKey || 'pageNum'
+      const sizeKey = el.sizeKey || 'pageSize'
+      const totalKey = el.totalKey || 'total'
+      // 使用 Element 原生分页，避免依赖项目内 Pagination 封装组件
+      pager = `
+<div class="pagination-container" style="margin-top:12px;text-align:right">
+  <el-pagination
+    background
+    layout="total, sizes, prev, pager, next, jumper"
+    :total="${totalKey}"
+    :current-page.sync="${pageKey}"
+    :page-size.sync="${sizeKey}"
+    @size-change="getList"
+    @current-change="getList"
+  />
+</div>`
+    }
+    return `<el-table :data="${dataKey}" ${border} ${stripe} ${size} style="width: 100%">
+${cols}
+</el-table>${pager}`
   },
   'el-input': el => {
     const {
@@ -345,13 +386,25 @@ export function makeUpHtml(conf, type) {
   const htmlList = []
   confGlobal = conf
   someSpanIsNot24 = conf.fields.some(item => item.span !== 24)
-  conf.fields.forEach(el => {
+
+  // 列表页：查询字段进 form，表格/分页放在 form 外，贴近后台业务页结构
+  const isList = conf.pageMode === 'list'
+  const formFields = isList ? conf.fields.filter(f => f.tag !== 'el-table') : conf.fields
+  const tableFields = isList ? conf.fields.filter(f => f.tag === 'el-table') : []
+
+  formFields.forEach(el => {
     htmlList.push(layouts[el.layout](el))
   })
-  const htmlStr = htmlList.join('\n')
+  let temp = buildFormTemplate(conf, htmlList.join('\n'), type)
 
-  let temp = buildFormTemplate(conf, htmlStr, type)
-  if (type === 'dialog') {
+  if (tableFields.length) {
+    const tableHtml = tableFields.map(el => layouts[el.layout](el)).join('\n')
+    temp = `${temp}\n${tableHtml}`
+  }
+
+  if (isList) {
+    temp = `<div class="app-container">\n${temp}\n</div>`
+  } else if (type === 'dialog') {
     temp = dialogWrapper(temp)
   }
   confGlobal = null

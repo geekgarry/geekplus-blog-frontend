@@ -111,7 +111,13 @@
           <i class="el-icon-edit"></i><span>投稿文章</span>
         </router-link>
         <router-link class="gp-side-nav-item" to="/tool/resumeGenerator" title="简历生成" @click.native="closeDrawer">
-          <i class="el-icon-document"></i><span>简历生成</span>
+          <i class="el-icon-document"></i><span>即刻简历</span>
+        </router-link>
+        <router-link class="gp-side-nav-item" to="/tool/pptStudio" title="PPT 工作室" @click.native="closeDrawer">
+          <i class="el-icon-picture-outline"></i><span>PPT 工作室</span>
+        </router-link>
+        <router-link class="gp-side-nav-item" to="/tool/skeletonStudio" title="骨架屏工作室" @click.native="closeDrawer">
+          <i class="el-icon-orange"></i><span>骨架屏工作室</span>
         </router-link>
         <router-link class="gp-side-nav-item" to="/chat" title="AI 助手" @click.native="closeDrawer">
           <i class="el-icon-cpu"></i><span>AI 助手</span>

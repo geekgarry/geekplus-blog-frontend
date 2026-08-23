@@ -246,7 +246,9 @@ export default {
         ...dynamic,
         { key: 'webTool', label: '在线工具', path: '/tool', icon: 'tool', children: [
           { key: 'transfer', label: '文件中转', path: '/file-transfer', icon: 'upload', children: null },
-          { key: 'resumeGenerator', label: '简历生成', path: '/resumeGenerator', icon: 'document', children: null },
+          { key: 'resumeGenerator', label: '即刻简历', path: '/resumeGenerator', icon: 'document', children: null },
+          { key: 'pptStudio', label: 'PPT 工作室', path: '/pptStudio', icon: 'picture', children: null },
+          { key: 'skeletonStudio', label: '骨架屏工作室', path: '/skeletonStudio', icon: 'component', children: null },
         ] },
         { key: 'chat', label: 'AI 助手', path: '/chat', icon: 'ai', children: null },
         { key: 'leave', label: '留言板', path: '/leave-word', icon: 'leave-word', children: null },
@@ -766,9 +768,9 @@ export default {
   transition: transform 0.22s ease;
 }
 
-.gp-nav-drawer__arrow:hover {
+/* .gp-nav-drawer__arrow:hover {
   background: var(--interactive-bg-secondary-hover, rgba(0, 0, 0, 0.06));
-}
+} */
 
 .gp-nav-drawer__sub {
   list-style: none;

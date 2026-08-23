@@ -22,10 +22,19 @@ export function makeUpJs(conf, type) {
   const propsList = []
   const methodList = mixinMethod(type)
   const uploadVarList = []
+  const extraDataList = []
 
   conf.fields.forEach(el => {
+    if (el.tag === 'el-table') {
+      buildTable(el, extraDataList, methodList)
+      return
+    }
     buildAttributes(el, dataList, ruleList, optionsList, methodList, propsList, uploadVarList)
   })
+
+  if (conf.pageMode === 'list') {
+    injectListPageScaffold(conf, extraDataList, methodList)
+  }
 
   const script = buildexport(
     conf,
@@ -35,10 +44,55 @@ export function makeUpJs(conf, type) {
     optionsList.join('\n'),
     uploadVarList.join('\n'),
     propsList.join('\n'),
-    methodList.join('\n')
+    methodList.join('\n'),
+    extraDataList.join('\n')
   )
   confGlobal = null
   return script
+}
+
+function buildTable(el, extraDataList, methodList) {
+  const dataKey = el.dataKey || el.vModel || 'tableData'
+  extraDataList.push(`${dataKey}: [],`)
+  if (el.showPagination) {
+    const pageKey = el.pageKey || 'pageNum'
+    const sizeKey = el.sizeKey || 'pageSize'
+    const totalKey = el.totalKey || 'total'
+    extraDataList.push(`${pageKey}: 1,`)
+    extraDataList.push(`${sizeKey}: 10,`)
+    extraDataList.push(`${totalKey}: 0,`)
+  }
+}
+
+/** 列表页：queryParams 镜像 + getList / handleQuery / resetQuery */
+function injectListPageScaffold(conf, extraDataList, methodList) {
+  // queryParams 与 formModel 字段对齐，便于直接改请求参数
+  extraDataList.push(`queryParams: {
+        pageNum: 1,
+        pageSize: 10,
+      },`)
+  if (!methodList.some(m => m.indexOf('getList(') === 0 || m.indexOf('getList ()') === 0 || m.indexOf('getList()') !== -1)) {
+    methodList.push(`getList() {
+        // ${conf.listApiComment || 'TODO: 调用列表接口'}
+        // listApi(this.queryParams).then(res => {
+        //   this.tableData = res.rows
+        //   this.total = res.total
+        // })
+      },`)
+  }
+  if (!methodList.some(m => m.indexOf('handleQuery') !== -1)) {
+    methodList.push(`handleQuery() {
+        this.queryParams.pageNum = 1
+        Object.assign(this.queryParams, this.${conf.formModel})
+        this.getList()
+      },`)
+  }
+  if (!methodList.some(m => m.indexOf('resetQuery') !== -1)) {
+    methodList.push(`resetQuery() {
+        this.$refs['${conf.formRef}'].resetFields()
+        this.handleQuery()
+      },`)
+  }
 }
 
 function buildAttributes(el, dataList, ruleList, optionsList, methodList, propsList, uploadVarList) {
@@ -206,7 +260,7 @@ function buildOptionMethod(methodName, model, methodList) {
   methodList.push(str)
 }
 
-function buildexport(conf, type, data, rules, selectOptions, uploadVar, props, methods) {
+function buildexport(conf, type, data, rules, selectOptions, uploadVar, props, methods, extraData) {
   const str = `${exportDefault}{
   ${inheritAttrs[type]}
   components: {},
@@ -222,11 +276,14 @@ function buildexport(conf, type, data, rules, selectOptions, uploadVar, props, m
       ${uploadVar}
       ${selectOptions}
       ${props}
+      ${extraData || ''}
     }
   },
   computed: {},
   watch: {},
-  created () {},
+  created () {
+    ${conf.pageMode === 'list' ? 'this.getList()' : ''}
+  },
   mounted () {},
   methods: {
     ${methods}
