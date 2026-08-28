@@ -34,10 +34,14 @@
     --black: #2c2a28;
     --lightYellow: #e8dfd0;
     /***************************************/
-    /* 雾霾青绿（莫兰迪）：浅色略加深，链接/强调更易过 AA */
+    /*
+     * 静态 fallback（JS 未跑前）；运行时由 @/theme applyThemeColor 覆盖 html/body inline。
+     * --theme-color-strong / --gp-menu-active-* 在引擎 setThemeCssVars 中按用户色重算。
+     */
     --theme-color: #5f7d80;
     --theme-color-soft: #8aa0a2;
     --theme-color-muted: rgba(95, 125, 128, 0.14);
+    --theme-color-strong: #4a6366;
     --themeBackground: #5f7d80;
     --gradualRed: linear-gradient(to right, #c49a7c, #b56a6a);
     /* 暖灰纸感背景 */
@@ -90,7 +94,10 @@
     --gp-surface-shadow-hover: 0 8px 22px rgba(44, 42, 40, 0.07);
     --gp-surface-title: var(--theme-color);
     --gp-nav-shadow: 0 1px 5px rgba(44, 42, 40, 0.05);
+    /* 菜单激活：字/底/左边条分工；运行时 inline 覆盖，见 elementTheme setThemeCssVars */
     --gp-menu-active-bg: var(--theme-color-muted);
+    --gp-menu-active-color: var(--theme-color-strong, var(--theme-color));
+    --gp-menu-active-border: var(--theme-color);
     /* 页面氛围 */
     --gp-page-wash: radial-gradient(1200px 480px at 12% -10%, rgba(138, 160, 162, 0.18), transparent 55%),
       radial-gradient(900px 420px at 90% 0%, rgba(196, 184, 174, 0.22), transparent 50%),
@@ -125,11 +132,10 @@
     --muted-1-color: #9a9590;
     --interactive-bg-secondary-hover: rgba(255, 255, 255, 0.08);
     --interactive-bg-secondary-press: rgba(255, 255, 255, 0.05);
-    /* 暗色主题色略提亮，避免发闷 */
-    --theme-color: #9bb4b6;
-    --theme-color-soft: #7a9799;
-    --theme-color-muted: rgba(155, 180, 182, 0.18);
-    --themeBackground: #9bb4b6;
+    /*
+     * 暗色不写 --theme-color 等：body 上若声明会截断 html inline 继承。
+     * 运行时由 @/theme applyThemeColor 写到 html/body；用户改色见 commitUserThemeColor 单链路。
+     */
     --gp-surface-bg: var(--background);
     --gp-surface-radius: 14px;
     --gp-surface-radius-sm: 10px;
@@ -141,6 +147,8 @@
     --gp-surface-title: var(--theme-color);
     --gp-nav-shadow: 0 1px 5px rgba(0, 0, 0, 0.36);
     --gp-menu-active-bg: var(--theme-color-muted);
+    --gp-menu-active-color: var(--theme-color-strong, var(--theme-color));
+    --gp-menu-active-border: var(--theme-color);
     --gp-page-wash: radial-gradient(1000px 420px at 10% -8%, rgba(122, 151, 153, 0.16), transparent 55%),
       var(--background-color);
 }

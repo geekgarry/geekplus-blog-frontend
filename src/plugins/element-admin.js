@@ -96,12 +96,12 @@ export function setupElementAdmin() {
     }
   })
 
-  // 按需 CSS（Table/Menu 等）注入后重申主题，避免 #409EFF 盖掉全站色
+  // 维护链路：Table/Menu 等按需组件 CSS 注入后，通过 @/theme 重申主题（不换色）
   const reassert = () => {
-    import(/* webpackChunkName: "element-theme" */ '@/utils/elementTheme')
+    import(/* webpackChunkName: "element-theme" */ '@/theme')
       .then((m) => {
-        m.reassertElementTheme()
-        // 再等一帧：部分 chunk 的 <link> 稍晚挂上
+        m.refreshAfterElementCss()
+        // 部分 chunk 的 <link> 稍晚挂上，两帧后再 bump 一次 style 顺序
         if (typeof window !== 'undefined') {
           window.setTimeout(() => m.bumpElementThemeStyles(), 0)
           window.setTimeout(() => m.bumpElementThemeStyles(), 120)

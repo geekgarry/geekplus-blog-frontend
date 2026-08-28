@@ -71,35 +71,32 @@ export function genAddGenTableInfo(dataForm) {
     })
 }
 
-// 预览生成代码
-export function previewTableCode(tableId) {
+// 预览生成代码（uiType: element | antd）
+export function previewTableCode(tableId, uiType = 'element') {
     return request({
         url: '/generator/previewCodeByGenTable/' + tableId,
-        method: 'get'
+        method: 'get',
+        params: { uiType }
     })
 }
 
-// 添加生成的数据表信息
-export function downloadCode(tableName) {
+// 按表名下载（uiType: element | antd）
+export function downloadCode(tableName, uiType = 'element') {
     return request({
         url: '/generator/download/' + tableName,
         method: 'get',
-        responseType: "blob", //收到的数据为blob
-        // headers: {            //注意
-        //     'Content-Type': 'application/json; application/octet-stream'
-        // }
+        params: { uiType },
+        responseType: "blob"
     })
 }
 
-// 添加生成的数据表信息
-export function downloadByGenTable(tableIds) {
+// 按 gen_table 下载（uiType: element | antd）
+export function downloadByGenTable(tableIds, uiType = 'element') {
     return request({
         url: '/generator/downloadByGenTable/' + tableIds,
         method: 'get',
-        responseType: "blob", //收到的数据为blob
-        // headers: {            //注意
-        //     'Content-Type': 'application/json; application/octet-stream'
-        // }
+        params: { uiType },
+        responseType: "blob"
     })
 }
 
@@ -108,5 +105,22 @@ export function cleanGenTable() {
     return request({
         url: '/generator/genTable/clean',
         method: 'delete'
+    })
+}
+
+/** 发布菜单预览（元数据，不校验磁盘） */
+export function publishMenuPreview(tableId) {
+    return request({
+        url: '/generator/table/publishMenuPreview/' + tableId,
+        method: 'get'
+    })
+}
+
+/** 幂等发布菜单（与 ZIP 下载分离） */
+export function publishGenMenus(data) {
+    return request({
+        url: '/generator/table/publishMenus',
+        method: 'post',
+        data
     })
 }

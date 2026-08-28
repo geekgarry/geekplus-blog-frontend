@@ -1,7 +1,7 @@
 /**
  * 静态路由表（constantRoutes）
  * 博客栏目（/timeEssay/... 等）不在此表，由 navMenu + permission.js 运行时 addRoute 到 name:'webApp'。
- * 前台统一走 BlogShell：按 settings.blogLayout 切换顶部导航 / 侧栏，子路由共享。
+ * 前台统一走 BlogShell：按 settings.blogLayout 切换顶部/侧栏/工作台导航，子路由共享。
  */
 import Vue from "vue";
 import VueRouter from "vue-router";
@@ -18,6 +18,17 @@ export const blogChildrenRoutes = [
     name: 'index',
     meta: { title: '首页', icon: '' },
     component: () => import("@/views/IndexView.vue")
+  },
+  {
+    // 兼容旧链接：与 / 同为文章流首页
+    path: '/home/feed',
+    redirect: '/'
+  },
+  {
+    path: '/workbench',
+    name: 'workbench',
+    meta: { title: '工作台', icon: '' },
+    component: () => import(/* webpackChunkName: "web-view-workbench" */ '@/views/WorkbenchView.vue')
   },
   {
     path: '/ai-search',
@@ -182,18 +193,26 @@ export const constantRoutes = [
     redirect: '/admin/dashboard',
     type: 'admin',
     name: 'admin',
+    meta: { title: '仪表盘', icon: 'dashboard' },
     children: [
       {
         path: 'dashboard',
         name: 'Dashboard',
-        component: () => import('@/views/admin/dashboard/index_v1'),
+        component: () => import('@/views/admin/dashboard/index'),
         meta: {
           title: "首页",
           icon: 'dashboard',
-          noCache: true,
-          affix: true,
-          // 页面内仍有 canViewBlogDashboard 二次校验
-          roles: ['admin', 'blog_admin', 'site_admin', 'website_admin']
+          noCache: false,
+          affix: true
+        }
+      },
+      {
+        path: 'blog-dashboard',
+        name: 'BlogDashboard',
+        component: () => import('@/views/admin/dashboard/index_v1.vue'),
+        meta: {
+          title: "博客看板",
+          icon: 'article'
         }
       }
     ]

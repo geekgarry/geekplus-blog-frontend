@@ -43,6 +43,12 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="前端模板">
+        <el-radio-group v-model="uiType" size="mini">
+          <el-radio-button label="element">Element UI</el-radio-button>
+          <el-radio-button label="antd">Ant Design Vue</el-radio-button>
+        </el-radio-group>
+      </el-form-item>
       <el-form-item>
         <el-button
           type="cyan"
@@ -242,7 +248,7 @@
         label="操作"
         align="center"
         fixed="right"
-        width="130"
+        width="200"
         class-name="small-padding fixed-width"
       >
         <template slot-scope="scope">
@@ -259,6 +265,13 @@
             icon="el-icon-truck"
             @click="handleGenCodeByGenTable(scope.row)"
             >生成代码</el-button
+          >
+          <el-button
+            size="small"
+            type="success"
+            icon="el-icon-s-promotion"
+            @click="handlePublishMenu(scope.row)"
+            >发布菜单</el-button
           >
           <!-- <el-button
             size="mini"
@@ -431,34 +444,42 @@
         <el-button @click="tableInfoCancel">取 消</el-button>
       </div>
     </el-dialog>
-    <!-- 预览界面 -->
+    <!-- 代码预览：border-card 标签 + 可横向滚动的代码区 -->
     <el-dialog
       :title="preview.title"
       :visible.sync="preview.open"
-      width="80%"
-      top="5vh"
+      width="85%"
+      top="4vh"
       append-to-body
-      class="scrollbar"
+      custom-class="gen-code-preview-dialog"
     >
-      <el-tabs v-model="preview.activeName">
+      <div v-if="previewFileCount" class="gen-code-preview__hint">
+        共 {{ previewFileCount }} 个生成文件！
+      </div>
+      <el-tabs v-model="preview.activeName" type="border-card" class="gen-code-preview__tabs">
         <el-tab-pane
           v-for="(item, key) in preview.data"
-          :label="item.fileName.substring(0,item.fileName.indexOf('.ftl'))"
-          :name="item.fileName.substring(0,item.fileName.indexOf('.ftl'))"
+          :label="previewTabLabel(item.fileName)"
+          :name="previewTabName(item.fileName)"
           :key="key"
         >
-          <el-link
-            class="copy-code-btn"
-            :data-clipboard-text="item.fileContent"
-            :underline="false"
-            icon="el-icon-document-copy"
-            style="float: right"
-            >复制</el-link
-          >
-          <pre><code class="hljs" v-text="item.fileContent" v-highlight></code></pre>
+          <div class="gen-code-preview__toolbar">
+            <span class="gen-code-preview__filename" :title="item.fileName">{{ item.fileName }}</span>
+            <el-button
+              type="text"
+              size="mini"
+              class="copy-code-btn"
+              :data-clipboard-text="item.fileContent"
+              icon="el-icon-document-copy"
+            >复制代码</el-button>
+          </div>
+          <div class="gen-code-preview__scroll">
+            <pre class="gen-code-preview__pre"><code class="hljs gen-code-preview__code" v-text="item.fileContent" v-highlight></code></pre>
+          </div>
         </el-tab-pane>
       </el-tabs>
     </el-dialog>
+    <gen-publish-dialog ref="publishDialog" />
   </div>
 </template>
 
@@ -467,13 +488,15 @@ import { getListTableInfo, getAllListTableInfo, getTableInfo, listGenTable, getG
 import { listGenTableColumn, getGenTableColumn, delGenTableColumn, addGenTableColumn, updateGenTableColumn, exportGenTableColumn } from "@/api/tool/tableColumn";
 import { downLoadZip } from "@/utils/downloadZip";
 import GenTableColumn from "./genTableColumn.vue"
+import GenPublishDialog from "./GenPublishDialog.vue"
 import Clipboard from 'clipboard';
 import lazyLoadDirectives from '@/mixins/lazyLoadDirectives'
 export default {
   name: 'Generator',
   mixins: [lazyLoadDirectives],
   components:{
-    GenTableColumn
+    GenTableColumn,
+    GenPublishDialog
   },
   data() {
     return {
@@ -510,6 +533,8 @@ export default {
       loading: true,
       // 显示搜索条件
       showSearch: true,
+      /** 代码生成前端模板：element（默认）| antd */
+      uiType: 'element',
       rules: {
         tableName: [
           { required: true, message: "数据表名称不为空", trigger: "blur" }
@@ -582,6 +607,13 @@ export default {
       //     { required: true, message: "关联表的ID不能为空", trigger: "change" }
       //   ]
       // }
+    }
+  },
+  computed: {
+    /** 预览弹窗顶部文件数提示 */
+    previewFileCount() {
+      const data = this.preview.data
+      return Array.isArray(data) ? data.length : 0
     }
   },
   created() {
@@ -705,37 +737,43 @@ export default {
     clipboardSuccess() {
       this.msgSuccess("复制成功");
     },
+    /** 预览 Tab 唯一 name：去扩展名，兼容 .java/.vue 等非 .ftl */
+    previewTabName(fileName) {
+      if (!fileName) return 'file'
+      const dot = fileName.lastIndexOf('.')
+      return dot > 0 ? fileName.slice(0, dot) : fileName
+    },
+    /** 预览 Tab 展示文案：短名 + 语言后缀 */
+    previewTabLabel(fileName) {
+      const name = this.previewTabName(fileName)
+      if (!fileName || fileName.indexOf('.') < 0) return name
+      const ext = fileName.slice(fileName.lastIndexOf('.') + 1).toLowerCase()
+      const langMap = { java: 'Java', vue: 'Vue', js: 'JS', xml: 'XML', sql: 'SQL', ftl: '模板' }
+      return langMap[ext] ? `${name} · ${langMap[ext]}` : name
+    },
     /** 预览按钮 */
     handlePreview(row) {
-      previewTableCode(row.tableId).then((response) => {
-        this.preview.data = response.data;
-        this.preview.open = true;
-        this.preview.activeName = response.data[0].fileName.substring(0,response.data[0].fileName.indexOf('.ftl'))
+      previewTableCode(row.tableId, this.uiType).then((response) => {
+        const list = response.data || []
+        this.preview.data = list
+        this.preview.open = true
+        if (list.length) {
+          this.preview.activeName = this.previewTabName(list[0].fileName)
+        }
       });
     },
     //直接生成代码
     handleGenCode(row) {
-      // downloadGenTable(row.tableName).then((response) => {
-      //     this.msgSuccess(response.msg);
-      // })
-      downLoadZip("/generator/download/" + row.tableName, "geekplus");
+      downLoadZip("/generator/download/" + row.tableName + "?uiType=" + this.uiType, "geekplus");
     },
     //通过生成表生成代码
     handleGenCodeByGenTable(row) {
       const tableIds = row.tableId || this.ids
-      // let res = downloadByGenTable(tableIds);
-      // let blob = new Blob([res], {
-      //   //type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      //   type: 'application/zip'
-      // });
-      // let downloadElement = document.createElement("a");
-      // let href = window.URL.createObjectURL(blob);
-      // downloadElement.href = href;
-      // downloadElement.download = "geekplus.zip";
-      // document.body.appendChild(downloadElement);
-      // downloadElement.click();
-      // window.URL.revokeObjectURL(href);
-      downLoadZip("/generator/downloadByGenTable/" + tableIds, "geekplus");
+      downLoadZip("/generator/downloadByGenTable/" + tableIds + "?uiType=" + this.uiType, "geekplus");
+    },
+    /** 发布菜单（ZIP 与菜单写入分离，见 docs/lowcode） */
+    handlePublishMenu(row) {
+      this.$refs.publishDialog.open(row)
     },
     handleDelete(row) {
       const tableIds = row.tableId || this.ids

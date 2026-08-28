@@ -1732,8 +1732,8 @@ code.hljs {
   word-break: break-word !important;
   background-color: var(--background-origin, #f8f8f9) !important;
   color: var(--text-color, #515a6e) !important;
-  height: 40px !important;
-  font-size: 13px !important;
+  height: 40px;
+  font-size: 13px;
 }
 
 .el-table thead {
@@ -1942,17 +1942,20 @@ code.hljs {
 
 .el-tree .el-tree-node.is-current,
 .el-tree .el-tree-node.is-current.is-focusable,
-.el-tree .el-tree-node.is-current.is-focusable .el-tree-node__content,
-.el-tree .el-tree-node.is-current.is-focusable .el-tree-node__children .el-tree-node.is-focusable {
-  background: var(--background-2, #FFFFFF) !important;
+.el-tree .el-tree-node.is-current.is-focusable > .el-tree-node__children > .el-tree-node.is-current.is-focusable {
+  background: var(--background-origin, #FFFFFF);
 }
 
-.el-tree .el-tree-node.is-focusable .el-tree-node__content:hover {
-  background: var(--background-2, #FFFFFF) !important;
+.el-tree .el-tree-node.is-current.is-focusable > .el-tree-node__content {
+  background: var(--background-1, #FFFFFF);
+}
+
+.el-tree .el-tree-node.is-focusable > .el-tree-node__content:hover {
+  background: var(--background-1, #FFFFFF) !important;
 }
 
 .el-tree .el-tree-node:focus > .el-tree-node__content {
-    background-color: var(--background-2, #F5F7FA) !important;
+    background-color: var(--background-1, #F5F7FA) !important;
     color: var(--theme-color) !important;
 }
 
@@ -1997,7 +2000,6 @@ code.hljs {
   height: 40px !important;
   line-height: 40px !important;
   outline: none !important;
-  padding: 0 15px !important;
   transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
   width: 100% !important;
 }
@@ -2243,6 +2245,9 @@ code.hljs {
   color: var(--text-color, #606266);
 }
 
+.el-pager li {
+  background: var(--background-origin, #090909);
+}
 
 /* el提示消息，弹出框，popover，对话框，dialog */
 
@@ -2300,11 +2305,7 @@ code.hljs {
 .el-dialog {
   -webkit-box-shadow: 0 1px 3px var(--box-shadow, rgba(0, 0, 0, 0.3)) !important;
   box-shadow: 0 1px 3px var(--box-shadow, rgba(0, 0, 0, 0.3)) !important;
-}
-
-.el-dialog,
-.el-pager li {
-  background: var(--background-origin, #090909);
+  background: var(--background-origin, #FFFFFF) !important;
 }
 
 .el-dialog__title {

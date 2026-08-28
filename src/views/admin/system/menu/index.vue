@@ -48,40 +48,40 @@
       :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
     >
       <!-- <el-table-column type="selection" width="55" align="center" /> -->
-      <el-table-column label="菜单名称" align="center" min-width="130" show-overflow-tooltip >
+      <el-table-column label="菜单名称" align="center" min-width="130" >
         <template slot-scope="scope">
           {{ scope.row.menuName }}
         </template>
       </el-table-column>
-      <el-table-column align="center" prop="menuId" label="菜单编号" show-overflow-tooltip />
-      <el-table-column label="图标" align="center" show-overflow-tooltip>
+      <el-table-column align="center" prop="menuId" label="菜单编号" width="100" />
+      <el-table-column label="图标" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.icon }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="类型" align="center" width="100" show-overflow-tooltip>
+      <el-table-column label="类型" align="center" width="100">
         <template slot-scope="scope">
           <span v-show="scope.row.menuType=='C'" style="color: #a11e1e;">菜单目录</span>
           <span v-show="scope.row.menuType=='M'" style="color: #1b941d;">功能菜单</span>
           <span v-show="scope.row.menuType=='B'" style="color: #3f81c7;">权限功能</span>
         </template>
       </el-table-column>
-      <el-table-column label="排序" align="center" show-overflow-tooltip>
+      <el-table-column label="排序" align="center" width="100">
         <template slot-scope="scope">
           {{ scope.row.orderNum }}
         </template>
       </el-table-column>
-      <el-table-column label="权限" align="center" show-overflow-tooltip>
+      <el-table-column label="权限" align="center" width="100">
         <template slot-scope="scope">
           {{ scope.row.perms }}
         </template>
       </el-table-column>
-      <el-table-column label="路径" align="center" width="130">
+      <el-table-column label="路径" align="center" width="150">
         <template slot-scope="scope">
           {{ scope.row.path }}
         </template>
       </el-table-column>
-      <el-table-column label="组件" align="center" show-overflow-tooltip>
+      <el-table-column label="组件" align="center" width="150">
         <template slot-scope="scope">
           {{ scope.row.component }}
         </template>
@@ -92,13 +92,13 @@
           <span>{{scope.row.status==0?'正常':'停用'}}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" prop="createTime" label="创建时间" show-overflow-tooltip>
+      <el-table-column align="center" prop="createTime" label="创建时间" width="150">
         <template slot-scope="scope">
           <i class="el-icon-time" />
           <span>{{ dateFormat(scope.row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" fixed="right" width="170" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" fixed="right" width="180" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-edit"
           @click="handleUpdate(scope.row)" >修改</el-button>

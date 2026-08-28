@@ -17,6 +17,22 @@
         <span v-if="!isAffix(tag)" class="el-icon-close" @click.prevent.stop="closeSelectedTag(tag)" />
       </router-link>
     </scroll-pane>
+    <!-- 标签栏右侧快捷菜单：与右键菜单能力一致，便于触屏/发现 -->
+    <div class="tags-view-menu">
+      <el-dropdown trigger="click" placement="bottom-end" @command="handleTagCommand">
+        <span class="tags-view-menu__trigger" title="标签操作">
+          <i class="el-icon-arrow-down" />
+        </span>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item command="refresh" icon="el-icon-refresh">刷新页面</el-dropdown-item>
+          <el-dropdown-item command="close" icon="el-icon-close" :disabled="isAffix(currentRouteView)">
+            关闭当前标签页
+          </el-dropdown-item>
+          <el-dropdown-item command="others" icon="el-icon-copy-document">关闭其它标签页</el-dropdown-item>
+          <el-dropdown-item command="all" icon="el-icon-circle-close">关闭全部标签页</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+    </div>
     <ul v-show="visible" :style="{left:left+'px',top:top+'px'}" class="contextmenu">
       <li @click="refreshSelectedTag(selectedTag)">刷新页面</li>
       <li v-if="!isAffix(selectedTag)" @click="closeSelectedTag(selectedTag)">关闭当前</li>
@@ -50,6 +66,16 @@ export default {
     },
     themeColor() {
       return this.$store.state.settings.themeColor;
+    },
+    /** 下拉菜单默认作用于当前路由对应标签 */
+    currentRouteView() {
+      return this.visitedViews.find(v => v.path === this.$route.path) || {
+        path: this.$route.path,
+        fullPath: this.$route.fullPath,
+        name: this.$route.name,
+        meta: this.$route.meta,
+        query: this.$route.query
+      }
     }
   },
   watch: {
@@ -202,6 +228,28 @@ export default {
     closeMenu() {
       this.visible = false
     },
+    /** 标签栏右侧下拉：刷新 / 关闭当前 / 关闭其它 / 关闭全部 */
+    handleTagCommand(command) {
+      const view = this.currentRouteView
+      if (!view || !view.path) return
+      switch (command) {
+        case 'refresh':
+          this.refreshSelectedTag(view)
+          break
+        case 'close':
+          if (!this.isAffix(view)) this.closeSelectedTag(view)
+          break
+        case 'others':
+          this.selectedTag = view
+          this.closeOthersTags()
+          break
+        case 'all':
+          this.closeAllTags(view)
+          break
+        default:
+          break
+      }
+    },
     handleScroll() {
       this.closeMenu()
     }
@@ -213,10 +261,14 @@ export default {
 .tags-view-container {
   height: 34px;
   width: 100%;
+  display: flex;
+  align-items: stretch;
   background: var(--background-origin,#fff);
   border-bottom: 1px solid var(--border-color-2,#d8dce5);
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .12), 0 0 3px 0 rgba(0, 0, 0, .04);
   .tags-view-wrapper {
+    flex: 1;
+    min-width: 0;
     .tags-view-item {
       display: inline-block;
       position: relative;
@@ -259,6 +311,29 @@ export default {
           margin-right: 2px;
         } */
       }
+    }
+  }
+  .tags-view-menu {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 10px 0 4px;
+    border-left: 1px solid var(--border-color-2, #d8dce5);
+    background: var(--background-origin, #fff);
+  }
+  .tags-view-menu__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-color, #495060);
+    transition: background 0.2s, color 0.2s;
+    &:hover {
+      background: var(--theme-color, #42b983);
+      color: #fff;
     }
   }
   .contextmenu {

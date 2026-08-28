@@ -149,6 +149,12 @@ export default {
   color: var(--theme-color, #5f7d80);
   border-color: var(--theme-color, #5f7d80);
 }
+@media screen and (max-width: 576px) {
+  .gp-rt-fab {
+    right: 12px;
+    bottom: 100px;
+  }
+}
 </style>
 
 <style>

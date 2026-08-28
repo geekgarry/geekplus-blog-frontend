@@ -1,5 +1,23 @@
 import request from '@/utils/request'
 
+// 控制台：近 N 天每日操作次数
+export function getOperLogCountByDay(days = 7) {
+  return request({
+    url: '/sys/operateLog/countByDay',
+    method: 'get',
+    params: { days }
+  })
+}
+
+// 控制台：近 N 天操作模块分布
+export function getOperLogCountByTitle(days = 7) {
+  return request({
+    url: '/sys/operateLog/countByTitle',
+    method: 'get',
+    params: { days }
+  })
+}
+
 // 查询操作日志列表
 export function listOperLog(query) {
   return request({

@@ -93,6 +93,7 @@ function messageHandle(message) {
       emitPresence(obj.type, obj)
       break
     default:
+      // 业务推送（operationLog/systemNotice 等）→ Navbar.applyRealtimePushDetail，契约见 @/utils/pushNotify.js
       window.dispatchEvent(new CustomEvent('onmessageWS', { detail: obj }))
       break
   }

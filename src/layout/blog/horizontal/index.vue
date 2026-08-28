@@ -157,7 +157,7 @@
             @click="toggleBlogLayout"
             :title="blogLayoutToggleTitle"
           >
-          <svg-icon :icon-class="blogLayout === 'side' ? 'topbar' : 'sidebar'" />
+          <svg-icon :icon-class="blogLayoutModeIcon" />
           <!-- <i :class="blogLayout === 'side' ? 'el-icon-s-unfold' : 'el-icon-s-fold'"></i> -->
         </button>
         <!-- <button type="button" class="gp-side-theme" @click="changeColor" :title="isDark ? '浅色' : '深色'">
@@ -257,6 +257,7 @@
  */
 import { mapGetters } from 'vuex'
 import blogLayoutMixin from '@/layout/blog/blogLayoutMixin'
+import { refreshAfterModeChange } from '@/theme'
 import RealtimeChatEntry from '@/components/RealtimeChat/Entry.vue'
 
 const COLLAPSE_KEY = 'gp-side-collapsed'
@@ -505,6 +506,8 @@ export default {
       if (isDark) document.body.setAttribute('theme-mode', 'dark')
       else document.body.removeAttribute('theme-mode')
       this.$store.commit('changeDarkMode', isDark)
+      // 维护链路：muted/menu token 依赖 theme-mode，同色重算（@/theme/maintain）
+      refreshAfterModeChange()
     },
     async onLogout() {
       try { await this.$store.dispatch('user/logout') } catch (e) { /* ignore */ }
@@ -631,6 +634,7 @@ export default {
   white-space: nowrap;
 }
 
+/* 侧栏导航：只消费 @/theme 写入的 gp-menu-active-*，与 BlogNavMenu 同一套对比策略 */
 .gp-side-nav-item {
   display: flex;
   align-items: center;
@@ -655,13 +659,14 @@ export default {
     color: var(--theme-color, #6e8b8e);
   }
   &:hover {
-    background: var(--theme-color-muted, rgba(110, 139, 142, 0.14));
+    background: var(--gp-menu-active-bg, var(--theme-color-muted));
     color: var(--text-color-2);
   }
   &.router-link-active {
     background: var(--gp-menu-active-bg, var(--theme-color-muted));
-    color: var(--theme-color, #6e8b8e);
+    color: var(--gp-menu-active-color, var(--theme-color-strong, var(--theme-color)));
     font-weight: 600;
+    box-shadow: inset 3px 0 0 var(--gp-menu-active-border, var(--theme-color));
   }
 }
 
@@ -681,8 +686,9 @@ export default {
 .gp-side-nav-item--sub { padding: 8px 12px; font-size: 13px; }
 
 .gp-side-nav-item--btn.is-open {
-  background: var(--theme-color-muted, rgba(110, 139, 142, 0.14));
-  color: var(--theme-color, #6e8b8e);
+  background: var(--gp-menu-active-bg, var(--theme-color-muted));
+  color: var(--gp-menu-active-color, var(--theme-color-strong, var(--theme-color)));
+  box-shadow: inset 3px 0 0 var(--gp-menu-active-border, var(--theme-color));
 }
 
 .gp-side-nav-flyout {

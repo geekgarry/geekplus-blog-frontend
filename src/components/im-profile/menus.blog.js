@@ -10,14 +10,14 @@ export function blogProfileMenus({ isAdmin } = {}) {
         {
           key: 'comments',
           label: '留言管理',
-          desc: isAdmin ? '网站留言与文章评论（管理员可看全站）' : '查看自己的网站留言与文章评论',
+          desc: isAdmin ? '网站留言与文章评论' : '查看网站留言与文章评论',
           icon: 'el-icon-chat-dot-round',
           to: '/user/comments'
         },
         {
           key: 'article-comments',
           label: '文章评论',
-          desc: '按文章浏览评论，一键跳转定位',
+          desc: '按文章浏览评论，一键跳转到原文',
           icon: 'el-icon-document',
           to: '/user/comments?tab=article'
         },
@@ -33,6 +33,13 @@ export function blogProfileMenus({ isAdmin } = {}) {
     {
       title: '常用功能',
       items: [
+        {
+          key: 'workbench',
+          label: '应用工作台',
+          desc: '图标式栏目入口与运营看板',
+          icon: 'el-icon-menu',
+          to: '/workbench'
+        },
         { key: 'write', label: '去投稿', icon: 'el-icon-edit', to: '/write' },
         { key: 'transfer', label: '文件中转', icon: 'el-icon-folder-opened', to: '/tool/file-transfer' },
         { key: 'im', label: '在线沟通', icon: 'el-icon-phone-outline', to: '/im' },

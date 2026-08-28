@@ -29,9 +29,18 @@
         <el-switch active-value="1" inactive-value="0" v-model="sidebarLogo" class="drawer-switch" />
       </div>
 
-      <!--增加切换按钮-->
+      <!--增加切换按钮（兼容旧版：仅侧栏/顶栏二选一）-->
       <div class="drawer-item">
-        <span>{{ $t("settings.leftMenuBar") }}</span>
+        <span>管理端菜单形式</span>
+        <el-radio-group v-model="adminMenuLayout" size="mini" class="drawer-radio">
+          <el-radio-button label="sidebar">侧栏</el-radio-button>
+          <el-radio-button label="topbar">顶栏</el-radio-button>
+          <el-radio-button label="workbench">工作台</el-radio-button>
+        </el-radio-group>
+      </div>
+
+      <div class="drawer-item drawer-item--legacy">
+        <span>{{ $t("settings.leftMenuBar") }}（旧）</span>
         <el-switch active-value="1" inactive-value="0" v-model="leftMenuBar" class="drawer-switch" />
       </div>
 
@@ -55,7 +64,15 @@
 </template>
 
 <script>
+/**
+ * 管理端右侧设置抽屉（布局 + 主题色 + 深/浅色）
+ *
+ * 主题相关：
+ * - theme-picker → themeChange → commitUserThemeColor（用户改色单链路）
+ * - isDarkMode → refreshAfterModeChange（维护链路，不换 hex）
+ */
 import ThemePicker from '@/components/ThemePicker'
+import { commitUserThemeColor, refreshAfterModeChange } from '@/theme'
 
 export default {
   components: { ThemePicker },
@@ -120,10 +137,18 @@ export default {
         return this.$store.state.settings.leftMenuBar
       },
       set(val) {
-        this.$store.dispatch('settings/changeSetting', {
-          key: 'leftMenuBar',
-          value: val
-        })
+        const mode = val === '1' ? 'sidebar' : 'topbar'
+        this.$store.dispatch('settings/changeSetting', { key: 'adminMenuLayout', value: mode })
+      }
+    },
+    adminMenuLayout: {
+      get() {
+        const val = this.$store.state.settings.adminMenuLayout
+        if (val === 'sidebar' || val === 'topbar' || val === 'workbench') return val
+        return this.$store.state.settings.leftMenuBar === '1' ? 'sidebar' : 'topbar'
+      },
+      set(val) {
+        this.$store.dispatch('settings/changeSetting', { key: 'adminMenuLayout', value: val })
       }
     },
     adminWatermark: {
@@ -150,6 +175,8 @@ export default {
           document.body.removeAttribute('theme-mode')
         }
         this.$store.dispatch('changeDarkMode', dark)
+        // 维护链路：深/浅色切换后重算 token（见 @/theme/README.md）
+        refreshAfterModeChange()
       }
     }
   },
@@ -162,10 +189,8 @@ export default {
       }
     },
     themeChange(val) {
-      this.$store.dispatch('settings/changeSetting', {
-        key: 'themeColor',
-        value: val
-      })
+      // 用户改色单链路入口，内部 dispatch settings/changeSetting → applyThemeColor
+      commitUserThemeColor(this.$store, val)
     }
   }
 }

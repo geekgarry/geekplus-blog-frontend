@@ -364,7 +364,7 @@ export default {
   gap: 8px;
   font-size: 1.125rem;
   font-weight: 700;
-  margin: 0 0 0.5rem;
+  margin: 0 auto;
   padding: 6px 10px;
   line-height: 1.3;
 }

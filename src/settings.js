@@ -23,9 +23,14 @@ module.exports = {
   leftMenuBar: true,
 
   /**
-   * 博客前台布局：top = 顶部导航，side = 侧栏导航（BlogShell）
+   * 博客前台布局：top=顶栏 | side=侧栏 | workbench=工作台导航（入口见 /workbench）
    */
   blogLayout: 'top',
+
+  /**
+   * 管理端菜单形式：sidebar=侧栏 | topbar=顶栏 | workbench=图标工作台
+   */
+  adminMenuLayout: 'sidebar',
 
   /**
    * 是否显示 tagsView

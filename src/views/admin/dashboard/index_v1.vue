@@ -1,5 +1,13 @@
 <template>
   <div class="blog-insight-dash">
+    <!-- 管理端工作台菜单模式：复用 WorkbenchHome，菜单来自 permission_routes -->
+    <workbench-home
+      v-if="useWorkbenchNav"
+      scope="admin"
+      :show-stats="allowed"
+    />
+
+    <template v-else>
     <!-- 无权限 -->
     <div v-if="!allowed" class="dash-denied">
       <i class="el-icon-lock"></i>
@@ -118,11 +126,13 @@
         </div>
       </div>
     </template>
+    </template>
   </div>
 </template>
 
 <script>
 import * as echarts from 'echarts'
+import WorkbenchHome from '@/components/WorkbenchHome/index'
 import { exportArticles } from '@/api/geekplus/articles'
 import { getDashboardStats } from '@/api/geekplus/stats'
 import { canViewBlogDashboard } from '@/utils/blogAdmin'
@@ -130,6 +140,7 @@ import { numFormatKWM } from '@/utils/plusTool'
 
 export default {
   name: 'BlogInsightDashboard',
+  components: { WorkbenchHome },
   data() {
     return {
       allowed: false,
@@ -148,13 +159,16 @@ export default {
     }
   },
   computed: {
+    useWorkbenchNav() {
+      return this.$store.state.settings.adminMenuLayout === 'workbench'
+    },
     displayName() {
       return this.$store.getters.nickname || this.$store.getters.username || '管理员'
     }
   },
   created() {
     this.allowed = canViewBlogDashboard()
-    if (this.allowed) {
+    if (this.allowed && !this.useWorkbenchNav) {
       this.loadDashboard()
     }
   },

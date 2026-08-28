@@ -24,11 +24,18 @@
         </div>
       </div>
       <blog-nav-menu
+        v-if="!isWorkbenchNavLayout"
         mode="drawer"
         :menus="addNavMenuRoutes"
         :show-admin-entry="!$common.isEmpty(username)"
         @navigate="onNavMenuNavigate"
       />
+      <div v-else class="drawer-workbench-entry">
+        <router-link class="drawer-workbench-entry__link" to="/workbench" @click.native="onNavMenuNavigate">
+          <svg-icon icon-class="menu-line" />
+          <span>应用工作台</span>
+        </router-link>
+      </div>
     </div>
     <div class="search-wrapper" v-show="isSearchDrawerOpen">
       <div class="search-overlay" @click="toggleSearch"></div>
@@ -82,13 +89,21 @@
             </div>
           </router-link>
 
-          <!-- 导航列表：独立 BlogNavMenu，桌面溢出自动收进「更多」 -->
+          <!-- 导航列表：workbench 模式改展示工作台入口，避免与顶栏菜单重复 -->
           <blog-nav-menu
-            v-if="!isMobile"
+            v-if="!isMobile && !isWorkbenchNavLayout"
             mode="desktop"
             :menus="addNavMenuRoutes"
             @navigate="onNavMenuNavigate"
           />
+          <router-link
+            v-else-if="!isMobile && isWorkbenchNavLayout"
+            class="gp-workbench-nav-entry"
+            to="/workbench"
+          >
+            <svg-icon icon-class="menu-line" />
+            <span>应用工作台</span>
+          </router-link>
 
           <!-- 导航搜索按钮 -->
           <div class="navbar-header-menu" :class="{ enter: navbar.enter }">
@@ -160,7 +175,7 @@
               @click="toggleBlogLayout()"
             ></i> -->
             <i>
-              <svg-icon aria-hidden="true" @click="toggleBlogLayout()" :icon-class="blogLayout === 'side' ? 'topbar' : 'sidebar'" />
+              <svg-icon aria-hidden="true" @click="toggleBlogLayout()" :icon-class="blogLayoutModeIcon" />
             </i>
           </div>
           <div :title="mouseAnimation ? '关闭点击飘字' : '开启点击飘字'">
@@ -211,6 +226,7 @@ import { enableClickFloat, disableClickFloat, setClickFloatWords } from '@/utils
 import { getCachedClickTextWords, refreshClickTextWords } from '@/utils/plusTool'
 import { runWhenIdle, cancelIdle } from '@/utils/deferRequest'
 import blogLayoutMixin from '@/layout/blog/blogLayoutMixin'
+import { refreshAfterModeChange } from '@/theme'
 import router from '@/router'
 // import '@/utils/TweenMax.min.js';
 // import '@/utils/paopaoScript.js';
@@ -604,9 +620,9 @@ export default {
       } else {
         document.body.removeAttribute("theme-mode", "dark");
         this.$store.commit("changeDarkMode", isDark);
-        // localStorage.setItem("theme-mode", "light");
-        // this.setCookieStorage("theme-mode", "light", { expires: 17 });
       }
+      // 维护链路：深/浅色切换后按同色重算 muted 与菜单 token（@/theme/maintain）
+      refreshAfterModeChange()
     },
     toTop() {
       window.scrollTo({
@@ -1060,7 +1076,53 @@ export default {
   display: grid;
 }
 
-/* 顶栏三区：品牌 | 可收缩菜单 | 操作；菜单过多由 BlogNavMenu 溢出折叠 */
+/* 顶栏 workbench 入口：与 gp-menu-active / gp-surface 同一套 token */
+.gp-workbench-nav-entry {
+  flex: 1 1 0;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  margin: 0 8px;
+  border-radius: 999px;
+  color: var(--gp-menu-active-color, var(--theme-color-strong, var(--theme-color)));
+  background: var(--gp-menu-active-bg, var(--theme-color-muted));
+  border: 1px solid var(--gp-surface-border, var(--border-color));
+  text-decoration: none;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.gp-workbench-nav-entry:hover {
+  background: var(--interactive-bg-secondary-hover, var(--hover-background));
+  border-color: var(--gp-surface-border-hover, var(--borderHoverColor));
+}
+
+.drawer-workbench-entry {
+  padding: 12px 16px 20px;
+}
+
+.drawer-workbench-entry__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--gp-surface-radius-sm, 10px);
+  color: var(--gp-menu-active-color, var(--theme-color-strong, var(--theme-color)));
+  background: var(--gp-menu-active-bg, var(--theme-color-muted));
+  border: 1px solid var(--gp-surface-border, var(--border-color));
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.drawer-workbench-entry__link:hover {
+  background: var(--interactive-bg-secondary-hover, var(--hover-background));
+  border-color: var(--gp-surface-border-hover, var(--borderHoverColor));
+}
+
 .navbar-container.flex-between {
   display: flex;
   align-items: center;

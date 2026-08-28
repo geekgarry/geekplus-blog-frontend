@@ -4,6 +4,24 @@
     <div class="dashboard-header">
       <h2 class="title"><i class="el-icon-data-analysis"></i> JVM & Server Live Monitor</h2>
       <div class="actions">
+        <!-- 默认开启定时拉取；关闭后仅保留手动刷新，避免后台页隐藏时仍打接口 -->
+        <div class="poll-controls">
+          <span class="poll-label">自动刷新</span>
+          <el-switch
+            v-model="autoRefreshEnabled"
+            active-text="开"
+            inactive-text="关"
+            @change="handleAutoRefreshChange"
+          />
+          <el-button
+            type="default"
+            icon="el-icon-refresh"
+            :loading="metricsLoading"
+            @click="handleManualRefresh"
+          >
+            <span class="hidden-xs-only">刷新数据</span>
+          </el-button>
+        </div>
         <el-button type="danger" icon="el-icon-delete" @click="triggerGC" :loading="gcLoading" title="System GC"><span class="hidden-xs-only">Force GC</span></el-button>
         <el-button type="info" icon="el-icon-document" @click="openGcLogDialog"><span class="hidden-xs-only">GC Logs</span></el-button>
         <el-button type="primary" icon="el-icon-folder-opened" @click="openHeapDumpDialog"><span class="hidden-xs-only">Heap Dumps</span></el-button>
@@ -218,6 +236,12 @@ export default {
         usedPhysicalMemory: 0, totalPhysicalMemory: 1
       },
       timer: null,
+      /** 是否每 3 秒自动拉取指标（与原 setInterval 行为一致） */
+      autoRefreshEnabled: true,
+      /** 指标轮询间隔（毫秒） */
+      metricsPollIntervalMs: 3000,
+      /** 手动刷新按钮 loading，与定时拉取互斥防连点 */
+      metricsLoading: false,
       gcLoading: false,
       drawerVisible: false,
       threadDump: [],
@@ -256,11 +280,13 @@ export default {
   mounted() {
     this.initCharts();
     this.fetchMetrics();
-    this.timer = setInterval(this.fetchMetrics, 3000);
+    if (this.autoRefreshEnabled) {
+      this.startMetricsPolling();
+    }
     window.addEventListener('resize', this.resizeCharts);
   },
   beforeDestroy() {
-    if (this.timer) clearInterval(this.timer);
+    this.stopMetricsPolling();
     window.removeEventListener('resize', this.resizeCharts);
     if (this.heapChartInstance) this.heapChartInstance.dispose();
     if (this.cpuChartInstance) this.cpuChartInstance.dispose();
@@ -367,7 +393,41 @@ export default {
         ]
       });
     },
-    async fetchMetrics() {
+    /** 启动指标定时轮询（先清旧 timer，防止重复挂载） */
+    startMetricsPolling() {
+      this.stopMetricsPolling();
+      this.timer = setInterval(() => {
+        this.fetchMetrics(false);
+      }, this.metricsPollIntervalMs);
+    },
+    /** 停止定时轮询；离开页或关闭自动刷新时调用 */
+    stopMetricsPolling() {
+      if (this.timer) {
+        clearInterval(this.timer);
+        this.timer = null;
+      }
+    },
+    handleAutoRefreshChange(enabled) {
+      if (enabled) {
+        this.startMetricsPolling();
+      } else {
+        this.stopMetricsPolling();
+      }
+    },
+    /** 关闭自动刷新后，由用户主动拉取最新指标 */
+    async handleManualRefresh() {
+      await this.fetchMetrics(true);
+    },
+    /**
+     * @param {boolean} showLoading 手动刷新时为 true，展示按钮 loading
+     */
+    async fetchMetrics(showLoading = false) {
+      if (showLoading && this.metricsLoading) {
+        return;
+      }
+      if (showLoading) {
+        this.metricsLoading = true;
+      }
       try {
         const res = await getMetrics();
         this.currentData = res.data;
@@ -382,6 +442,13 @@ export default {
         this.updateCharts();
       } catch (error) {
         console.error('获取指标失败', error);
+        if (showLoading) {
+          this.$message.error('刷新指标失败');
+        }
+      } finally {
+        if (showLoading) {
+          this.metricsLoading = false;
+        }
       }
     },
     async triggerGC() {
@@ -534,6 +601,23 @@ export default {
 }
 .actions {
   margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.poll-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 8px;
+  margin-right: 4px;
+  border-right: 1px solid var(--gp-border-subtle, #e5e7eb);
+}
+.poll-label {
+  font-size: 13px;
+  color: var(--gp-text-secondary, #6b7280);
+  white-space: nowrap;
 }
 .mb-4 { margin-bottom: 24px; }
 .mt-3 { margin-top: 16px; }

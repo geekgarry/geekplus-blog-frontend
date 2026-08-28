@@ -1,17 +1,36 @@
 <template>
-  <div class="navbar" :class="{showTopMenuBar: device!=='mobile'&&!leftMenuBar}">
+  <div class="navbar" :class="{ showTopMenuBar: device !== 'mobile' && adminMenuLayout === 'topbar' }">
     <!--注释 侧边栏展开关闭按钮-->
     <hamburger
-      v-if="device==='mobile'||leftMenuBar"
+      v-if="device==='mobile'|| adminMenuLayout === 'sidebar'"
       :is-active="sidebar.opened"
       class="hamburger-container"
       @toggleClick="toggleSideBar"
     />
 
-    <breadcrumb v-if="leftMenuBar" class="breadcrumb-container hidden-xs-only" />
+    <breadcrumb v-if="adminMenuLayout === 'sidebar'" class="breadcrumb-container hidden-xs-only" />
 
-    <!--当 leftMenuBar===false，左菜单栏隐藏，顶部显示-->
-    <topbar v-if="device!=='mobile' && !leftMenuBar" class="left-menu" />
+    <!-- 工作台模式无侧栏/顶栏菜单：Logo+站名改挂 Navbar，与 Topbar/Sidebar 同源 -->
+    <div
+      v-if="adminMenuLayout === 'workbench' && showAdminHeaderLogo"
+      class="admin-workbench-brand"
+    >
+      <router-link to="/admin/dashboard" class="admin-workbench-brand__link">
+        <img :src="adminLogoSrc" class="admin-workbench-brand__logo" alt="">
+        <span class="admin-workbench-brand__title">{{ adminSiteTitle }}</span>
+      </router-link>
+    </div>
+
+    <!-- topbar=顶栏菜单；workbench=隐藏传统菜单，靠 dashboard 工作台图标导航 -->
+    <topbar v-if="device!=='mobile' && adminMenuLayout === 'topbar'" class="left-menu" />
+
+    <router-link
+      v-if="adminMenuLayout === 'workbench' && device!=='mobile' && $route.path !== '/admin/dashboard'"
+      class="admin-workbench-back hidden-xs-only"
+      to="/admin/dashboard"
+    >
+      <i class="el-icon-menu" /> 返回工作台
+    </router-link>
 
     <div class="right-menu">
       <!-- <div class="right-menu-item hover-effect hidden-xs-only" @click="showNotice">
@@ -26,7 +45,13 @@
         ></el-badge>
         <span class="el-icon-chat-dot-square"></span>
       </div> -->
-      <notification-msg :operationLog="operationLog" :systemNotice="systemNotice" class="right-menu-item hover-effect" />
+      <notification-msg
+        :operation-log="operationLog"
+        :system-notice="systemNotice"
+        :online-user="onlineUser"
+        class="right-menu-item hover-effect"
+        @clear="onPushClear"
+      />
       <template v-if="device!=='mobile'">
         <search id="header-search" class="right-menu-item" />
 
@@ -113,11 +138,13 @@ import Langs from "./Lang"
 import Topbar from "./Topbar"
 import NotificationMsg from "./NotificationMsg"
 import RealtimeChatEntry from '@/components/RealtimeChat/Entry.vue'
+import adminLogo from '@/assets/images/logo/geekplus.png'
 import headPic from "@/assets/mai.jpg";
 import { getOnlineUserCount } from "@/api/monitor/online"
 import { resetRouter } from '@/router'
 //权限检查js方法
 import {checkPermi, checkRole} from "@/utils/permission"
+import { applyRealtimePushDetail } from '@/utils/pushNotify'
 
 export default {
   components: {
@@ -138,7 +165,9 @@ export default {
       notifyMsg: undefined,
       operationLog: undefined,
       systemNotice: undefined,
-      onlineUserCount:0,
+      /** 顶栏「在线用户」未读，仅 applyRealtimePushDetail 在他人 type=online 时写入 */
+      onlineUser: undefined,
+      onlineUserCount: 0,
       baseHost: window.location.host,
       baseApi: process.env.VUE_APP_BASE_API,
       prefixUrl: process.env.VUE_APP_BASE_API,
@@ -177,9 +206,25 @@ export default {
     // ...mapState({
     //   leftMenuBar: state => state.settings.leftMenuBar == '1' ? true : false
     // }),
-    //获取menuInLeft值
+    /** 管理端三种菜单形式，与 settings.adminMenuLayout 同步 */
+    adminMenuLayout() {
+      const val = this.$store.state.settings.adminMenuLayout
+      if (val === 'sidebar' || val === 'topbar' || val === 'workbench') return val
+      return this.$store.state.settings.leftMenuBar == '1' ? 'sidebar' : 'topbar'
+    },
+    /** 与侧栏/顶栏 Logo 开关一致；工作台无侧栏时在此展示 */
+    showAdminHeaderLogo() {
+      return this.$store.state.settings.sidebarLogo == '1'
+    },
+    adminLogoSrc() {
+      return adminLogo
+    },
+    adminSiteTitle() {
+      const info = this.$store.state.webInfo || {}
+      return info.gpWebName || info.gpWebTitle || 'GeekPlus Blog'
+    },
     leftMenuBar() {
-      return this.$store.state.settings.leftMenuBar == '1' ? true : false
+      return this.adminMenuLayout === 'sidebar'
     },
     userAvatar:{
       get() {
@@ -281,11 +326,25 @@ export default {
         this.onlineUserCount=res.data;
       })
     },
-    // 收到消息处理
+    // 收到 WS/SSE 推送：统一走 pushNotify 规范化（v1 "add" / v2 对象正文），见 @/utils/pushNotify.js
     getSocketData(res) {
-      // this.notifyMsg=res.detail.notifyMsg
-      this.operationLog=res.detail.operationLog
-      this.systemNotice=res.detail.systemNotice
+      console.log(res);
+      const detail = res.detail || {}
+      applyRealtimePushDetail(detail, this, { currentUserId: this.userId })
+      // 同步在线人数（后端 online 广播带 onlineCount 时）
+      if (detail.type === 'online' && detail.onlineCount != null) {
+        this.onlineUserCount = detail.onlineCount
+      }
+      // 后期 v2 气泡：import { notifyPushToast } from '@/utils/pushNotify' 后取消注释
+      // if (detail.operationLog && typeof detail.operationLog === 'object') {
+      //   notifyPushToast(this.operationLog, { title: '操作提醒' })
+      // }
+    },
+    /** NotificationMsg 点击菜单后清空对应通道未读 */
+    onPushClear(channel) {
+      if (channel && Object.prototype.hasOwnProperty.call(this, channel)) {
+        this[channel] = undefined
+      }
     },
     //检测用户是否拥有某个权限
     checkHasPermi(value){
@@ -296,6 +355,64 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/* 工作台顶栏品牌区：侧栏 Logo 隐藏时的替代位 */
+.admin-workbench-brand {
+  float: left;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px 0 8px;
+  border-right: 1px solid var(--gp-surface-border, var(--border-color));
+}
+
+.admin-workbench-brand__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.admin-workbench-brand__logo {
+  width: auto;
+  height: 32px;
+  vertical-align: middle;
+}
+
+.admin-workbench-brand__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color-2, var(--navbarFont, #2c2a28));
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-workbench-back {
+  float: left;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 50px;
+  line-height: 50px;
+  margin-left: 12px;
+  padding: 0 10px;
+  color: var(--gp-menu-active-color, var(--theme-color-strong, var(--theme-color)));
+  background: var(--gp-menu-active-bg, var(--theme-color-muted));
+  border: 1px solid var(--gp-surface-border, var(--border-color));
+  border-radius: var(--gp-surface-radius-sm, 8px);
+  text-decoration: none;
+  font-size: 13px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.admin-workbench-back:hover {
+  background: var(--interactive-bg-secondary-hover, var(--hover-background));
+  border-color: var(--gp-surface-border-hover, var(--borderHoverColor));
+}
+
 .navbar {
   height: 50px;
   overflow: hidden;

@@ -194,8 +194,10 @@ export default {
 }
 
 .gp-user-menu__item:hover {
-  background: var(--gp-menu-active-bg, rgba(11, 173, 182, 0.1));
-  color: var(--theme-color, #0badb6);
+  /* 与 BlogNavMenu 共用 gp-menu-active-* token，仅消费 CSS 变量 */
+  background: var(--gp-menu-active-bg, var(--theme-color-muted));
+  color: var(--gp-menu-active-color, var(--theme-color-strong, var(--theme-color)));
+  box-shadow: inset 3px 0 0 var(--gp-menu-active-border, var(--theme-color));
 }
 
 .gp-user-menu__item i {

@@ -7,11 +7,11 @@
   </div>
 </template>
 <script>
-import {
-  applyElementTheme,
-  DEFAULT_THEME,
-  resolveStoredThemeColor
-} from '@/utils/elementTheme'
+/**
+ * 根组件：博客前台 + 管理端共用入口
+ * 主题冷启动只在此调 initSiteTheme，勿再 import applyThemeColor
+ */
+import { initSiteTheme } from '@/theme'
 
 export default {
   name: 'App',
@@ -24,31 +24,8 @@ export default {
     console.log('当前时间：%O', new Date());
     console.log("%c"+window.location.host, "background-image:-webkit-gradient( linear, left top, right top, color-stop(0, #f22), color-stop(0.15, #f2f), color-stop(0.3, #22f), color-stop(0.45, #2ff), color-stop(0.6, #25e),color-stop(0.75, #4f2), color-stop(0.9, #f2f), color-stop(1, #f22) );color:transparent;-webkit-background-clip: text;font-size:2em;")
 
-    // 旧版默认色迁移
-    const storedTheme = localStorage.getItem('themeColor')
-    if (!storedTheme || /^#0badb6$/i.test(storedTheme) || /^#13c2c2$/i.test(storedTheme) || /^#6e8b8e$/i.test(storedTheme)) {
-      localStorage.setItem('themeColor', DEFAULT_THEME)
-      this.$store && this.$store.dispatch('settings/changeSetting', { key: 'themeColor', value: DEFAULT_THEME })
-    }
-
-    // 同步 CSS 变量 + 轻量覆盖；chalk 空闲再加载，不挡首屏
-    applyElementTheme(resolveStoredThemeColor(), { defer: true })
-
-    var key = "theme-mode";
-    const themeMode = localStorage.getItem(key);
-    if (themeMode) {
-      if(themeMode.includes("dark")) {
-        document.body.setAttribute(key, themeMode);
-      }else if (themeMode.includes("light")) {
-        document.body.removeAttribute(key, "dark");
-      }
-    } else {
-      if (this.isDay) {
-        document.body.removeAttribute(key, "dark")
-      } else {
-        document.body.setAttribute(key, "dark")
-      }
-    }
+    // 1) 恢复 body[theme-mode]  2) 迁移旧色 / 对齐 store / 写 CSS 变量（@/theme/bootstrap.js）
+    initSiteTheme(this.$store, { isDay: this.isDay })
   },
   mounted() {
     const bootExtras = () => {

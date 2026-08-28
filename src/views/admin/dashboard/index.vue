@@ -1,599 +1,539 @@
 <template>
-  <div class="dashboard-container home">
-    <el-row :gutter="20">
-      <el-col :sm="24" :lg="24">
-        <blockquote class="text-warning" style="font-size: 14px">
-          <h2>
-            <el-link href="/" type="info" target="_blank"
-              >极客普拉斯</el-link
-            >
-          </h2>
-          <el-button class="mobile" type="primary" icon="el-icon-document"
-            ><el-link
-              target="_blank"
-              type="info"
-              href="#"
-              >XXXX</el-link
-            ></el-button
-          >
-          <br />
-          <el-link
-            href="/"
-            type="primary"
-            target="_blank"
-            >###</el-link
-          >
-          <br />
-          极客普拉斯
-          <br />
-          <el-link
-            href="/"
-            type="primary"
-            target="_blank"
-            >###</el-link
-          >
-          <br />
-          极客普拉斯后端
-          <el-link
-            href="https://github.com/geekgarry/geekplus-admin-springboot-api"
-            type="primary"
-            target="_blank"
-            >>☛☛点我进入☚☚</el-link
-          >
-          &nbsp;&nbsp;&nbsp; 极客普拉斯前端
-          <el-link
-            href="https://github.com/geekgarry/geekplus-admin-vue-ui"
-            type="primary"
-            target="_blank"
-            >>☛☛点我进入☚☚</el-link
-          ><br />
-          <h4 class="text-danger">极客普拉斯</h4>
-        </blockquote>
+  <div class="admin-dashboard app-container">
+    <el-tabs v-model="activeTab" class="dashboard-tabs">
+      <el-tab-pane label="数据概览" name="overview">
+        <div class="dashboard-toolbar">
+          <el-button type="primary" icon="el-icon-refresh" :loading="loading" @click="loadDashboard">
+            刷新数据
+          </el-button>
+        </div>
 
-        <hr />
-      </el-col>
-    </el-row>
-    <el-row :gutter="20">
-      <el-col :sm="12" :lg="12" :md="12" style="padding-left: 20px">
-        <el-card class="box-card">
-          <div slot="header" class="clearfix">
-            <span>中国地图</span>
-            <el-button style="float: right; padding: 3px 0" type="text"
-              >清除</el-button
-            >
-          </div>
-          <!-- <el-calendar v-model="dateValue" >
-          </el-calendar> -->
-          <div
-            class="chinaMap"
-            ref="chinaMap"
-            style="min-width: 400px; height: 300px; margin: 0 auto;"
-          ></div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="12" :lg="12" style="padding-left: 20px">
-        <el-card class="box-card">
-          <div slot="header" class="clearfix">
-            <span>二维码生成</span>
-            <el-button style="float: right; padding: 3px 0" type="text"
-              >清空</el-button
-            >
-          </div>
-          <!-- <el-calendar v-model="dateValue" >
-          </el-calendar> -->
-          <div>
-            <el-form
-              status-icon
-              ref="qrCodeForm"
-              class="demo-ruleForm"
-            >
-              <el-form-item prop="qrCodeText">
-                <el-input
-                  placeholder="请输入要生成的文本"
-                  v-model="qrCodeText"
-                  @keyup.enter.native="getQRCodeImg"
-                  class="input-with-select"
-                >
-                  <!-- <el-select v-model="select" slot="prepend" placeholder="请选择">
-                    <el-option label="" value="1"></el-option>
-                    <el-option label="" value="2"></el-option>
-                    <el-option label="" value="3"></el-option>
-                  </el-select> -->
-                  <el-button
-                    slot="append"
-                    icon="el-icon-s-promotion"
-                    @click="getQRCodeImg"
-                    >生成</el-button
-                  >
-                </el-input>
-              </el-form-item>
-            </el-form>
-          </div>
-          <div class="block" style="text-align:center;">
-            <el-image
-              :src="qrCodeImg"
-              :preview-src-list="[qrCodeImg]"
-            >
-              <div slot="error" class="image-slot">
-                <i class="el-icon-picture-outline"></i>
-              </div>
-            </el-image>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
-    <el-row :gutter="20">
-      <el-col :sm="24" :lg="12" style="padding-left: 20px">
-        <h2>GeekPlusAdmin管理框架</h2>
-        <p>
-          一直想做一款后台管理系统，看了很多优秀的开源项目但是发现没有合适自己的。于是利用空闲休息时间开始自己写一套后台系统。如此有了极客普拉斯管理系统。他可以用于所有的Web应用程序，如网站管理后台等等，当然，您也可以对它进行代码修改定制操作。所有前端后台代码封装过后十分精简易上手，出错概率低。同时支持移动客户端访问。会陆续更新下去！。
-        </p>
-        <p>
-          <b>当前版本:</b> <span>v{{ version }}</span>
-        </p>
-        <p>
-          <el-tag type="danger">&yen;免费开源</el-tag>
-        </p>
-        <p>
-          <el-button
-            type="primary"
-            size="mini"
-            icon="el-icon-cloudy"
-            plain
-            @click="
-              goTarget('https://github.com/geekgarry/geekplus-admin-vue-ui')
-            "
-            >访问Github</el-button
-          >
-          <el-button
-            size="mini"
-            icon="el-icon-s-home"
-            plain
-            @click="goTarget('/')"
-            >访问主页</el-button
-          >
-        </p>
-      </el-col>
+        <div v-loading="loading && !kpiList.length" class="dashboard-body">
+          <el-row :gutter="20" class="kpi-row">
+            <el-col :xs="24" :sm="12" :md="6" v-for="item in kpiList" :key="item.key">
+              <el-card shadow="hover" class="kpi-card">
+                <div class="kpi-card__label">{{ item.label }}</div>
+                <div class="kpi-card__value" :style="{ color: item.color }">
+                  {{ item.value }}<span class="kpi-card__suffix">{{ item.suffix }}</span>
+                </div>
+                <div class="kpi-card__delta">{{ item.delta }}</div>
+              </el-card>
+            </el-col>
+          </el-row>
 
-      <el-col :sm="24" :lg="12" style="padding-left: 50px">
-        <el-row>
-          <el-col :span="12">
-            <h2>技术选型</h2>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="6">
-            <h4>后端技术</h4>
-            <ul>
-              <li>SpringBoot</li>
-              <li>Shiro</li>
-              <li>Redis</li>
-              <li>MyBatis</li>
-              <li>Druid</li>
-              <li>Fastjson</li>
-              <li>...</li>
-            </ul>
-          </el-col>
-          <el-col :span="6">
-            <h4>前端技术</h4>
-            <ul>
-              <li>Vue</li>
-              <li>Vuex</li>
-              <li>Element-ui</li>
-              <li>Axios</li>
-              <li>Sass</li>
-              <li>Quill</li>
-              <li>...</li>
-            </ul>
-          </el-col>
-        </el-row>
-      </el-col>
-    </el-row>
-    <el-divider />
-    <el-row :gutter="20">
-      <el-col :xs="24" :sm="24" :md="12" :lg="8">
-        <el-card class="update-log">
-          <div slot="header" class="clearfix">
-            <span>系统公告</span>
-          </div>
-          <div class="body">
-            <!-- <el-table :data="noticeList">
-              <el-table-column align="center" label="公告" prop="noticeContent" />
-            </el-table> -->
-            <span v-for="(item, index) in noticeList" :key="index">
-              <p>
-                <i class="el-icon-s-promotion"></i
-                ><el-link :href="item.noticeUrl" target="_blank">{{
-                  item.noticeTitle
-                }}</el-link>
-              </p>
-              <span v-html="item.noticeContent"></span>
-              <el-divider />
-            </span>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="24" :md="12" :lg="8">
-        <el-card class="update-log">
-          <div slot="header" class="clearfix">
-            <span>更新日志</span>
-          </div>
-          <el-collapse accordion>
-            <el-collapse-item title="v1.0.0 - 2020-11-18">
-              <ol>
-                <li>阻止任意文件下载漏洞</li>
-                <li>代码生成支持上传控件</li>
-                <li>新增图片上传组件</li>
-                <li>调整默认首页</li>
-                <li>升级druid到最新版本v1.2.2</li>
-                <li>mapperLocations配置支持分隔符</li>
-                <li>权限信息调整</li>
-                <li>调整sql默认时间</li>
-                <li>解决代码生成没有bit类型的问题</li>
-                <li>升级pagehelper到最新版1.3.0</li>
-              </ol>
-            </el-collapse-item>
-            <el-collapse-item title="v0.0.9 - 2020-10-10">
-              <ol>
-                <li>升级springboot版本到2.1.17 提升安全性</li>
-                <li>升级oshi到最新版本v5.2.5</li>
-                <li>升级druid到最新版本v1.2.1</li>
-                <li>升级jjwt到版本0.9.1</li>
-                <li>升级fastjson到最新版1.2.74</li>
-                <li>修改sass为node-sass，避免el-icon图标乱码</li>
-                <li>代码生成支持同步数据库</li>
-                <li>代码生成支持富文本控件</li>
-                <li>代码生成页面时不忽略remark属性</li>
-                <li>代码生成添加select必填选项</li>
-                <li>Excel导出类型NUMERIC支持精度浮点类型</li>
-                <li>Excel导出targetAttr优化获取值，防止get方法不规范</li>
-                <li>Excel注解支持自动统计数据总和</li>
-                <li>Excel注解支持设置BigDecimal精度&舍入规则</li>
-                <li>菜单&数据权限新增（展开/折叠 全选/全不选 父子联动）</li>
-                <li>允许用户分配到部门父节点</li>
-                <li>菜单新增是否缓存keep-alive</li>
-                <li>表格操作列间距调整</li>
-                <li>限制系统内置参数不允许删除</li>
-                <li>富文本组件优化，支持自定义高度&图片冲突问题</li>
-                <li>富文本工具栏样式对齐</li>
-                <li>导入excel整形值校验优化</li>
-                <li>修复页签关闭所有时固定标签路由不刷新问题</li>
-                <li>表单构建布局型组件新增按钮</li>
-                <li>左侧菜单文字过长显示省略号</li>
-                <li>修正根节点为子部门时，树状结构显示问题</li>
-                <li>修正调用目标字符串最大长度</li>
-                <li>修正菜单提示信息错误</li>
-                <li>修正定时任务执行一次权限标识</li>
-                <li>修正数据库字符串类型nvarchar</li>
-                <li>优化递归子节点</li>
-                <li>优化数据权限判断</li>
-                <li>其他细节优化</li>
-              </ol>
-            </el-collapse-item>
+          <el-row :gutter="20" class="chart-row">
+            <el-col :xs="24" :md="12">
+              <el-card shadow="hover" class="chart-card">
+                <div slot="header" class="chart-head">近 7 日用户登录</div>
+                <div ref="loginChart" class="chart-box" />
+              </el-card>
+            </el-col>
+            <el-col :xs="24" :md="12">
+              <el-card shadow="hover" class="chart-card">
+                <div slot="header" class="chart-head">近 7 日用户操作</div>
+                <div ref="operChart" class="chart-box" />
+              </el-card>
+            </el-col>
+          </el-row>
 
-            <el-collapse-item title="v1.0.0 - 2019-10-08">
-              <ol>
-                <li>极客普拉斯前后端分离系统正式发布</li>
-              </ol>
-            </el-collapse-item>
-          </el-collapse>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="24" :md="12" :lg="8">
-        <el-card class="update-log">
-          <div slot="header" class="clearfix">
-            <span>捐赠支持</span>
-          </div>
-          <div class="body">
-            <p>
-              <i class="el-icon-s-promotion"></i> 官网：<el-link
-                href="/"
-                target="_blank"
-                >梦极客园</el-link
-              >
-            </p>
-            <!-- <img
-              src="/"
-              alt="donate"
-              width="50%"
-            />
-            <img
-              src="/"
-              alt="donate"
-              width="50%"
-            />
-            <span style="display: inline-block; height: 30px; line-height: 30px"
-              >你可以请作者喝杯奶茶表示鼓励和支持</span
-            > -->
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
-    <!-- <div class="dashboard-text">name: {{ nickName }}</div> -->
+          <el-row :gutter="20" class="chart-row">
+            <el-col :xs="24" :md="12">
+              <el-card shadow="hover" class="chart-card">
+                <div slot="header" class="chart-head">操作模块分布</div>
+                <div ref="operPieChart" class="chart-box" />
+              </el-card>
+            </el-col>
+            <el-col :xs="24" :md="12">
+              <el-card shadow="hover" class="chart-card">
+                <div slot="header" class="chart-head">访问地域分布</div>
+                <div ref="mapChart" class="chart-box" />
+              </el-card>
+            </el-col>
+          </el-row>
+
+          <el-row :gutter="20" class="chart-row">
+            <el-col :xs="24" :lg="14">
+              <el-card shadow="hover" class="metric-card-wrap">
+                <div slot="header" class="chart-head">系统核心指标</div>
+                <div class="metric-card__body" :class="{ 'is-masked': serverForbidden }">
+                  <el-row :gutter="16">
+                    <el-col :span="12">
+                      <div class="metric-block">
+                        <div class="metric-title">CPU</div>
+                        <el-progress :percentage="num(server.cpu.used)" :stroke-width="10" />
+                        <div class="metric-meta">
+                          核心 {{ server.cpu.cpuNum || '-' }} · 系统 {{ pct(server.cpu.sys) }} · 空闲 {{ pct(server.cpu.free) }}
+                        </div>
+                      </div>
+                    </el-col>
+                    <el-col :span="12">
+                      <div class="metric-block">
+                        <div class="metric-title">内存 / JVM</div>
+                        <el-progress :percentage="num(server.mem.usage)" :stroke-width="10" status="success" />
+                        <div class="metric-meta">物理 {{ memSummary }} · JVM {{ pct(server.jvm.usage) }}</div>
+                      </div>
+                    </el-col>
+                  </el-row>
+                  <el-descriptions :column="2" border size="small" class="metric-desc">
+                    <el-descriptions-item label="服务器名">{{ server.sys.computerName || '-' }}</el-descriptions-item>
+                    <el-descriptions-item label="服务器 IP">{{ server.sys.computerIp || '-' }}</el-descriptions-item>
+                    <el-descriptions-item label="操作系统">{{ server.sys.osName || '-' }}</el-descriptions-item>
+                    <el-descriptions-item label="系统架构">{{ server.sys.osArch || '-' }}</el-descriptions-item>
+                    <el-descriptions-item label="运行时长">{{ server.sys.runTime || server.jvm.runTime || '-' }}</el-descriptions-item>
+                    <el-descriptions-item label="Java 版本">{{ server.jvm.version || '-' }}</el-descriptions-item>
+                    <el-descriptions-item label="磁盘分区" :span="2">
+                      <span v-if="!diskSummary.length">-</span>
+                      <span v-else>
+                        <span v-for="(d, i) in diskSummary" :key="d.dirName">
+                          {{ d.dirName }} {{ d.usage }}%<span v-if="i < diskSummary.length - 1"> · </span>
+                        </span>
+                      </span>
+                    </el-descriptions-item>
+                  </el-descriptions>
+                </div>
+                <div v-if="serverForbidden" class="metric-card__mask">
+                  <i class="el-icon-lock metric-card__mask-icon" />
+                  <div class="metric-card__mask-title">暂无权限查看</div>
+                  <div class="metric-card__mask-desc">需要 <code>monitor:server:list</code> 权限，请联系管理员授权</div>
+                </div>
+              </el-card>
+            </el-col>
+            <el-col :xs="24" :lg="10">
+              <el-card shadow="hover" class="chart-card">
+                <div slot="header" class="chart-head">最近登录</div>
+                <el-table :data="recentLogins" size="small" border max-height="320">
+                  <el-table-column prop="logUsername" label="用户" width="90" show-overflow-tooltip />
+                  <el-table-column prop="logLoginIp" label="IP" width="110" />
+                  <el-table-column prop="loginLocation" label="地点" show-overflow-tooltip />
+                  <el-table-column label="状态" width="72">
+                    <template slot-scope="scope">
+                      <el-tag :type="scope.row.logType === 1 ? 'success' : 'danger'" size="mini">
+                        {{ formatLoginStatus(scope.row.logType) }}
+                      </el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="时间" width="150">
+                    <template slot-scope="scope">{{ dateFormat(scope.row.logTime) }}</template>
+                  </el-table-column>
+                </el-table>
+              </el-card>
+            </el-col>
+          </el-row>
+
+          <el-row :gutter="20" class="chart-row">
+            <el-col :span="24">
+              <el-card shadow="hover" class="chart-card">
+                <div slot="header" class="chart-head">最近操作</div>
+                <el-table :data="recentOpers" size="small" border>
+                  <el-table-column prop="title" label="模块" min-width="140" show-overflow-tooltip />
+                  <el-table-column prop="operName" label="操作人" width="90" />
+                  <el-table-column label="类型" width="80">
+                    <template slot-scope="scope">{{ formatOperType(scope.row.businessType) }}</template>
+                  </el-table-column>
+                  <el-table-column prop="operIp" label="IP" width="120" />
+                  <el-table-column label="状态" width="80">
+                    <template slot-scope="scope">
+                      <el-tag :type="scope.row.status === (200 || 201 || 1) ? 'success' : 'danger'" size="mini">
+                        {{ scope.row.status === (200 || 201 || 1) ? '成功' : '失败' }}
+                      </el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="时间" width="160">
+                    <template slot-scope="scope">{{ dateFormat(scope.row.operTime) }}</template>
+                  </el-table-column>
+                </el-table>
+              </el-card>
+            </el-col>
+          </el-row>
+        </div>
+      </el-tab-pane>
+
+      <el-tab-pane label="系统介绍" name="intro" lazy>
+        <dashboard-intro />
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 
 <script>
-import { registerChinaMap } from '@/assets/echarts/map/js/registerChina';
-import * as echarts from 'echarts';
-// import '@/assets/echarts/map/js/china.js';
+import * as echarts from 'echarts'
+import { registerChinaMap } from '@/assets/echarts/map/js/registerChina'
+import { listLoginLog, getLoginLogCountByDay } from '@/api/system/log/loginlog'
+import {
+  listOperLog,
+  getViewCount,
+  getOperLogCountByDay,
+  getOperLogCountByTitle
+} from '@/api/system/log/operlog'
+import { getServer } from '@/api/monitor/server'
+import { getOnlineUserCount } from '@/api/monitor/online'
+import { mergeDailyCounts, lastNDays, parseStatsList } from '@/utils/dashboardStats'
+import { dateFormat } from '@/utils/gputil'
+import DashboardIntro from './DashboardIntro.vue'
 
-import { listNotice, getNotice } from "@/api/system/notice";
-import { getViewCount } from "@/api/system/log/operlog";
-import { getQRCodeImg } from "@/api/common"
-import { mapGetters } from 'vuex'
+const TREND_DAYS = 7
+
+/** 图表色板：对齐站点莫兰迪 token */
+const CHART_COLORS = {
+  green: '#6f8f72',
+  blue: '#6f8b96',
+  purple: '#8fa3a6',
+  pie: ['#6f8f72', '#6f8b96', '#8fa3a6', '#a8b5b0', '#c4b8ae', '#b56a6a']
+}
+
+function emptyServer() {
+  return { cpu: {}, mem: {}, jvm: {}, sys: {}, sysFiles: [] }
+}
+
+function parseOnlineCount(res) {
+  if (res == null) return 0
+  if (typeof res === 'number') return res
+  const d = res.data
+  if (typeof d === 'number') return d
+  if (d && typeof d.count === 'number') return d.count
+  if (typeof res.count === 'number') return res.count
+  return Number(res.total) || 0
+}
+
+function isForbiddenError(err) {
+  const status = err && err.response && err.response.status
+  return status === 403
+}
 
 export default {
   name: 'Dashboard',
-  computed: {
-    ...mapGetters([
-      'nickName'
-    ])
-  },
+  components: { DashboardIntro },
   data() {
     return {
-      version: '1.1.1',
-      noticeList: [],
-      queryParams: {
-        pageNum: 1,
-        pageSize: 10,
-      },
-      dateValue: new Date(),
-      qrCodeRules: {
-        qrCodeText: [
-          { required: true, message: '请输入', trigger: 'blur' },
-        ],
-      },
-      qrCodeText: '',
-      qrCodeImg: '',
-      mapcharts: null,
-      webViewData: [
-        { name: "北京", value: 17 },
-        { name: '天津', value: 12 },
-        { name: '上海', value: 15 },
-        { name: '重庆', value: 15 },
-        { name: '河北', value: 15 },
-        { name: '河南', value: 15 },
-        { name: '云南', value: 5 },
-        { name: '辽宁', value: 15 },
-        { name: '黑龙江', value: 15 },
-        { name: '湖南', value: 2 },
-        { name: '安徽', value: 15 },
-        { name: '山东', value: 15 },
-        { name: '新疆', value: 3 },
-        { name: '江苏', value: 3 },
-        { name: '浙江', value: 9 },
-        { name: '江西', value: 15 },
-        { name: '湖北', value: 4 },
-        { name: '广西', value: 4 },
-        { name: '甘肃', value: 10 },
-        { name: '山西', value: 15 },
-        { name: '内蒙古', value: 15 },
-        { name: '陕西', value: 9 },
-        { name: '吉林', value: 8 },
-        { name: '福建', value: 9 },
-        { name: '贵州', value: 9 },
-        { name: '广东', value: 8 },
-        { name: '青海', value: 3 },
-        { name: '西藏', value: 9 },
-        { name: '四川', value: 0 },
-        { name: '宁夏', value: 15 },
-        { name: '海南', value: 7 },
-        { name: '台湾', value: 4 },
-        { name: '香港', value: 4 },
-        { name: '澳门', value: 3 }
-      ]
+      activeTab: 'overview',
+      loading: false,
+      kpiList: [],
+      recentLogins: [],
+      recentOpers: [],
+      server: emptyServer(),
+      serverForbidden: false,
+      charts: {}
     }
   },
-  created() {
-    this.getNoticeList();
-    //this.init()
+  computed: {
+    memSummary() {
+      const m = this.server.mem || {}
+      if (m.used != null && m.total != null) return `${m.used}G / ${m.total}G`
+      if (m.usage != null) return `${m.usage}%`
+      return '-'
+    },
+    diskSummary() {
+      return (this.server.sysFiles || []).slice(0, 4).map((f) => ({
+        dirName: f.dirName,
+        usage: f.usage != null ? Math.round(Number(f.usage)) : 0
+      }))
+    }
   },
-  async mounted() {
-    // 必须先用同一 echarts 实例注册地图，再拉数据绘图（生产环境旧 UMD china.js 会注册失败）
-    registerChinaMap();
-    await this.getSysOperLog();
+  mounted() {
+    this.loadDashboard()
+    window.addEventListener('resize', this.resizeCharts)
   },
   beforeDestroy() {
-    if (this._onMapResize) {
-      window.removeEventListener('resize', this._onMapResize);
-      this._onMapResize = null;
-    }
-    if (this.mapcharts) {
-      this.mapcharts.dispose();
-      this.mapcharts = null;
-    }
+    window.removeEventListener('resize', this.resizeCharts)
+    Object.keys(this.charts).forEach((k) => {
+      if (this.charts[k]) this.charts[k].dispose()
+    })
   },
   methods: {
-    getNoticeList() {
-      listNotice(this.queryParams).then((res) => {
-        this.noticeList = res.rows
+    dateFormat,
+    num(v) {
+      const n = Number(v)
+      return Number.isNaN(n) ? 0 : Math.min(100, Math.round(n))
+    },
+    pct(v) {
+      return v != null && !Number.isNaN(Number(v)) ? `${v}%` : '-'
+    },
+    formatLoginStatus(type) {
+      if (type === 1) return '成功'
+      if (type === 0) return '失败'
+      return '其它'
+    },
+    formatOperType(type) {
+      const map = { 0: '其它', 1: '新增', 2: '修改', 3: '删除', 4: '授权', 5: '导出', 6: '导入', 7: '强退', 8: '生成', 9: '清空' }
+      return map[type] || '其它'
+    },
+    resizeCharts() {
+      Object.keys(this.charts).forEach((k) => {
+        if (this.charts[k]) this.charts[k].resize()
       })
     },
-    getWebViewList(res){
-      this.webViewData=res.data;
-      this.initCharts();
+    initChart(refName, option) {
+      const el = this.$refs[refName]
+      if (!el) return
+      if (this.charts[refName]) this.charts[refName].dispose()
+      const chart = echarts.init(el)
+      chart.setOption(option)
+      this.charts[refName] = chart
     },
-    async getSysOperLog(){
-      let _this=this;
-      await getViewCount().then(_this.getWebViewList)
-    },
-    getQRCodeImg() {
-      getQRCodeImg(this.qrCodeText).then((res) => {
-        this.qrCodeImg = "data:image/gif;base64," + res.data;
-        //console.log(res.data);
-      });
-    },
-    initCharts() {
-      if (!this.$refs.chinaMap) return;
-      if (!registerChinaMap()) {
-        console.error('[Dashboard] 中国地图未注册，无法渲染');
-        return;
-      }
-      if (this.mapcharts) {
-        this.mapcharts.dispose();
-      }
-      let mapcharts = echarts.init(this.$refs.chinaMap);
-      this.mapcharts = mapcharts;
-      //窗口尺寸改变
-      this._onMapResize = function () {
-        mapcharts.resize();
-      };
-      window.addEventListener("resize", this._onMapResize);
+    loadDashboard() {
+      this.loading = true
+      const days = lastNDays(TREND_DAYS)
+      const recentQuery = { pageNum: 1, pageSize: 10 }
 
-      // 绘制图表
-      mapcharts.setOption({
-        series: [{
-          type: 'map',
-          map: 'china',
-          layoutCenter: ['40%', '50%'], // 地图布局中心点
-          layoutSize: 270,
-          label: {
-            show: true,
-            color: '#ffffff',
-            fontSize: 10,
-          },
-          itemStyle: {
-            areaColor: '#eee',
-            borderColor: '#24dafe',
-          },
-          roam: true,
-          zoom: 1.2,
-          emphasis: {
-            label: {
-              color: '#fff',
-              fontSize: 12,
-              fontWeight: 'bold'
-            },
-            itemStyle: {
-              areaColor: 'none',
-              borderColor: '#77ebff',
-              borderWidth: 2
+      const serverPromise = getServer({ __suppressErrorTip: true })
+        .then((res) => ({ res, forbidden: false }))
+        .catch((err) => ({ res: {}, forbidden: isForbiddenError(err) }))
+
+      Promise.all([
+        getLoginLogCountByDay(TREND_DAYS).catch(() => ({})),
+        getOperLogCountByDay(TREND_DAYS).catch(() => ({})),
+        getOperLogCountByTitle(TREND_DAYS).catch(() => ({})),
+        listLoginLog(recentQuery).catch(() => ({ rows: [] })),
+        listOperLog(recentQuery).catch(() => ({ rows: [] })),
+        serverPromise,
+        getOnlineUserCount().catch(() => ({})),
+        getViewCount().catch(() => ({}))
+      ])
+        .then(([loginTrendRes, operTrendRes, operModuleRes, loginList, operList, serverOut, onlineRes, mapRes]) => {
+          const loginCounts = mergeDailyCounts(days, parseStatsList(loginTrendRes))
+          const operCounts = mergeDailyCounts(days, parseStatsList(operTrendRes))
+          const todayLogin = loginCounts[loginCounts.length - 1] || 0
+          const todayOper = operCounts[operCounts.length - 1] || 0
+          const weekLogin = loginCounts.reduce((a, b) => a + b, 0)
+          const weekOper = operCounts.reduce((a, b) => a + b, 0)
+
+          this.serverForbidden = serverOut.forbidden
+          const sd = (serverOut.res && serverOut.res.data) || serverOut.res || {}
+          this.server = this.serverForbidden
+            ? emptyServer()
+            : {
+                cpu: sd.cpu || {},
+                mem: sd.mem || sd.memory || {},
+                jvm: sd.jvm || {},
+                sys: sd.sys || sd.system || {},
+                sysFiles: Array.isArray(sd.sysFiles) ? sd.sysFiles : []
+              }
+
+          const cpu = this.server.cpu
+          const onlineNum = parseOnlineCount(onlineRes)
+
+          this.kpiList = [
+            { key: 'online', label: '在线用户', value: onlineNum, suffix: '人', color: CHART_COLORS.blue, delta: '实时会话数' },
+            { key: 'login', label: '今日登录', value: todayLogin, suffix: '次', color: CHART_COLORS.green, delta: `近${TREND_DAYS}日合计 ${weekLogin} 次` },
+            { key: 'oper', label: '今日操作', value: todayOper, suffix: '次', color: '#c49a7c', delta: `近${TREND_DAYS}日合计 ${weekOper} 次` },
+            {
+              key: 'cpu',
+              label: 'CPU 使用',
+              value: this.serverForbidden ? '-' : (cpu.used != null ? this.num(cpu.used) : '-'),
+              suffix: !this.serverForbidden && cpu.used != null ? '%' : '',
+              color: CHART_COLORS.purple,
+              delta: this.serverForbidden ? '无服务监控权限' : `内存 ${this.pct(this.server.mem.usage)}`
             }
-          },
-          data: this.webViewData
-        }],
-        visualMap: [{
-          type: 'piecewise',
-          show: true,
-          pieces: [
-            { min: 0, max: 50 },
-            { min: 50, max: 100 },
-            { min: 100, max: 1000 },
-            { min: 1000, max: 5000 },
-            { min: 5000, max: 10000 },
-            { min: 10000}
-          ],
-          textStyle: {
-            color: '#828994'
-          },
-          itemWidth: 64, // 每个图元的宽度
-          itemHeight: 12,
-          top: "top",
-          right: "0",
-          inRange: {
-            borderRadius: 4,
-            color: [
-              '#84bbff',
-              '#70b4ff',
-              '#61a7ff',
-              '#4d90f2',
-              '#3988f7',
-              '#2e81f5'
-            ]
-          },
-        }],
+          ]
+
+          this.recentLogins = loginList.rows || []
+          this.recentOpers = operList.rows || []
+
+          const pieData = parseStatsList(operModuleRes).map((r) => ({
+            name: r.name || r.title || '其他',
+            value: Number(r.value != null ? r.value : r.count) || 0
+          }))
+
+          this.$nextTick(() => this.renderCharts(days, loginCounts, operCounts, pieData, mapRes))
+        })
+        .finally(() => {
+          this.loading = false
+        })
+    },
+    renderCharts(days, loginCounts, operCounts, pieData, mapRes) {
+      const xLabels = days.map((d) => d.slice(5))
+
+      this.initChart('loginChart', {
+        tooltip: { trigger: 'axis' },
+        grid: { left: 40, right: 16, top: 24, bottom: 28 },
+        xAxis: { type: 'category', data: xLabels, boundaryGap: false },
+        yAxis: { type: 'value', minInterval: 1 },
+        series: [{
+          name: '登录次数',
+          type: 'line',
+          smooth: true,
+          areaStyle: { opacity: 0.12, color: CHART_COLORS.green },
+          itemStyle: { color: CHART_COLORS.green },
+          data: loginCounts
+        }]
+      })
+
+      this.initChart('operChart', {
+        tooltip: { trigger: 'axis' },
+        grid: { left: 40, right: 16, top: 24, bottom: 28 },
+        xAxis: { type: 'category', data: xLabels },
+        yAxis: { type: 'value', minInterval: 1 },
+        series: [{
+          name: '操作次数',
+          type: 'bar',
+          itemStyle: { color: CHART_COLORS.blue, borderRadius: [4, 4, 0, 0] },
+          data: operCounts
+        }]
+      })
+
+      const pieList = pieData.length ? pieData : [{ name: '暂无数据', value: 1 }]
+      this.initChart('operPieChart', {
+        tooltip: { trigger: 'item' },
+        legend: { bottom: 0, type: 'scroll' },
+        color: CHART_COLORS.pie,
+        series: [{ name: '操作模块', type: 'pie', radius: ['35%', '60%'], data: pieList }]
+      })
+
+      registerChinaMap()
+      const mapPayload = mapRes.data != null ? mapRes.data : mapRes
+      const mapList = Array.isArray(mapPayload) ? mapPayload : (mapPayload.rows || [])
+      const mapMax = Math.max(10, ...mapList.map((i) => Number(i.value) || 0))
+
+      this.initChart('mapChart', {
         tooltip: {
-          trigger: 'item',  //数据项图形触发
-          backgroundColor: "#222121",
-          borderWidth: 0,
-          formatter: '地区：{b}<br/>数据：{c}'
-        },
-        toolbox: {
-          show: true,
-          orient: 'vertical',
-          left: 'right',
-          bottom: '0',
-          feature: {
-            restore: {},
-            saveAsImage: {}
+          trigger: 'item',
+          formatter(params) {
+            const region = params.name || '未知地区'
+            const count = params.value != null && !Number.isNaN(Number(params.value)) ? params.value : 0
+            return `${region}<br/>访问次数：${count}`
           }
         },
-      });
+        visualMap: {
+          min: 0,
+          max: mapMax,
+          left: 'left',
+          bottom: 20,
+          text: ['高', '低'],
+          calculable: true,
+          inRange: { color: ['#88BFD3', '#66ADC7', '#459BBA', '#387F99', '#2C6478'] }
+        },
+        series: [{
+          name: '访问次数',
+          type: 'map',
+          map: 'china',
+          roam: true,
+          data: mapList,
+          emphasis: { label: { show: true } }
+        }]
+      })
     }
   }
 }
 </script>
 
-<style lang="scss" scoped>
-.dashboard {
-  &-container {
-    margin: 30px;
+<style scoped lang="scss">
+.admin-dashboard {
+  padding-top: 8px;
+}
+.dashboard-tabs {
+  ::v-deep .el-tabs__header {
+    margin-bottom: 16px;
   }
-  &-text {
-    font-size: 30px;
-    line-height: 46px;
+  ::v-deep .el-tabs__item.is-active {
+    color: var(--theme-color, #6f8f72);
+  }
+  ::v-deep .el-tabs__active-bar {
+    background-color: var(--theme-color, #6f8f72);
   }
 }
-.home {
-  blockquote {
-    padding: 10px 20px;
-    margin: 0 0 20px;
-    font-size: 17.5px;
-    border-left: 5px solid var(--border-color-2, #eee);
+.dashboard-toolbar {
+  margin-bottom: 16px;
+}
+.kpi-row {
+  margin-bottom: 4px;
+}
+.kpi-card {
+  margin-bottom: 16px;
+  border-radius: var(--gp-surface-radius, 14px);
+  border: 1px solid var(--gp-surface-border, rgba(44, 42, 40, 0.07));
+  &__label {
+    font-size: 13px;
+    color: var(--greyFont, #7a7672);
+    margin-bottom: 8px;
   }
-  hr {
-    margin-top: 20px;
-    margin-bottom: 20px;
-    border: 0;
-    border-top: 1px solid var(--border-color-2, #eee);
+  &__value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
   }
-  .col-item {
-    margin-bottom: 20px;
+  &__suffix {
+    font-size: 14px;
+    font-weight: 500;
+    margin-left: 4px;
   }
-
-  ul {
-    padding: 0;
-    margin: 0;
+  &__delta {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--greyFont, #7a7672);
   }
-
-  font-family: "open sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 13px;
-  color: #676a6c;
-  overflow-x: hidden;
-
-  ul {
-    list-style-type: none;
-  }
-
-  h4 {
-    margin-top: 0px;
-  }
-
-  h2 {
-    margin-top: 10px;
-    font-size: 26px;
-    font-weight: 100;
-  }
-
-  p {
-    margin-top: 10px;
-
-    b {
-      font-weight: 700;
-    }
-  }
-
-  .update-log {
-    ol {
-      display: block;
-      list-style-type: decimal;
-      margin-block-start: 1em;
-      margin-block-end: 1em;
-      margin-inline-start: 0;
-      margin-inline-end: 0;
-      padding-inline-start: 40px;
-    }
+}
+.chart-row {
+  margin-bottom: 4px;
+}
+.chart-card,
+.metric-card-wrap {
+  margin-bottom: 16px;
+  border-radius: var(--gp-surface-radius, 14px);
+  border: 1px solid var(--gp-surface-border, rgba(44, 42, 40, 0.07));
+}
+.chart-head {
+  font-weight: 600;
+  color: var(--gp-surface-title, var(--theme-color));
+}
+.chart-box {
+  height: 300px;
+  width: 100%;
+}
+.metric-block {
+  margin-bottom: 12px;
+}
+.metric-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.metric-meta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--greyFont, #7a7672);
+}
+.metric-desc {
+  margin-top: 12px;
+}
+.metric-card-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.metric-card__body.is-masked {
+  filter: blur(2px);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.45;
+}
+.metric-card__mask {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: rgba(250, 249, 247, 0.82);
+  text-align: center;
+}
+.metric-card__mask-icon {
+  font-size: 28px;
+  color: var(--greyFont, #7a7672);
+  margin-bottom: 8px;
+}
+.metric-card__mask-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+.metric-card__mask-desc {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--greyFont, #7a7672);
+  code {
+    padding: 0 4px;
+    border-radius: 4px;
+    background: var(--lightGray, #e4e0db);
   }
 }
 </style>

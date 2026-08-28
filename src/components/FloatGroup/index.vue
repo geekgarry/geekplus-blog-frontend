@@ -3,15 +3,18 @@
       enter-active-class="animate__bounceIn"
       leave-active-class="animate__bounceOut"> -->
   <notification-msg
-    :operationLog="operationLog"
-    :systemNotice="systemNotice"
+    :operation-log="operationLog"
+    :system-notice="systemNotice"
+    :online-user="onlineUser"
     class="page-component-up"
+    @clear="onPushClear"
   />
   <!-- </transition> -->
 </template>
-  
+
   <script>
 import NotificationMsg from "@/layout/components/NotificationMsg"
+import { applyRealtimePushDetail } from '@/utils/pushNotify'
 
 export default {
   components: {
@@ -31,9 +34,10 @@ export default {
     return {
       visible: false,
       interval: null,
-      notifyMsg: undefined,
       operationLog: undefined,
       systemNotice: undefined,
+      /** 与 Navbar 一致：仅他人 type=online 时点亮 */
+      onlineUser: undefined,
     }
   },
   mounted() {
@@ -43,6 +47,7 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener('scroll', this.handleScroll)
+    window.removeEventListener('onmessageWS', this.getSocketData)
     if (this.interval) {
       clearInterval(this.interval)
     }
@@ -51,11 +56,18 @@ export default {
     handleScroll() {
       this.visible = window.pageYOffset > this.visibilityHeight
     },
-    // 收到消息处理
+    // 与 Navbar 相同：pushNotify 适配 v1/v2 推送体
     getSocketData(res) {
-      // this.notifyMsg=res.detail.notifyMsg
-      this.operationLog = res.detail.operationLog
-      this.systemNotice = res.detail.systemNotice
+      console.log(res);
+      const detail = res.detail || {}
+      applyRealtimePushDetail(detail, this, {
+        currentUserId: this.$store.getters.userId
+      })
+    },
+    onPushClear(channel) {
+      if (channel && Object.prototype.hasOwnProperty.call(this, channel)) {
+        this[channel] = undefined
+      }
     },
     /*
       缓动公式（Tween算法）
@@ -63,7 +75,7 @@ export default {
        b: 起始位置
        c: 终止位置
        d: 从起始位置到终止位置的经过时间（实际上时执行多少次/帧数）
- 
+
       http://www.cnblogs.com/mrsunny/archive/2011/06/21/2086080.html
     */
     easeInOutQuad(t, b, c, d) {
@@ -78,7 +90,7 @@ export default {
   }
 }
   </script>
-  
+
   <style lang="scss" scoped>
 /* 类名要对应回 name 的属性值 */
 .plusBack-enter-active {

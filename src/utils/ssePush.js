@@ -32,6 +32,7 @@ function dispatchPayload(raw) {
   }
   if (!obj || typeof obj !== 'object') return
   if (obj.type === 'heartBeat' || obj.type === 'online') return
+  // 与 wesocket.js 共用 onmessageWS；payload 规范见 @/utils/pushNotify.js
   window.dispatchEvent(new CustomEvent('onmessageWS', { detail: obj }))
   window.dispatchEvent(new CustomEvent('onmessageSSE', { detail: obj }))
 }

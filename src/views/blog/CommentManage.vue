@@ -4,8 +4,8 @@
       <header class="gp-blog-page__hero">
         <p class="eyebrow">Comments</p>
         <h1>留言管理</h1>
-        <p class="lead" v-if="isAdmin">管理全站网站留言与文章评论；可跳转前台定位到具体一条。</p>
-        <p class="lead" v-else>仅展示<strong>你自己</strong>发布的网站留言与文章评论，可一键定位到前台原文。</p>
+        <p class="lead" v-if="isAdmin">管理全站网站留言与文章评论；点击跳转到原文查看。</p>
+        <p class="lead" v-else>仅展示<strong>你自己</strong>发布的网站留言与文章评论，点击跳转到留言处。</p>
         <div class="hero-meta">
           <el-tag size="small" :type="isAdmin ? 'danger' : 'info'">{{ isAdmin ? '管理员 · 全站数据' : '普通用户 · 仅本人' }}</el-tag>
           <router-link class="back-link" to="/user/center">← 返回个人中心</router-link>

@@ -1,10 +1,10 @@
 <template>
   <div :class="classObj" class="app-wrapper">
     <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
-    <!--当 leftMenuBar===true，左菜单栏显示,顶部隐藏-->
-    <sidebar class="sidebar-container" v-if="device==='mobile'||leftMenuBar" />
-    <div :class="{hasTagsView:needTagsView, 'main-container':leftMenuBar}">
-      <div :class="{'fixed-header':fixedHeader, topMenuBar: !leftMenuBar}">
+    <!--当 adminMenuLayout=sidebar 显示侧栏；topbar 显示顶栏菜单；workbench 隐藏传统菜单-->
+    <sidebar class="sidebar-container" v-if="device==='mobile'||showAdminSidebar" />
+    <div :class="{hasTagsView:needTagsView, 'main-container':showAdminSidebar}">
+      <div :class="{'fixed-header':fixedHeader, topMenuBar: !showAdminSidebar}">
         <navbar />
         <tags-view v-if="needTagsView" />
       </div>
@@ -21,13 +21,17 @@
 </template>
 
 <script>
+/**
+ * 管理端 Layout：侧栏/顶栏 + Settings 抽屉
+ * admin.scss / element-admin 在此加载；挂载后 refreshAfterElementCss 压过 Element 默认色
+ */
 import { Navbar, Sidebar, Topbar, AppMain, TagsView, Settings } from './components'
 import ResizeMixin from './mixin/ResizeHandler'
 import RightPanel from '@/components/RightPanel'
 import AdminWatermark from '@/components/AdminWatermark/index.vue'
 import RealtimeChatEntry from '@/components/RealtimeChat/Entry.vue'
 import { markBootReady } from '@/utils/bootLoader'
-import { reassertElementTheme, bumpElementThemeStyles } from '@/utils/elementTheme'
+import { refreshAfterElementCss } from '@/theme'
 import '@/styles/admin.scss'
 import '@/styles/sidebar.scss'
 import '@/plugins/element-admin'
@@ -47,10 +51,9 @@ export default {
   },
   mixins: [ResizeMixin],
   mounted() {
-    // 管理端 CSS chunk 可能已在其它页预加载过：模块不会重跑，这里再申明一次主题
-    reassertElementTheme()
+    // 维护链路：admin.scss + 按需 Element CSS 就绪后，重申 --theme-color 与 override 顺序
+    refreshAfterElementCss()
     this.$nextTick(() => {
-      bumpElementThemeStyles()
       if (typeof requestAnimationFrame === 'function') {
         requestAnimationFrame(() => markBootReady())
       } else {
@@ -77,17 +80,29 @@ export default {
     fixedHeader() {
       return this.$store.state.settings.fixedHeader == '1' ? true : false
     },
-    //获取menuInLeft值
+    //获取menuInLeft值（与 adminMenuLayout 同步，workbench 时视为顶栏宽布局）
     leftMenuBar() {
       return this.$store.state.settings.leftMenuBar == '1' ? true : false
     },
+    adminMenuLayout() {
+      const val = this.$store.state.settings.adminMenuLayout
+      if (val === 'sidebar' || val === 'topbar' || val === 'workbench') return val
+      return this.leftMenuBar ? 'sidebar' : 'topbar'
+    },
+    showAdminSidebar() {
+      return this.adminMenuLayout === 'sidebar'
+    },
+    isAdminWorkbenchNav() {
+      return this.adminMenuLayout === 'workbench'
+    },
     classObj() {
       return {
-        showTopMenuBar: this.device!=='mobile'&&!this.leftMenuBar, //显示顶部菜单的样式
-        hideSidebar: !this.sidebar.opened && (this.device==='mobile' || this.leftMenuBar),
+        showTopMenuBar: this.device!=='mobile' && this.adminMenuLayout === 'topbar',
+        hideSidebar: !this.sidebar.opened && (this.device==='mobile' || this.showAdminSidebar),
         openSidebar: this.sidebar.opened,
         withoutAnimation: this.sidebar.withoutAnimation,
-        mobile: this.device === 'mobile'
+        mobile: this.device === 'mobile',
+        adminWorkbenchNav: this.isAdminWorkbenchNav
       }
     }
   },

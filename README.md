@@ -144,6 +144,7 @@ Node 版本建议与团队现网一致（Vue CLI 5 / webpack 体系）。首次�
 2. **BlogShell**：`settings.blogLayout = top|side`，localStorage 持久化。  
 3. **请求层**：鉴权头、错误去重、401 单例、可选 retry；**GET 默认「切标签/切 App 回来静默续传」**（`resumeOnVisible`）。  
 4. **调度层**：首屏关键立即请求，侧栏 idle/错峰；后台时延后任务等回前台再跑。  
+5. **主题色（可移植模块 `@/theme`）**：用户改色 `ThemePicker → commitUserThemeColor → applyThemeColor`；冷启动 `initSiteTheme`；博客/管理端维护见 `src/theme/README.md`（拆 SPA 仍可用同一链路）。  
 
 ---
 
@@ -164,11 +165,42 @@ Node 版本建议与团队现网一致（Vue CLI 5 / webpack 体系）。首次�
 
 后端鉴权 / 缓存 / 全栈契约文档在兄弟仓库：[`GeekPlus-Blog-API/docs`](../GeekPlus-Blog-API/docs/README.md)。
 
+低代码演进与开发手册：[docs/lowcode/README.md](./docs/lowcode/README.md)
+
 ---
 
 ## 变更记录（重点优化）
 
 > **约定**：以后每一次**重点优化 / 架构改动 / 体验向修复**，必须在本小节**置顶追加**一条（日期 + 摘要 + 关键路径）。日常文案微调可不记。
+
+### 2026-08-26
+
+- **管理端控制台改版**：首页改为「数据概览 + 系统介绍」双 Tab；KPI/近 7 日登录操作图表、模块分布、地域地图、服务器指标与最近日志；介绍 Tab 对齐 README 架构/技术选型/变更摘要。
+  - 代码：`src/views/admin/dashboard/index.vue`、`DashboardIntro.vue`、`dashboardMeta.js`、`src/utils/dashboardStats.js`
+  - API：`loginlog.js` / `operlog.js` 补 `countByDay` / `countByTitle`
+- **标签栏快捷菜单**：TagsView 右侧下拉支持刷新页面、关闭当前/其它/全部标签（与右键菜单一致）。
+  - 代码：`src/layout/components/TagsView/index.vue`
+
+### 2026-08-24
+
+- **OA 工作台（非默认首页）**：`/` 恢复文章流；`/workbench` 为图标菜单页，个人中心添加入口；`blogLayout` 支持 top/side/workbench 三态切换（顶栏按钮循环）。
+  - 代码：`WorkbenchHome`、`blogNavItems.js`、`blogLayoutMixin.js`、`menus.blog.js`
+- **管理端三种菜单形式**：`adminMenuLayout` = sidebar / topbar / workbench；workbench 模式在 dashboard 复用 `WorkbenchHome`（后台 permission 菜单）。
+  - 代码：`settings.js`、`Layout/index.vue`、`Navbar.vue`、`Settings/index.vue`、`dashboard/index_v1.vue`
+- **深色模式主题色被覆盖**：`color.css` 暗色块不再写死 `--theme-color`；`applyElementTheme` 同步写到 `html/body` inline；切换 dark/light 后 `reassertElementTheme`。
+  - 代码：`src/assets/css/color.css`、`src/utils/elementTheme.js`、`App.vue`、`Settings/index.vue`
+- **主题模块 `@/theme`**：公共 API 与 `utils/elementTheme` 引擎分离；一体/仅博客/仅管理端均可 `initSiteTheme` + `commitUserThemeColor`；文档 `src/theme/README.md`。
+  - 代码：`src/theme/*`、`App.vue`、`store/modules/settings.js`
+- **主题色单链路梳理**：用户改色 `ThemePicker → commitUserThemeColor → applyThemeColor`；维护 `refreshAfterModeChange` / `refreshAfterElementCss`。
+- **主题色与菜单对比度**：修复 `mutedFrom` 透明度；`--gp-menu-active-*` 菜单对比；本地 localStorage，非全站远程。
+  - 代码：`elementTheme.js`、`BlogNavMenu`、`layout/blog/horizontal`
+- **代码生成预览 UI**：预览弹窗 border-card 标签、文件工具栏、代码区支持横向/纵向滚动；Tab 名兼容 `.java/.vue` 等非 `.ftl`。
+  - 代码：`src/views/admin/tool/generator/index.vue`、`src/styles/admin.scss`
+- **代码生成：ZIP 与发布菜单解耦**：保留 ZIP 下载；新增 `publishMenuPreview` / `publishMenus`（幂等 component、事务写菜单+按钮、@Log 审计）；不做服务端读盘校验。
+  - 前端：`GenPublishDialog.vue`、`generator/index.vue`、`api/tool/generatorTable.js`
+  - 后端：`GenMenuPublishService`、`GeekPlus-Blog-API/docs/15-代码生成发布菜单.md`
+- **低代码文档目录**：演进架构、自建应用、扩展包与实施路径。
+  - 文档：`docs/lowcode/README.md`
 
 ### 2026-08-22
 

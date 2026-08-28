@@ -24,40 +24,16 @@
           show-icon
           class="mb8"
         />
-        <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
-          <el-form-item label="用户名称" prop="username">
-            <el-input v-model="queryParams.username" placeholder="请输入用户名称" clearable size="small" style="width: 240px"
-              @keyup.enter.native="handleQuery" />
-          </el-form-item>
-          <el-form-item label="手机号码" prop="phoneNumber">
-            <el-input v-model="queryParams.phoneNumber" placeholder="请输入手机号码" clearable size="small"
-              style="width: 240px" @keyup.enter.native="handleQuery" />
-          </el-form-item>
-          <el-form-item label="状态" prop="status">
-            <el-select v-model="queryParams.status" placeholder="用户状态" clearable size="small" style="width: 240px">
-              <!-- <el-option
-                v-for="dict in statusOptions"
-                :key="dict.dictValue"
-                :label="dict.dictLabel"
-                :value="dict.dictValue"
-              /> -->
-              <el-option label="正常" :value="0"></el-option>
-              <el-option label="禁用" :value="1"></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="创建时间">
-            <el-date-picker v-model="dateRange" size="small" style="width: 240px" value-format="yyyy-MM-dd"
-              type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期"></el-date-picker>
-          </el-form-item>
-          <!-- <el-form-item label="所属部门" prop="deptId">
-            <treeselect v-model="queryParams.deptId" :options="deptOptions" :normalizer="normalizer" :show-count="true"
-              placeholder="请选择归属部门" />
-          </el-form-item> -->
-          <el-form-item>
-            <el-button type="cyan" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-          </el-form-item>
-        </el-form>
+        <div v-show="showSearch" class="mb8">
+          <dynamic-query-form
+            ref="dynamicQuery"
+            :fields="userQueryFields"
+            :default-rows="2"
+            :initial-conditions="userQueryInitial"
+            @search="onDynamicSearch"
+            @reset="onDynamicReset"
+          />
+        </div>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
             <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleAdd">新增</el-button>
@@ -332,9 +308,27 @@
 import { listUser, getUser, delUser, updateUser, addUser, addUserPwd, resetUserPwd, changeUserStatus, exportUser } from "@/api/system/user";
 import { listAllRole, listUserRoles, addUserRoles, batchAddUserRoles, deleteUserRoles, batchDeleteUserRoles } from "@/api/system/role"
 import { deptTreeSelect, listDept } from "@/api/system/dept";
+import DynamicQueryForm, { buildDynamicQueryParams } from "@/components/DynamicQueryForm";
+
+const USER_QUERY_FIELDS = [
+  { value: "username", label: "用户名称" },
+  { value: "phoneNumber", label: "手机号码" },
+  { value: "nickname", label: "用户昵称" },
+  { value: "email", label: "邮箱" },
+  {
+    value: "status",
+    label: "状态",
+    valueType: "select",
+    options: [
+      { value: 0, label: "正常" },
+      { value: 1, label: "禁用" },
+    ],
+  },
+];
 
 export default {
   name: "UserManage",
+  components: { DynamicQueryForm },
   filters: {
     statusFilter(status) {
       const statusMap = {
@@ -351,6 +345,11 @@ export default {
       listLoading: true,
       total: 2,
       queryForm: {},
+      userQueryFields: USER_QUERY_FIELDS,
+      userQueryInitial: [
+        { field: "username", op: "like", value: undefined },
+        { field: "status", op: "eq", value: undefined },
+      ],
       queryParams: {
         pageNum: 1,
         pageSize: 10,
@@ -363,14 +362,13 @@ export default {
         deptIds: undefined,
         /** 为 true 时后端按 deptId 展开子树（与 deptIds 二选一或同时支持） */
         includeChildren: undefined,
+        conditionsJson: undefined,
       },
       /** 当前选中的部门名（列表提示） */
       activeDeptName: "",
       form: {},
       listRole: [],//角色列表
       roleIds: [],
-      // 日期范围
-      dateRange: [],
       ids: [],
       title: '',
       // 非单个禁用
@@ -478,15 +476,48 @@ export default {
       walk(node);
       return ids;
     },
-    getList() {
+    getList(conditions) {
       this.listLoading = true;
-      listUser(this.queryParams).then((response) => {
+      const dyn = conditions ||
+        (this.$refs.dynamicQuery && this.$refs.dynamicQuery.getConditions()) ||
+        [];
+      const built = buildDynamicQueryParams(dyn, {}, { attachConditionsJson: true, attachFlat: true });
+      this.queryParams.username = undefined;
+      this.queryParams.phoneNumber = undefined;
+      this.queryParams.status = undefined;
+      this.queryParams.email = undefined;
+      this.queryParams.conditionsJson = built.conditionsJson;
+      const req = {
+        pageNum: this.queryParams.pageNum,
+        pageSize: this.queryParams.pageSize,
+        deptId: this.queryParams.deptId,
+        deptIds: this.queryParams.deptIds,
+        includeChildren: this.queryParams.includeChildren,
+      };
+      if (built.conditionsJson) {
+        req.conditionsJson = built.conditionsJson;
+      }
+      ["username", "phoneNumber", "status", "nickname", "email"].forEach((k) => {
+        if (built[k] !== undefined && built[k] !== null && built[k] !== "") {
+          this.queryParams[k] = built[k];
+          req[k] = built[k];
+        }
+      });
+      listUser(req).then((response) => {
         this.list = response.rows;
         this.total = response.total;
         this.listLoading = false;
       }).catch(() => {
         this.listLoading = false;
       });
+    },
+    onDynamicSearch(conditions) {
+      this.queryParams.pageNum = 1;
+      this.getList(conditions);
+    },
+    onDynamicReset(conditions) {
+      this.queryParams.pageNum = 1;
+      this.getList(conditions);
     },
     getListRoles() {
       listAllRole({}).then((res) => {
@@ -533,7 +564,6 @@ export default {
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.dateRange = [];
       this.activeDeptName = "";
       this.queryParams = {
         pageNum: 1,
@@ -541,8 +571,9 @@ export default {
         deptId: undefined,
         deptIds: undefined,
         includeChildren: undefined,
+        conditionsJson: undefined,
       };
-      this.resetForm("queryForm");
+      if (this.$refs.dynamicQuery) this.$refs.dynamicQuery.resetConditions();
       this.handleQuery();
     },
     // 取消按钮

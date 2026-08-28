@@ -1,5 +1,14 @@
 import request from '@/utils/request'
 
+// 控制台：近 N 天每日登录次数
+export function getLoginLogCountByDay(days = 7) {
+  return request({
+    url: '/sys/loginLog/countByDay',
+    method: 'get',
+    params: { days }
+  })
+}
+
 // 查询登录日志列表
 export function listLoginLog(query) {
   return request({

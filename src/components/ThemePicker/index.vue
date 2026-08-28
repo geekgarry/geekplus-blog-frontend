@@ -1,4 +1,5 @@
 <template>
+  <!-- 仅 UI：改色后 $emit('change')，由 Settings.themeChange → commitUserThemeColor 持久化 -->
   <el-color-picker
     v-model="themeColor"
     :predefine="['#5f7d80', '#8ea9a7', '#6f8f72', '#9a8f86', '#6f8b96', '#11a983', '#409EFF', '#6959CD']"
@@ -9,12 +10,20 @@
 </template>
 
 <script>
-import '@/plugins/element-admin'
-import { applyElementTheme } from '@/utils/elementTheme'
-
+/**
+ * 管理端主题色选择器（Settings 抽屉内）
+ *
+ * 职责边界：
+ * - 本组件：展示色块、同步 store 到 picker、抛出 change
+ * - 不调用 applyThemeColor / 不写 localStorage（避免与 store action 双触发）
+ * - 父组件 Settings.themeChange → commitUserThemeColor
+ *
+ * ColorPicker 由 layout 引入 element-admin 全局注册，本组件不 import element-admin
+ */
 export default {
   data() {
     return {
+      /** 与 el-color-picker v-model 绑定，由 defaultTheme 同步 */
       themeColor: ''
     }
   },
@@ -24,6 +33,7 @@ export default {
     }
   },
   watch: {
+    /** store 被其它 Tab/冷启动更新时，回显到 picker */
     defaultTheme: {
       handler(val) {
         if (typeof val === 'string' && val && val !== this.themeColor) {
@@ -34,22 +44,9 @@ export default {
     }
   },
   methods: {
-    async onPick(val) {
+    onPick(val) {
       if (typeof val !== 'string') return
-      const $message = this.$message({
-        message: (this.$t && this.$t('theme.changeColor')) || '正在应用主题色…',
-        customClass: 'theme-message',
-        type: 'success',
-        duration: 0,
-        iconClass: 'el-icon-loading'
-      })
-      try {
-        // 全站统一：CSS 变量 + Element 覆盖（前台博客同样吃 --theme-color）
-        await applyElementTheme(val, { defer: false })
-        this.$emit('change', val)
-      } finally {
-        $message.close()
-      }
+      this.$emit('change', val)
     }
   }
 }

@@ -48,6 +48,7 @@
         document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
         if (dark) document.documentElement.style.colorScheme = 'dark';
         var tc = localStorage.getItem('themeColor') || '#5f7d80';
+        /* FOUC 占位：Vue initSiteTheme 挂载后会覆盖完整 --theme-color* token */
         document.documentElement.style.setProperty('--theme-color', tc);
         document.documentElement.style.setProperty('--gp-boot-bg', bg);
         window.__gpBootTheme = { dark: dark, bg: bg, themeColor: tc };

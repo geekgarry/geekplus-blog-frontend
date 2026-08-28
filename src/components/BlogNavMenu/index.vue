@@ -201,6 +201,8 @@
  * - 菜单数据来自 props.menus（Vuex addMenuRoutes）+ 固定项（首页/中转/留言/关于）
  * 溢出算法误区：勿用 scrollWidth 与 (avail-SAFETY) 比较，width:100% 时会误判全折叠（见 tightenUntilFits）
  */
+import { buildBlogNavAllItems, joinNavChildPath } from '@/utils/blogNavItems'
+
 export default {
   name: 'BlogNavMenu',
   props: {
@@ -231,29 +233,9 @@ export default {
     }
   },
   computed: {
-    /** 统一菜单项：固定首页/留言/关于 + 动态栏目 */
+    /** 统一菜单项：与 WorkbenchHome 共用 buildBlogNavAllItems，避免两处维护 */
     allItems() {
-      const dynamic = (this.menus || []).map((item, index) => ({
-        key: 'dyn-' + (item.id != null ? item.id : index),
-        label: item.categoryName || item.name || '',
-        path: item.path,
-        icon: item.icon,
-        children: item.children && item.children.length ? item.children : null,
-        raw: item
-      }))
-      return [
-        { key: 'home', label: '首页', path: '/', icon: 'home', children: null },
-        ...dynamic,
-        { key: 'webTool', label: '在线工具', path: '/tool', icon: 'tool', children: [
-          { key: 'transfer', label: '文件中转', path: '/file-transfer', icon: 'upload', children: null },
-          { key: 'resumeGenerator', label: '即刻简历', path: '/resumeGenerator', icon: 'document', children: null },
-          { key: 'pptStudio', label: 'PPT 工作室', path: '/pptStudio', icon: 'picture', children: null },
-          { key: 'skeletonStudio', label: '骨架屏工作室', path: '/skeletonStudio', icon: 'component', children: null },
-        ] },
-        { key: 'chat', label: 'AI 助手', path: '/chat', icon: 'ai', children: null },
-        { key: 'leave', label: '留言板', path: '/leave-word', icon: 'leave-word', children: null },
-        { key: 'about', label: '关于本站', path: '/about', icon: 'cheers', children: null }
-      ]
+      return buildBlogNavAllItems(this.menus)
     },
     primaryItems() {
       return this.allItems.slice(0, this.visibleCount)
@@ -352,10 +334,7 @@ export default {
     childPath(parent, child) {
       const pRaw = parent && (parent.path || (parent.raw && parent.raw.path))
       if (!pRaw) return '/'
-      if (!child || !child.path) return pRaw
-      const p = String(pRaw).replace(/\/$/, '')
-      const c = String(child.path).replace(/^\//, '')
-      return p + '/' + c
+      return joinNavChildPath(pRaw, child && child.path)
     },
     navigate(path) {
       this.closeAll()
@@ -578,8 +557,11 @@ export default {
 .gp-nav-menu__link:hover,
 .gp-nav-menu__item.is-active > .gp-nav-menu__link,
 .gp-nav-menu__item.is-open > .gp-nav-menu__link {
-  color: var(--theme-color, #6e8b8e);
-  background: var(--gp-menu-active-bg, rgba(11, 173, 182, 0.1));
+  /* 消费 @/theme 写入的 gp-menu-active-*，左边条 + 深字 + 浅底提升对比 */
+  color: var(--gp-menu-active-color, var(--theme-color-strong, var(--theme-color)));
+  background: var(--gp-menu-active-bg, var(--theme-color-muted));
+  box-shadow: inset 3px 0 0 var(--gp-menu-active-border, var(--theme-color));
+  font-weight: 600;
 }
 
 /* fixed + JS 定位：不受顶栏 60px 高度 / overflow 裁切 */
@@ -628,8 +610,10 @@ export default {
 }
 
 .gp-nav-menu__panel-item:hover {
-  background: var(--gp-menu-active-bg, rgba(11, 173, 182, 0.1));
-  color: var(--theme-color, #6e8b8e);
+  /* 下拉项 hover 与顶栏项同一套 menu token */
+  background: var(--gp-menu-active-bg, var(--theme-color-muted));
+  color: var(--gp-menu-active-color, var(--theme-color-strong, var(--theme-color)));
+  box-shadow: inset 3px 0 0 var(--gp-menu-active-border, var(--theme-color));
 }
 
 .gp-nav-menu__group {
@@ -729,8 +713,10 @@ export default {
 }
 
 .gp-nav-drawer__link:hover {
-  background: var(--gp-menu-active-bg, rgba(11, 173, 182, 0.1));
-  color: var(--theme-color, #6e8b8e);
+  /* 移动端抽屉：只读 CSS 变量，不 import @/theme */
+  background: var(--gp-menu-active-bg, var(--theme-color-muted));
+  color: var(--gp-menu-active-color, var(--theme-color-strong, var(--theme-color)));
+  box-shadow: inset 3px 0 0 var(--gp-menu-active-border, var(--theme-color));
 }
 
 .gp-nav-drawer__button {

@@ -1,32 +1,45 @@
 /**
- * Element UI 主题色统一应用（性能优先）
+ * 主题色 CSS 变量 + Element UI 覆盖（引擎实现层）
  *
- * 唯一换肤入口：前台博客 CSS 变量 + 后台 Element 共用同一 color。
- * 不再通过 styles/element-variables 编译全量 chalk（已移除，避免主题打三遍）。
+ * ━━━ 对外 API ━━━
+ * 业务与布局请 import @/theme，勿直接 import 本文件（见 @/theme/README.md）。
  *
- * 策略：
- * 1) 同步：只写 CSS 变量 + 一份很小的 primary 覆盖（不挡首屏）
- * 2) 空闲：按需拉取/缓存一份 theme-chalk，改色后注入 #chalk-style，并移到 head 末尾压过后加载的按需 CSS
- * 3) 管理端 element-admin / Layout 加载后再 reassert，避免 Table/Menu 等后到的 #409EFF 盖掉主题
+ * ━━━ 本模块职责 ━━━
+ * 1. normalizeHex / resolveStoredThemeColor — 读 storage 与校验
+ * 2. applyElementTheme — 写 html/body 的 --theme-color* 与菜单 token
+ * 3. applyLightOverrides + applyChalkTheme — 覆盖 Element 默认 #409EFF
+ * 4. reassertElementTheme — 同色重算（深/浅色、后加载 CSS），由 @/theme/maintain 封装
+ *
+ * ━━━ 性能策略 ━━━
+ * 同步：CSS 变量 + 轻量 primary 覆盖（不挡首屏）
+ * 空闲：CDN 拉 theme-chalk 整包替换色值，sessionStorage 缓存
  */
 const elementVersion = require('element-ui/package.json').version
 
-/** Element 官方 chalk / babel-plugin-component 按需 CSS 的基准色 */
+/** Element 官方 chalk / babel-plugin-component 按需 CSS 的基准色（替换源） */
 export const ELEMENT_ORIGINAL_THEME = '#409EFF'
 
-/** 站点默认主题色（与 App / color.css 一致） */
+/** 站点默认主题色；与 color.css、public/index.html FOUC 占位一致 */
 export const DEFAULT_THEME = '#5f7d80'
 
+/** 注入 head 的 style#id，用于全量 chalk 换色 */
 const CHALK_STYLE_ID = 'chalk-style'
+/** 注入 head 的 style#id，常用 primary 控件轻量覆盖 */
 const OVERRIDE_STYLE_ID = 'gp-element-theme-override'
+/** sessionStorage 缓存 chalk 文本，避免重复 CDN */
 const CHALK_CACHE_KEY = `gp-element-chalk-v${elementVersion}`
 
 let chalkSource = ''
 let chalkLoadPromise = null
+/** 内存中最近一次 apply 的色，reassert 优先用它 */
 let appliedColor = ''
 let idleHandle = null
 
-function normalizeHex(color) {
+/**
+ * 规范化 hex；非法或空则回退 DEFAULT_THEME
+ * 支持 #rgb 展成 #rrggbb
+ */
+export function normalizeHex(color) {
   if (!color || typeof color !== 'string') return DEFAULT_THEME
   const c = color.trim()
   if (!/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(c)) return DEFAULT_THEME
@@ -36,6 +49,16 @@ function normalizeHex(color) {
   return c
 }
 
+/** 是否 dark：muted/soft/menu 字色 alpha 与 cluster 索引依赖此状态 */
+function isDarkThemeMode() {
+  if (typeof document === 'undefined') return false
+  return document.body && document.body.getAttribute('theme-mode') === 'dark'
+}
+
+/**
+ * Element 官方换肤算法：主色 + 10 档 tint + 1 档 shade
+ * 用于 softFrom / strongFrom / chalk 字符串替换
+ */
 function getThemeCluster(theme) {
   const hex = theme.replace('#', '')
   const tintColor = (color, tint) => {
@@ -67,6 +90,7 @@ function getThemeCluster(theme) {
   return clusters
 }
 
+/** 在 chalk CSS 文本中把官方色集群批量替换为目标主题集群 */
 function updateStyle(style, oldCluster, newCluster) {
   let next = style
   oldCluster.forEach((color, index) => {
@@ -75,22 +99,47 @@ function updateStyle(style, oldCluster, newCluster) {
   return next
 }
 
+/** 辅助色：同色相更浅/更深；暗色用 cluster[3]、亮色用 [6]，避免与主色糊一片 */
 function softFrom(hex) {
   const cluster = getThemeCluster(hex.replace('#', ''))
-  const soft = cluster[4]
+  const idx = isDarkThemeMode() ? 3 : 6
+  const soft = cluster[idx]
   if (!soft) return hex
   return soft.charAt(0) === '#' ? soft : `#${soft}`
 }
 
+/** 菜单/标签底：低透明 tint；勿用高 alpha（旧版 0.7 会导致字与底同色难辨） */
 function mutedFrom(hex) {
   const h = hex.replace('#', '')
   const r = parseInt(h.slice(0, 2), 16)
   const g = parseInt(h.slice(2, 4), 16)
   const b = parseInt(h.slice(4, 6), 16)
-  return `rgba(${r}, ${g}, ${b}, 0.7)`
+  const alpha = isDarkThemeMode() ? 0.16 : 0.12
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+/** 强调字色：浅色模式略加深，保证在纸感背景上可读 */
+function strongFrom(hex) {
+  const cluster = getThemeCluster(hex.replace('#', ''))
+  const shade = cluster[cluster.length - 1]
+  if (!shade) return normalizeHex(hex)
+  return shade.charAt(0) === '#' ? shade : `#${shade}`
+}
+
+/** 导航激活字色：浅色加深、暗色略提亮，与 muted 底拉开对比 */
+function menuActiveColorFrom(hex) {
+  const normalized = normalizeHex(hex)
+  if (isDarkThemeMode()) {
+    const cluster = getThemeCluster(normalized.replace('#', ''))
+    const light = cluster[2] || cluster[3]
+    if (!light) return normalized
+    return light.charAt(0) === '#' ? light : `#${light}`
+  }
+  return strongFrom(normalized)
 }
 
 function ensureStyleTag(id) {
+  // 复用已有 style#id，避免重复插入
   let el = document.getElementById(id)
   if (!el) {
     el = document.createElement('style')
@@ -111,19 +160,38 @@ export function bumpElementThemeStyles() {
   })
 }
 
+/**
+ * inline 写 CSS 变量到指定节点；优先级高于 color.css 的 body 选择器
+ * darkMode 时同步 html + body，避免 body 子树截断继承链
+ */
+function setThemeCssVars(target, color) {
+  if (!target || !target.style) return
+  const normalized = normalizeHex(color)
+  target.style.setProperty('--theme-color', normalized)
+  target.style.setProperty('--themeBackground', normalized)
+  target.style.setProperty('--theme-color-soft', softFrom(normalized))
+  target.style.setProperty('--theme-color-muted', mutedFrom(normalized))
+  target.style.setProperty('--theme-color-strong', strongFrom(normalized))
+  target.style.setProperty('--gp-menu-active-bg', mutedFrom(normalized))
+  target.style.setProperty('--gp-menu-active-color', menuActiveColorFrom(normalized))
+  target.style.setProperty('--gp-menu-active-border', normalized)
+}
+
+/** 写 --theme-color 系列到 documentElement 与 body，并通知 IE11 css-vars ponyfill */
 function applyCssVars(color) {
-  const root = document.documentElement
-  root.style.setProperty('--theme-color', color)
-  root.style.setProperty('--themeBackground', color)
-  root.style.setProperty('--theme-color-soft', softFrom(color))
-  root.style.setProperty('--theme-color-muted', mutedFrom(color))
+  setThemeCssVars(document.documentElement, color)
+  // darkMode 时 token 挂在 body[theme-mode] 子树；同步 body 避免 stylesheet 覆盖继承链
+  if (document.body) {
+    setThemeCssVars(document.body, color)
+  }
   if (typeof window.__gpRefreshCssVars === 'function') {
     window.__gpRefreshCssVars()
   }
 }
 
 /**
- * 轻量覆盖：不拉 chalk 也能让常用 primary 控件立刻变色（体积很小）
+ * 轻量 primary 覆盖：不拉 chalk 也能让 Button/Menu/Tabs 等立刻变色
+ * 体积小，首屏同步注入；完整 chalk 仍空闲加载
  */
 function applyLightOverrides(color) {
   const cluster = getThemeCluster(color.replace('#', ''))
@@ -169,6 +237,7 @@ function applyLightOverrides(color) {
   bumpElementThemeStyles()
 }
 
+/** 从 unpkg 拉 Element chalk，sessionStorage 缓存；失败时轻量覆盖仍可用 */
 function loadChalkSource() {
   if (chalkSource) return Promise.resolve(chalkSource)
   if (chalkLoadPromise) return chalkLoadPromise
@@ -203,6 +272,7 @@ function loadChalkSource() {
   return chalkLoadPromise
 }
 
+/** 把 chalk 内 #409EFF 集群替换为用户主题集群，写入 #chalk-style */
 async function applyChalkTheme(color) {
   try {
     const source = await loadChalkSource()
@@ -217,6 +287,7 @@ async function applyChalkTheme(color) {
   }
 }
 
+/** 空闲回调：requestIdleCallback 或 setTimeout 降级 */
 function scheduleIdle(fn) {
   if (typeof window === 'undefined') return
   if (idleHandle != null) {
@@ -237,9 +308,9 @@ function scheduleIdle(fn) {
 }
 
 /**
+ * 应用主题色到 DOM（引擎核心，由 @/theme applyThemeColor 别名导出）
  * @param {string} color hex
- * @param {{ defer?: boolean }} [options] defer=true（默认）空闲再拉 chalk；管理端建议 defer:false
- * @returns {Promise<void>|void}
+ * @param {{ defer?: boolean }} [options] defer=true 空闲再拉 chalk；用户改色应 defer:false
  */
 export function applyElementTheme(color, options = {}) {
   if (typeof document === 'undefined') return
@@ -259,7 +330,7 @@ export function applyElementTheme(color, options = {}) {
   return applyChalkTheme(next)
 }
 
-/** 读取当前应使用的主题色 */
+/** 从 localStorage themeColor 读取；无则用 DEFAULT_THEME */
 export function resolveStoredThemeColor() {
   try {
     return normalizeHex(localStorage.getItem('themeColor') || DEFAULT_THEME)
@@ -269,7 +340,8 @@ export function resolveStoredThemeColor() {
 }
 
 /**
- * 管理端 / 异步 CSS 到达后：立刻用缓存重申主题（不重复空闲排队）
+ * 同色重算：不读新 hex，按 appliedColor 或 storage 再 apply 一遍
+ * 供 @/theme refreshAfterModeChange / refreshAfterElementCss 调用
  */
 export function reassertElementTheme() {
   const color = appliedColor || resolveStoredThemeColor()

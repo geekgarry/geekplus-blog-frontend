@@ -1,6 +1,6 @@
 <template>
   <!--
-    可移植个人中心壳：微信/QQ 风格
+    可移植个人中心壳：App 风格 UI
     - 顶部资料卡 → 点击进入编辑
     - 下方分组菜单列表（由 menus 注入，产品可替换）
     - 移动端单栏；桌面端左资料 + 右菜单（或居中卡片流）
@@ -78,7 +78,7 @@
               <i class="el-icon-user im-profile__cell-icon"></i>
               <div class="im-profile__cell-body">
                 <strong>登录 / 注册</strong>
-                <p>登录后使用个人中心与即时沟通</p>
+                <p>登录后使用个人中心与即时通讯</p>
               </div>
               <i class="el-icon-arrow-right im-profile__cell-arrow"></i>
             </router-link>
