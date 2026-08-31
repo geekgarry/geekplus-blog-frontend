@@ -819,7 +819,7 @@ export default {
   position: relative;
   width: 100%;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: var(--gp-surface-radius, 12px);
   background: #e8ecf1;
   user-select: none;
   -webkit-user-select: none;
@@ -938,13 +938,13 @@ export default {
 
   &.active {
     width: 16px;
-    border-radius: 8px;
+    border-radius: var(--gp-surface-radius, 8px);
     background: #fff;
   }
 }
 
 .plus-carousel.is-mobile {
-  border-radius: 10px;
+  border-radius: var(--gp-surface-radius, 10px);
   cursor: default;
 
   .plus-carousel__caption {

@@ -577,7 +577,7 @@ export default {
   z-index: 3000;
   background: var(--gp-surface-bg, var(--background, #fff));
   border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
-  border-radius: var(--gp-surface-radius-sm, 10px);
+  border-radius: var(--gp-surface-radius, 10px);
   box-shadow: var(--gp-surface-shadow-hover, 0 6px 18px rgba(15, 23, 42, 0.06));
   will-change: opacity, transform;
 }
@@ -696,7 +696,7 @@ export default {
   padding: 10px 12px;
   margin: 0;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius, 8px);
   background: var(--gp-surface-bg, var(--navbarBackground, transparent));
   color: inherit;
   font-size: 14px;
@@ -729,7 +729,7 @@ export default {
   margin: 0;
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius, 8px);
   color: inherit;
   font-size: 14px;
   font-weight: 500;
@@ -743,7 +743,7 @@ export default {
   /* width: 36px;
   height: 36px; */
   border: none;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius, 8px);
   background: transparent;
   color: inherit;
   cursor: pointer;

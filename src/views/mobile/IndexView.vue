@@ -679,7 +679,7 @@ export default {
 
 /* 移动端文章卡：与桌面/侧栏共用 gp-surface Token */
 .article-card {
-  border-radius: var(--gp-surface-radius-sm, 10px);
+  border-radius: var(--gp-surface-radius, 10px);
   padding: 12px;
   margin-bottom: 0;
   background: var(--gp-surface-bg, var(--background));
@@ -717,7 +717,7 @@ export default {
   max-width: 34%;
   min-height: 80px;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius, 8px);
   display: flex;
   justify-content: center;
   align-items: stretch; /* 确保子元素垂直方向撑满 */
@@ -730,7 +730,7 @@ export default {
   height: 100%; /* 继承父容器的高度 */
   display: flex; /* 让图片作为 flex item 更好控制 */
   /* padding-bottom: 68%;
-  border-radius: 8px; */
+  border-radius: var(--gp-surface-radius, 8px); */
   position: relative;
   overflow: hidden;
 }
@@ -741,7 +741,7 @@ export default {
   width: 100%;
   height: 100%;
   display: block;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius, 8px);
   object-fit: cover;
   object-position: center;
   transition: transform 0.35s ease;
@@ -834,7 +834,7 @@ export default {
 }
 
 .index-carousel-wrapper {
-  border-radius: 10px;
+  border-radius: var(--gp-surface-radius, 10px);
   overflow: hidden;
   margin-bottom: 10px;
 }
@@ -842,7 +842,7 @@ export default {
 .welcome {
   margin-bottom: 12px;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: var(--gp-surface-radius, 10px);
   background: linear-gradient(90deg, rgba(47, 111, 237, 0.08), rgba(47, 111, 237, 0.02));
   border: 1px solid rgba(47, 111, 237, 0.1);
   font-size: 13px;
@@ -851,7 +851,7 @@ export default {
 @media screen and (max-width: 480px) {
   .article-card {
     padding: 10px;
-    border-radius: 8px;
+    border-radius: var(--gp-surface-radius, 8px);
   }
 
   .article-content {

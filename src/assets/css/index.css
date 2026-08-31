@@ -267,13 +267,67 @@ body {
 }
 
 .el-picker-panel {
+  /* 仅主题色，勿改 margin/line-height，否则 Popper 定位会相对输入框偏移 */
   color: var(--text-color-2, #606266) !important;
   border: 1px solid var(--border-color, #dfe4ed) !important;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1) !important;
-  background: var(--background, #fff) !important;
-  border-radius: 4px !important;
-  line-height: 30px !important;
-  margin: 5px 0 !important;
+  background: var(--background-origin, #fff) !important;
+  border-radius: var(--gp-border-radius-base, 4px) !important;
+}
+
+.el-picker-panel.gp-dq-picker-popper {
+  z-index: 4000 !important;
+}
+
+/* 日期时间面板：此刻 / 确定 页脚与侧栏跟随黑白主题（Element 默认写死浅色） */
+.el-picker-panel__footer {
+  background-color: var(--background-origin, #fff) !important;
+  border-top: 1px solid var(--border-color, #e4e4e4) !important;
+  position: relative;
+  z-index: 2;
+}
+
+.el-picker-panel__link-btn {
+  color: var(--theme-color, #409eff) !important;
+}
+
+.el-picker-panel__sidebar {
+  background-color: var(--background-1, #f5f5f5) !important;
+  border-right: 1px solid var(--border-color, #e4e4e4) !important;
+}
+
+.el-date-picker__header-label,
+.el-date-picker__header-label:hover {
+  color: var(--text-color-2, #303133) !important;
+}
+
+.el-time-panel {
+  color: var(--text-color-2, #606266) !important;
+  background-color: var(--background-origin, #fff) !important;
+  border: 1px solid var(--border-color, #e4e4e4) !important;
+}
+
+.el-time-panel__content::after,
+.el-time-panel__content::before {
+  border-top-color: var(--border-color, #e4e4e4) !important;
+  border-bottom-color: var(--border-color, #e4e4e4) !important;
+}
+
+.el-time-panel__footer {
+  background-color: var(--background-origin, #fff) !important;
+  border-top: 1px solid var(--border-color, #e4e4e4) !important;
+}
+
+.el-time-spinner__item {
+  color: var(--text-color, #606266) !important;
+}
+
+.el-time-spinner__item:hover:not(.disabled):not(.active) {
+  background: var(--background-1, #f5f7fa) !important;
+}
+
+.el-time-spinner__item.active:not(.disabled) {
+  color: var(--text-color-2, #303133) !important;
 }
 
 .el-date-table th {
@@ -289,7 +343,7 @@ body {
 
 .el-date-table td.in-range div,
 .el-date-table td.in-range div:hover {
-  background-color: var(--background-origin, #f2f6fc) !important;
+  background-color: var(--background-1, #f2f6fc) !important;
 }
 
 .el-picker-panel__icon-btn {
@@ -503,7 +557,7 @@ body {
   border: 1px solid var(--background-2, #ececec);
   background: var(--background-2, #fefefe);
   color: var(--text-color-2, #242424);
-  border-radius: 5px;
+  border-radius: var(--gp-surface-radius-sm, 5px);
   resize: vertical;
   box-sizing: border-box;
   vertical-align: middle;
@@ -547,10 +601,10 @@ body {
   /* margin: auto; */
   display: inline-flex;
   flex-wrap: nowrap;
-  align-self: flex-end;
+  align-self: center;
   justify-content: center;
   align-items: center;
-  margin: 3px auto;
+  margin: 0 auto;
 }
 
 .upload-button,
@@ -576,17 +630,17 @@ body {
 
 .upload-button {
   position: absolute;
-  /* top: 50%; */
-  bottom: 5px;
+  top: 50%;
+  /* bottom: 5px; */
   right: 5px;
-  /* transform: translateY(-50%); */
+  transform: translateY(-50%);
   border-radius: 50px;
   width: 26px;
   height: 26px;
   font-size: 16px;
   display: inline-flex;
   /* vertical-align: middle;
-text-align: center; */
+  text-align: center; */
   justify-content: center;
   align-items: center;
   flex-wrap: nowrap;
@@ -1321,7 +1375,7 @@ code.hljs {
 .top-article-card-cover {
   width: 100%;
   height: 110px;
-  border-radius: var(--gp-surface-radius-sm, 10px);
+  border-radius: var(--gp-surface-radius, 10px);
   position: relative;
   overflow: hidden;
 }
@@ -1352,7 +1406,7 @@ code.hljs {
   -webkit-box-orient: vertical;
   box-orient: vertical;
   padding: 5px 0;
-  border-radius: 0 0 var(--gp-surface-radius-sm, 10px) var(--gp-surface-radius-sm, 10px);
+  border-radius: 0 0 var(--gp-surface-radius, 10px) var(--gp-surface-radius, 10px);
 }
 
 .article-card-list {
@@ -1837,7 +1891,7 @@ code.hljs {
 /******管理端侧边折叠菜单样式*******/
 .el-select-dropdown {
   border: solid 1px var(--border-color-2, #dfe4ed) !important;
-  border-radius: 4px !important;
+  border-radius: var(--gp-border-radius-base, 4px) !important;
   background-color: var(--background-origin, #FFFFFF) !important;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1) !important;
   box-sizing: border-box !important;
@@ -1991,17 +2045,15 @@ code.hljs {
   appearance: none !important;
   background-color: var(--background-origin, #ffffff) !important;
   background-image: none !important;
-  border-radius: 4px !important;
+  border-radius: var(--gp-border-radius-base, 4px) !important;
   border: 1px solid var(--border-color-2, #dcdfe6) !important;
-  box-sizing: border-box !important;
+  box-sizing: border-box;
   color: var(--text-color-2, #606266) !important;
-  display: inline-block !important;
-  font-size: inherit !important;
-  height: 40px !important;
-  line-height: 40px !important;
-  outline: none !important;
-  transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
-  width: 100% !important;
+  display: inline-block;
+  font-size: inherit;
+  outline: none;
+  transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+  width: 100%;
 }
 
 .el-input__inner:focus {
@@ -2044,7 +2096,7 @@ code.hljs {
 .el-textarea__inner {
   -webkit-appearance: none !important;
   appearance: none !important;
-  border-radius: 4px !important;
+  border-radius: var(--gp-border-radius-base, 4px) !important;
   color: var(--text-color-2, #606266) !important;
   background-color: var(--background-origin, #ffffff) !important;
   border: 1px solid var(--border-color-2, #dcdfe6) !important;

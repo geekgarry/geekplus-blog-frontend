@@ -1544,7 +1544,7 @@ export default {
   padding: 15px;
   background-color: #409eff;
   color: white;
-  border-radius: var(--gp-surface-radius-sm, 10px);
+  border-radius: var(--gp-surface-radius, 10px);
   margin-bottom: 15px;
 }
 

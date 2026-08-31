@@ -1,16 +1,24 @@
 <template>
   <div class="app-container">
     <el-row :gutter="20">
-      <!--部门数据-->
-      <el-col :span="4" :xs="24">
+      <!-- 部门树：窄列展开后名称过长需横向滚动 -->
+      <el-col :span="4" :xs="24" class="user-dept-col">
         <div class="head-container">
           <el-input v-model="deptName" placeholder="请输入部门名称" clearable size="mini" prefix-icon="el-icon-search"
             style="margin-bottom: 20px" />
         </div>
-        <div class="head-container" style="overflow-x: scroll;">
-          <el-tree :data="deptOptions" :props="defaultProps" :expand-on-click-node="false"
-            :filter-node-method="filterNode" ref="tree" default-expand-all highlight-current
-            @node-click="handleNodeClick" />
+        <div class="dept-tree-scroll">
+          <el-tree
+            class="dept-tree"
+            :data="deptOptions"
+            :props="defaultProps"
+            :expand-on-click-node="false"
+            :filter-node-method="filterNode"
+            ref="tree"
+            default-expand-all
+            highlight-current
+            @node-click="handleNodeClick"
+          />
         </div>
         <p v-if="activeDeptName" class="dept-filter-hint">当前：{{ activeDeptName }}（含下级）</p>
         <br/>
@@ -310,11 +318,12 @@ import { listAllRole, listUserRoles, addUserRoles, batchAddUserRoles, deleteUser
 import { deptTreeSelect, listDept } from "@/api/system/dept";
 import DynamicQueryForm, { buildDynamicQueryParams } from "@/components/DynamicQueryForm";
 
+/** 用户列表动态查询字段（含时间类型；须与后端 SysUser 白名单一致） */
 const USER_QUERY_FIELDS = [
-  { value: "username", label: "用户名称" },
-  { value: "phoneNumber", label: "手机号码" },
-  { value: "nickname", label: "用户昵称" },
-  { value: "email", label: "邮箱" },
+  { value: "username", label: "用户名称", valueType: "text" },
+  { value: "nickname", label: "用户昵称", valueType: "text" },
+  { value: "phoneNumber", label: "手机号码", valueType: "text" },
+  { value: "email", label: "邮箱", valueType: "text" },
   {
     value: "status",
     label: "状态",
@@ -324,6 +333,34 @@ const USER_QUERY_FIELDS = [
       { value: 1, label: "禁用" },
     ],
   },
+  {
+    value: "userType",
+    label: "用户类型",
+    valueType: "select",
+    options: [
+      { value: 0, label: "普通人员" },
+      { value: 1, label: "系统管理员" },
+      { value: 2, label: "网站管理员" },
+      { value: 3, label: "开发人员" },
+      { value: 4, label: "其他" },
+    ],
+  },
+  {
+    value: "gender",
+    label: "性别",
+    valueType: "select",
+    options: [
+      { value: 0, label: "男" },
+      { value: 1, label: "女" },
+      { value: 2, label: "未知" },
+    ],
+  },
+  { value: "loginIp", label: "登录 IP", valueType: "text" },
+  { value: "loginTime", label: "登录时间", valueType: "datetime" },
+  { value: "createTime", label: "创建时间", valueType: "datetime" },
+  { value: "updateTime", label: "更新时间", valueType: "datetime" },
+  { value: "createBy", label: "创建者", valueType: "text" },
+  { value: "remark", label: "备注", valueType: "text" },
 ];
 
 export default {
@@ -481,11 +518,17 @@ export default {
       const dyn = conditions ||
         (this.$refs.dynamicQuery && this.$refs.dynamicQuery.getConditions()) ||
         [];
-      const built = buildDynamicQueryParams(dyn, {}, { attachConditionsJson: true, attachFlat: true });
+      // 互斥：只传 conditionsJson，不传 username 等扁平筛选项（后端有 dq 走 DynamicWhere，无 dq 才扁平）
+      const built = buildDynamicQueryParams(dyn, {}, {
+        attachConditionsJson: true,
+        attachFlat: false,
+        fields: this.userQueryFields,
+      });
       this.queryParams.username = undefined;
       this.queryParams.phoneNumber = undefined;
       this.queryParams.status = undefined;
       this.queryParams.email = undefined;
+      this.queryParams.nickname = undefined;
       this.queryParams.conditionsJson = built.conditionsJson;
       const req = {
         pageNum: this.queryParams.pageNum,
@@ -497,12 +540,6 @@ export default {
       if (built.conditionsJson) {
         req.conditionsJson = built.conditionsJson;
       }
-      ["username", "phoneNumber", "status", "nickname", "email"].forEach((k) => {
-        if (built[k] !== undefined && built[k] !== null && built[k] !== "") {
-          this.queryParams[k] = built[k];
-          req[k] = built[k];
-        }
-      });
       listUser(req).then((response) => {
         this.list = response.rows;
         this.total = response.total;
@@ -512,10 +549,12 @@ export default {
       });
     },
     onDynamicSearch(conditions) {
+      // 仅翻到第一页并查询，不清空动态条件输入
       this.queryParams.pageNum = 1;
       this.getList(conditions);
     },
     onDynamicReset(conditions) {
+      // 重置已由 DynamicQueryForm 清空输入；此处只刷新列表
       this.queryParams.pageNum = 1;
       this.getList(conditions);
     },
@@ -818,5 +857,24 @@ export default {
   font-size: 12px;
   color: #909399;
   line-height: 1.4;
+}
+/* 部门列：内容超出时可横向滚动（仅 overflow 不够，节点需 nowrap 撑开宽度） */
+.dept-tree-scroll {
+  max-height: calc(100vh - 220px);
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.dept-tree-scroll >>> .el-tree {
+  display: inline-block;
+  min-width: 100%;
+  min-width: max-content;
+}
+.dept-tree-scroll >>> .el-tree-node__content {
+  height: auto;
+  min-height: 26px;
+}
+.dept-tree-scroll >>> .el-tree-node__label {
+  white-space: nowrap;
 }
 </style>

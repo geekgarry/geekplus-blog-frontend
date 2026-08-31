@@ -14,4 +14,6 @@
   subMenuBg: $subMenuBg;
   subMenuHover: $subMenuHover;
   sideBarWidth: $sideBarWidth;
+  /** 与 SCSS $base-border-radius 同值；运行时以 --gp-border-radius-base 为准 */
+  baseBorderRadius: $base-border-radius;
 }

@@ -12,6 +12,7 @@ import {
   DEFAULT_THEME,
   resolveStoredThemeColor
 } from '@/utils/elementTheme'
+import { applySiteRadii } from './borderRadius'
 import {
   SETTINGS_NS,
   THEME_MODE_STORAGE_KEY,
@@ -59,6 +60,8 @@ export function bootstrapSiteTheme(store) {
   if (typeof document === 'undefined') return
   migrateLegacyThemeColor()
   syncThemeColorToStore(store)
+  // 圆角双轨：控件 + 博客表面（独立 localStorage）
+  applySiteRadii()
   applyElementTheme(resolveStoredThemeColor(), { defer: true })
 }
 

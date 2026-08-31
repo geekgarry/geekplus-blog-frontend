@@ -83,10 +83,13 @@
     --muted-1-color: #8a8580;
     --interactive-bg-secondary-hover: rgba(44, 42, 40, 0.06);
     --interactive-bg-secondary-press: rgba(44, 42, 40, 0.04);
-    /* 表面卡片 */
     --gp-surface-bg: var(--background);
+    /* 管理端控件圆角；运行时 applyBorderRadius */
+    --gp-border-radius-base: 4px;
+    /* 博客表面圆角；运行时 applyBlogSurfaceRadius（主 14 / sm 10） */
     --gp-surface-radius: 14px;
     --gp-surface-radius-sm: 10px;
+    --border-radius: var(--gp-border-radius-base);
     --gp-surface-padding: 16px 18px;
     --gp-surface-border: rgba(44, 42, 40, 0.07);
     --gp-surface-border-hover: rgba(44, 42, 40, 0.12);
@@ -137,8 +140,12 @@
      * 运行时由 @/theme applyThemeColor 写到 html/body；用户改色见 commitUserThemeColor 单链路。
      */
     --gp-surface-bg: var(--background);
+    /* 管理端控件圆角；运行时 applyBorderRadius */
+    --gp-border-radius-base: 4px;
+    /* 博客表面圆角；运行时 applyBlogSurfaceRadius（主 14 / sm 10） */
     --gp-surface-radius: 14px;
     --gp-surface-radius-sm: 10px;
+    --border-radius: var(--gp-border-radius-base);
     --gp-surface-padding: 16px 18px;
     --gp-surface-border: rgba(255, 255, 255, 0.08);
     --gp-surface-border-hover: rgba(255, 255, 255, 0.13);

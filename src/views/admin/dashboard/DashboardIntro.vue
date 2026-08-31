@@ -185,7 +185,7 @@ export default {
 .dashboard-intro {
   .intro-banner {
     margin-bottom: 20px;
-    border-radius: var(--gp-surface-radius-sm, 10px);
+    border-radius: var(--gp-surface-radius, 10px);
   }
   .intro-row {
     margin-top: 20px;
@@ -208,7 +208,7 @@ export default {
   .arch-block {
     padding: 12px 14px;
     background: var(--gp-surface-bg, #faf9f7);
-    border-radius: var(--gp-surface-radius-sm, 10px);
+    border-radius: var(--gp-surface-radius, 10px);
     font-family: ui-monospace, monospace;
     font-size: 12px;
     line-height: 1.7;
@@ -216,7 +216,7 @@ export default {
   code {
     font-size: 12px;
     padding: 0 4px;
-    border-radius: 4px;
+    border-radius: var(--gp-border-radius-base, 4px);
     background: var(--lightGray, #e4e0db);
   }
   .intro-actions {
@@ -249,7 +249,7 @@ export default {
     align-items: center;
     justify-content: center;
     background: var(--gp-surface-bg, #faf9f7);
-    border-radius: var(--gp-surface-radius-sm, 10px);
+    border-radius: var(--gp-surface-radius, 10px);
     padding: 12px;
   }
   .qr-preview .el-image {

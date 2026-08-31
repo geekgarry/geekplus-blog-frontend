@@ -1,8 +1,38 @@
 import { dynamicRoutes, constantRoutes } from '@/router'
 import { getMenuTree } from '@/api/system/user'
+import { mergeLocalStaticRoutes } from '@/router/local-dynamic'
 // 切勿同步 import Layout，否则管理端整壳会打进博客首屏包
 const Layout = () => import(/* webpackChunkName: "layout-admin" */ '@/layout/index')
 import store from '@/store'
+
+/**
+ * 后台视图异步加载（限定 admin 目录，与前台 navMenu.loadView 分离）。
+ * require.context(lazy) 编译期枚举，避免 import(`@/views/admin/${view}`) 的 Critical dependency 警告。
+ * 须定义在 generaMenu / makeRoutes 之前，供菜单拼装直接引用。
+ */
+const adminViewModules = require.context(
+  '@/views/admin',
+  true,
+  /\.vue$/,
+  'lazy'
+)
+
+export const loadView = (view) => {
+  const raw = String(view || '')
+    .replace(/^\//, '')
+    .replace(/\.vue$/i, '')
+  const key = `./${raw}.vue`
+  return () =>
+    adminViewModules(key)
+      .then((mod) => mod.default || mod)
+      .catch((err) => {
+        console.error('[permission] loadView missing:', key, err)
+        return import(
+          /* webpackChunkName: "admin-view-404" */
+          '@/views/admin/error/404.vue'
+        ).then((m) => m.default || m)
+      })
+}
 
 const permission = {
   state: {
@@ -51,7 +81,9 @@ const permission = {
       return new Promise(resolve => {
         // 通配 * 不在此推入：由 permission.js 在「前台+后台」全部 addRoute 之后统一挂末尾，
         // 避免前台先挂 * 导致后台直链 rematch 被吞成 /404
-        let permissionRoutes = generaMenu(routes).concat(filterAsyncRoutes(dynamicRoutes));
+        // 先拼后端菜单，再 merge 本地不入库路由（如代码演练场）
+        let permissionRoutes = mergeLocalStaticRoutes(generaMenu(routes))
+          .concat(filterAsyncRoutes(dynamicRoutes));
         commit('SET_ROUTES', permissionRoutes)
         resolve(permissionRoutes)
       })
@@ -125,8 +157,8 @@ function hasPermission(route) {
 }
 
 /**
- * 后台查询的菜单数据拼装成路由格式的数据
- * 注意：必须用 import() + webpackInclude，禁止 require([`@/${x}`]) 扫整个 src
+ * 后台查询的菜单数据拼装成路由格式的数据。
+ * 组件懒加载统一走 loadView（require.context lazy），禁止 require([`@/views/...`]) 动态表达式。
  */
 export function generaMenu(data) {
   const routes=[]
@@ -136,10 +168,9 @@ export function generaMenu(data) {
     const hasChildren = item.children && item.children.length > 0
     const menu = {
       path: item.path == '#' ? item.menuId + '_key' : (item.parentId == 0?'/'+item.path : item.path),
-      // component: item.component === '#' ? Layout : () => import(`@/views${item.component}`),
-      component: item.component ? (resolve) => require([`@/views/admin/${item.component}`], resolve) : Layout,
-      // 动态加载路由，使用es6的import()语法无效，因为import()是异步的，会导致路由加载失败
-      // component: item.component ? () => import(/* webpackChunkName: "admin-view-[request]" */ /* webpackInclude: /\.vue$/ */ `@/views/admin/${item.component}`) : Layout,
+      component: item.component
+        ? loadView(String(item.component).replace(/^views\/admin\/?/, '').replace(/\.vue$/i, ''))
+        : Layout,
       hidden: (item.visible == 0 ? false : true),
       // 无子菜单时不要读 children[0].path
       redirect: (item.parentId == 0 && hasChildren ? '/'+item.path+'/'+item.children[0].path : ''),
@@ -206,25 +237,14 @@ export function makeRoutes(routes) {
       meta,
       component: (!component || component === '')
         ? Layout
-        : () => import(
-            /* webpackChunkName: "admin-view-[request]" */
-            /* webpackInclude: /views\/admin\/.*\.vue$/ */
-            `@/views/admin/${String(component).replace(/^views\/admin\/?/, '').replace(/\.vue$/, '')}`
+        : loadView(
+            String(component).replace(/^views\/admin\/?/, '').replace(/\.vue$/, '')
           ),
       children: children && children.length > 0 ? makeRoutes(children) : []
     }
     res.push(oRouter)
   })
   return res
-}
-
-/** 后台视图异步加载（限定 admin 目录，与前台 navMenu.loadView 分离） */
-export const loadView = (view) => {
-  return () => import(
-    /* webpackChunkName: "admin-view-[request]" */
-    /* webpackInclude: /\.vue$/ */
-    `@/views/admin/${view}`
-  )
 }
 
 // 字符串首字母大写，其余不变

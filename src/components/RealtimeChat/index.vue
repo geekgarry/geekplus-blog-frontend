@@ -993,6 +993,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/variables.scss';
 .rt-chat {
   --rt-border: var(--gp-surface-border, #e7ecee);
   --rt-bg: var(--gp-surface-bg, #fff);
@@ -1007,7 +1008,7 @@ export default {
   height: 520px;
   max-height: 70vh;
   border: 1px solid var(--rt-border);
-  border-radius: 12px;
+  border-radius: var(--gp-border-radius-base, #{$base-border-radius});
   overflow: hidden;
   background: var(--rt-bg);
   color: var(--rt-text);
@@ -1067,13 +1068,14 @@ export default {
 .msg .avatar {
   width: 42px;
   height: 42px;
-  border-radius: 8px;
+  /* 头像保持圆形，不跟随管理端控件圆角 */
+  border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
   background: #ddd;
 }
 .rt-chat__hd .avatar.sm,
-.msg .avatar.sm { width: 36px; height: 36px; border-radius: 6px; }
+.msg .avatar.sm { width: 36px; height: 36px; border-radius: 50%; }
 .rt-chat__users .info { flex: 1; min-width: 0; }
 .rt-chat__users .row {
   display: flex;
@@ -1102,7 +1104,7 @@ export default {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  border-radius: 9px;
+  border-radius: var(--gp-border-radius-base, #{$base-border-radius});
   background: #e54d42;
   color: #fff;
   font-size: 11px;
@@ -1180,7 +1182,7 @@ export default {
 .bubble {
   display: inline-block;
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: var(--gp-border-radius-base, #{$base-border-radius});
   background: var(--rt-bubble);
   font-size: 14px;
   line-height: 1.5;
@@ -1196,14 +1198,14 @@ export default {
 .media-img {
   max-width: 220px;
   max-height: 220px;
-  border-radius: 8px;
+  border-radius: var(--gp-border-radius-base, #{$base-border-radius});
   display: block;
   cursor: zoom-in;
 }
 .media-video {
   max-width: 260px;
   max-height: 200px;
-  border-radius: 8px;
+  border-radius: var(--gp-border-radius-base, #{$base-border-radius});
   background: #000;
   display: block;
 }
@@ -1258,7 +1260,7 @@ export default {
   width: 120px;
   height: 90px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: var(--gp-border-radius-base, #{$base-border-radius});
   border: 2px solid #fff;
   background: #333;
   z-index: 2;
@@ -1271,7 +1273,7 @@ export default {
   transform: translate(-50%, -50%);
   background: rgba(0, 0, 0, 0.55);
   padding: 8px 14px;
-  border-radius: 8px;
+  border-radius: var(--gp-border-radius-base, #{$base-border-radius});
   font-size: 13px;
   z-index: 2;
 }
@@ -1313,7 +1315,7 @@ export default {
   border: none;
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
-  border-radius: 14px;
+  border-radius: var(--gp-border-radius-base, #{$base-border-radius});
   padding: 10px 6px 8px;
   cursor: pointer;
   display: flex;

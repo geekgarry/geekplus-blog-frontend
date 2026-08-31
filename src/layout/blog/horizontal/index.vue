@@ -589,7 +589,7 @@ export default {
   img {
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    border-radius: var(--gp-surface-radius, 10px);
     object-fit: cover;
     background: var(--theme-color, #6e8b8e);
     flex-shrink: 0;
@@ -609,7 +609,7 @@ export default {
   color: var(--text-color);
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius, 8px);
   font-size: 16px;
   cursor: pointer;
   flex-shrink: 0;
@@ -642,7 +642,7 @@ export default {
   width: 100%;
   padding: 10px 12px;
   margin-bottom: 2px;
-  border-radius: 10px;
+  border-radius: var(--gp-surface-radius, 10px);
   color: var(--text-color, #5c5854);
   text-decoration: none;
   font-size: 14px;
@@ -698,7 +698,7 @@ export default {
   max-width: 240px;
   overflow-y: auto;
   padding: 8px;
-  border-radius: 12px;
+  border-radius: var(--gp-surface-radius, 12px);
   background: var(--gp-surface-bg, var(--background, #fafafa));
   border: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.1));
   box-shadow: var(--gp-surface-shadow-hover, 0 10px 28px rgba(58, 56, 53, 0.12));
@@ -721,7 +721,7 @@ export default {
   display: block;
   padding: 9px 10px;
   margin-bottom: 2px;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius, 8px);
   color: var(--text-color, #5c5854);
   text-decoration: none;
   font-size: 13px;
@@ -753,7 +753,7 @@ export default {
   align-items: center;
   gap: 8px;
   padding: 8px;
-  border-radius: 12px;
+  border-radius: var(--gp-surface-radius, 12px);
   background: var(--gp-surface-bg, var(--background, #fafbfa));
   border: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.06));
   img {
@@ -783,7 +783,7 @@ export default {
   flex-shrink: 0;
   height: 28px;
   padding: 0 10px;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius, 8px);
   border: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.1));
   background: var(--background-2, #f7f4f0);
   color: var(--text-color);
@@ -807,7 +807,7 @@ export default {
   cursor: pointer;
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: var(--gp-surface-radius, 10px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -925,7 +925,7 @@ export default {
     width: 180px;
     height: 34px;
     padding: 0 12px 0 32px;
-    border-radius: 10px;
+    border-radius: var(--gp-surface-radius, 10px);
     border: 1px solid var(--border-color, transparent);
     background: var(--background-2, #f7f4f0);
     color: var(--text-color-2);
@@ -963,7 +963,7 @@ export default {
   height: 42px;
   padding: 0;
   border: 1px solid var(--gp-surface-border, rgba(52, 68, 73, 0.1));
-  border-radius: 12px;
+  border-radius: var(--gp-surface-radius, 12px);
   background: var(--gp-surface-bg, var(--background, #fff));
   color: var(--theme-color, #5f7d80);
   box-shadow: var(--gp-surface-shadow-hover, 0 6px 18px rgba(52, 68, 73, 0.12));

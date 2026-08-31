@@ -52,21 +52,21 @@ module.exports = {
     open: false,
     allowedHosts: "all",
     proxy: {
-      //配置后端的跨域访问，重写API路径
-      // detail: https://cli.vuejs.org/config/#devserver-proxy
+      // 本地联调：VUE_APP_PROXY_TARGET 指向本机 API（见 .env.development）。
+      // secure:false 允许代理到 https://127.0.0.1 自签证书。
       [process.env.VUE_APP_BASE_API]: {
-        target: `http://127.0.0.1:8443`, //后端URI地址3443
-        changeOrigin: true, // 是否改变源地址
-        secure: false, //确保使用https，在使用https时可以选择开启
-        ws: true, // 聊天 /websocket 走同一前缀代理
+        target: process.env.VUE_APP_PROXY_TARGET || `https://127.0.0.1:8443`,
+        changeOrigin: true,
+        secure: false,
+        ws: true,
         pathRewrite: {
           ["^" + process.env.VUE_APP_BASE_API]: "",
-        }, // 重写路径
+        },
       },
-      //再配置后端静态资源的跨域访问，/profile为后端配置静态资源映射的虚拟路径
       "/profile": {
-        target: `http://127.0.0.1:8443`, //后端URI地址3443
+        target: process.env.VUE_APP_PROXY_TARGET || `https://127.0.0.1:8443`,
         changeOrigin: true,
+        secure: false,
         pathRewrite: {
           "^/profile": "/profile",
         },

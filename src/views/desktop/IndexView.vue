@@ -841,7 +841,7 @@ export default {
 }
 
 .article-card {
-  border-radius: var(--gp-surface-radius-sm, 10px);
+  border-radius: var(--gp-surface-radius, 10px);
   padding: var(--gp-surface-padding, 14px 16px);
   margin-bottom: 0;
   background: var(--gp-surface-bg, var(--background, #fafafa));
@@ -879,7 +879,7 @@ export default {
   width: 168px;
   max-width: 34%;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius, 8px);
 }
 
 .article-cover-link {
@@ -889,7 +889,7 @@ export default {
   padding-bottom: 62%;
   position: relative;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius, 8px);
 }
 
 .article-cover:hover .article-image {
@@ -902,7 +902,7 @@ export default {
   width: 100%;
   height: 100%;
   display: block;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius, 8px);
   object-fit: cover;
   object-position: center;
   transition: transform 0.35s ease;
@@ -1013,7 +1013,7 @@ export default {
 
 .special-article-wrapper {
   margin-bottom: 10px;
-  border-radius: 10px;
+  border-radius: var(--gp-surface-radius, 10px);
   overflow: hidden;
   background: var(--gp-surface-bg, var(--background, #fafafa));
   transition: box-shadow 0.2s ease, transform 0.2s ease;
@@ -1064,7 +1064,7 @@ export default {
 
 /* 首页轮播容器：与 PlusCarousel 圆角对齐 */
 .index-carousel-wrapper {
-  border-radius: 12px;
+  border-radius: var(--gp-surface-radius, 12px);
   overflow: hidden;
   margin-bottom: 12px;
 }
@@ -1073,7 +1073,7 @@ export default {
 .welcome {
   margin: 0 0 14px;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: var(--gp-surface-radius, 10px);
   background: linear-gradient(90deg, rgba(47, 111, 237, 0.08), rgba(47, 111, 237, 0.02));
   border: 1px solid rgba(47, 111, 237, 0.1);
 }
@@ -1105,7 +1105,7 @@ export default {
 @media screen and (max-width: 768px) {
   .article-card {
     padding: 10px;
-    border-radius: 8px;
+    border-radius: var(--gp-surface-radius, 8px);
   }
 
   .article-content {

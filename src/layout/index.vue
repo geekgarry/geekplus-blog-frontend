@@ -9,7 +9,7 @@
         <tags-view v-if="needTagsView" />
       </div>
       <app-main />
-      <right-panel v-if="showSettings">
+      <right-panel>
         <settings />
       </right-panel>
       <admin-watermark />
@@ -34,6 +34,8 @@ import { markBootReady } from '@/utils/bootLoader'
 import { refreshAfterElementCss } from '@/theme'
 import '@/styles/admin.scss'
 import '@/styles/sidebar.scss'
+/* admin.scss 在 layout 懒加载，再盖一层圆角变量，避免写死 4px 盖掉设置 */
+import '@/styles/gp-border-radius.css'
 import '@/plugins/element-admin'
 
 export default {
@@ -67,9 +69,6 @@ export default {
     },
     device() {
       return this.$store.state.app.device
-    },
-    showSettings(){
-      return this.$store.state.settings.showSettings
     },
     switchLangs(){
       return this.$store.state.settings.switchLangs

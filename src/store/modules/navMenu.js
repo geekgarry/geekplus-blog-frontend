@@ -181,15 +181,32 @@ function setChild(item, routerList) {
 
 /**
  * 异步加载前台页面组件。
- * webpackExclude 排除 admin，避免 require.context 式扫描把管理端重依赖打进博客包。
+ * 用 require.context(lazy) 限定非 admin 视图：编译期枚举路径，避免
+ * import(`@/views/${view}`) 触发「Critical dependency: the request of a dependency is an expression」，
+ * 同时不把管理端页面扫进博客包。栏目 component 形如 article-list/index.vue。
  */
+const webViewModules = require.context(
+  "@/views",
+  true,
+  /^\.\/(?!admin(?:\/|$)).+\.vue$/,
+  "lazy"
+);
+
 export const loadView = (view) => {
+  const raw = String(view || "")
+    .replace(/^\//, "")
+    .replace(/\.vue$/i, "");
+  const key = `./${raw}.vue`;
   return () =>
-    import(
-      /* webpackChunkName: "web-view-[request]" */
-      /* webpackExclude: /[\\/]admin[\\/]/ */
-      `@/views/${view}`
-    );
+    webViewModules(key)
+      .then((mod) => mod.default || mod)
+      .catch((err) => {
+        console.error("[navMenu] loadView missing:", key, err);
+        return import(
+          /* webpackChunkName: "web-view-404" */
+          "@/views/error/Error404.vue"
+        ).then((m) => m.default || m);
+      });
 };
 
 export default {

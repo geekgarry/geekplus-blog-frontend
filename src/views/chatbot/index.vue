@@ -1,277 +1,285 @@
 <template>
   <!--
-    /chat 全页对话：移动端与桌面共用一套结构（flex 列 + 居中卡片），
-    避免双分支布局导致桌面高度错乱、输入栏被 overflow 裁切。
+    /chat：桌面端左侧会话导航 + 右侧对话区平铺；
+    窄屏（<900px）侧栏改为抽屉，遮罩关闭。
   -->
-  <div class="chat-app-container" :class="{ 'is-desktop': !mobileChatdisplay, 'is-mobile': mobileChatdisplay }">
-    <div class="chat-box-header" :style="{ top: chatBoxHeaderTop + 'px' }">
-      <div class="plus-drawer-toggle" data-target="#my-plus-drawer" data-side="left">
-        <span class="gplus-icon">
-          <svg t="1723616704150" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6277"
-            width="24" height="24" class="icon">
-            <path data-v-00771e96=""
-              d="M844.8 883.2l-256 0c-19.2 0-38.4-19.2-38.4-38.4l0-256c0-19.2 19.2-38.4 38.4-38.4l256 0c19.2 0 38.4 19.2 38.4 38.4l0 256C883.2 864 864 883.2 844.8 883.2zM844.8 480l-256 0c-19.2 0-38.4-19.2-38.4-38.4l0-256c0-19.2 19.2-38.4 38.4-38.4l256 0c19.2 0 38.4 19.2 38.4 38.4l0 256C883.2 460.8 864 480 844.8 480zM435.2 883.2l-256 0c-19.2 0-38.4-19.2-38.4-38.4l0-256c0-19.2 19.2-38.4 38.4-38.4l256 0c19.2 0 38.4 19.2 38.4 38.4l0 256C480 864 460.8 883.2 435.2 883.2zM435.2 480l-256 0c-19.2 0-38.4-19.2-38.4-38.4l0-256c0-19.2 19.2-38.4 38.4-38.4l256 0c19.2 0 38.4 19.2 38.4 38.4l0 256C480 460.8 460.8 480 435.2 480z"
-              fill="currentColor" p-id="6278"></path>
-          </svg>
-        </span>
-      </div>
-      <span class="chat-box-header__title">AI 智能助手</span>
-      <div @click="openMsg">
-        <span class="gplus-icon">
-          <svg t="1723618948778" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="28131"
-            width="24" height="24" class="icon">
-            <path data-v-00771e96=""
-              d="M512.001 928.997c230.524 0 418.076-187.552 418.075-418.077 0-230.527-187.552-418.077-418.075-418.077s-418.077 187.55-418.077 418.077c0 230.525 187.552 418.077 418.077 418.077zM512 301.88c28.86 0 52.26 23.399 52.26 52.263 0 28.858-23.399 52.257-52.26 52.257s-52.26-23.399-52.26-52.257c0-28.863 23.399-52.263 52.26-52.263zM459.74 510.922c0-28.86 23.399-52.26 52.26-52.26s52.26 23.399 52.26 52.26l0 156.775c0 28.86-23.399 52.26-52.26 52.26s-52.26-23.399-52.26-52.26l0-156.775z"
-              fill="currentColor" p-id="28132"></path>
-          </svg>
-        </span>
-      </div>
-    </div>
+  <div
+    class="chat-app-container"
+    :class="{
+      'is-desktop': !mobileChatdisplay,
+      'is-mobile': mobileChatdisplay,
+      'sidebar-open': sidebarOpen
+    }"
+  >
+    <!-- 窄屏抽屉遮罩 -->
+    <div
+      class="chat-sidebar-mask"
+      v-show="mobileChatdisplay && sidebarOpen"
+      @click="closeSidebar"
+    />
 
-    <div class="chat-shell">
-      <div class="chat-main-content">
-        <div
-          ref="chatBox"
-          class="big-chat-box"
-          id="big-chat-box"
-          :style="chatBoxInlineStyle"
-        >
-          <div v-if="!msgList.length" class="chat-empty-hint">
-            <p>有什么可以帮你的？在下方输入问题开始对话。</p>
-          </div>
-          <div v-for="(item, index) in msgList" :key="index" class="list-chat-msg">
-            <div class="chat-data-meta">
-              <span v-show="item.time" class="chat-date-time">{{ getChatDateTime(item.time) }}</span>
-              <span v-show="item.align === 'left' && item.elapsedMs" class="chat-reply-elapsedMs">已思考：{{ item.elapsedMs }}s</span>
-            </div>
-            <div :class="item && item.align === 'right' ? 'list-chat-item-right' : 'list-chat-item-left'">
-              <span>
-                <img
-                  class="chat-user-icon"
-                  :src="item.align == 'right' ? userAvatar : aiAvatar"
-                  :alt="item.align == 'right' ? '麦壳' : '极客普拉斯'"
-                >
-              </span>
-              <span class="list-chat-item-content">
-                <div v-if="item.type === 'text'">
-                  <span v-html="item.align === 'right' ? item.text : renderMdHtml(item.text)"></span>
-                </div>
-                <div v-else-if="item.type === 'image'">
-                  <span>{{ item.text }}</span>
-                  <div class="chat-msg-media-data">
-                    <img :src="item.mediaData" :alt="item.mediaFileName">
-                  </div>
-                  <div>{{ item.mediaFileName }}</div>
-                </div>
-                <div v-else>
-                  <span>{{ item.text }}</span>
-                  <div class="chat-msg-media-data">
-                    <object :data="item.mediaData" style="width: 95%;" height="100%">
-                      <embed :src="item.mediaData" style="width: 100%;">
-                      <audio controls height="50" width="100%" :data="item.mediaData"></audio>
-                      <video controls height="50" width="100%" :data="item.mediaData">
-                        <source :src="item.mediaData" type="audio/mpeg">
-                        <source :src="item.mediaData" type="audio/ogg">
-                        <source :src="item.mediaData" type="video/mp4">
-                        <source :src="item.mediaData" type="video/ogg">
-                      </video>
-                      <a :href="item.mediaData" target="_blank">查看</a>
-                    </object>
-                  </div>
-                  <div>{{ item.mediaFileName }}</div>
-                </div>
-                <div v-show="item.link"><a :href="item.link" target="_blank">链接</a></div>
-              </span>
-            </div>
+    <!-- 会话导航：桌面常驻 / 窄屏抽屉 -->
+    <div
+      id="my-plus-drawer"
+      class="chat-sidebar"
+      :class="{ 'is-open': sidebarOpen }"
+      aria-label="会话导航"
+    >
+      <div class="chat-sidebar__brand">
+        <div class="chat-sidebar__brand-main">
+          <span class="chat-sidebar__logo" aria-hidden="true">AI</span>
+          <div class="chat-sidebar__brand-text">
+            <strong>极客普拉斯</strong>
+            <span>智能助手</span>
           </div>
         </div>
-
-        <div class="chat-box-footer">
-          <div class="input-container chat-composer">
-            <div v-if="mobileChatdisplay" class="button-container">
-              <button type="button" class="send-button" @click="startAndStopRecording">
-                {{ recordingTxt }}
-              </button>
-            </div>
-            <div class="textarea-container">
-              <textarea
-                ref="chatInput"
-                placeholder="请输入消息…"
-                class="plus-text-input onlyoneline"
-                id="plus-input-content-text"
-                name="inputChatMsg"
-                autocomplete="off"
-                rows="1"
-                v-model="inputChatMsg"
-                :autofocus="false"
-                @keydown="keyDownEvent"
-                @input="textInputEvent"
-                @paste.capture.passive="pastingData"
-              ></textarea>
-              <label for="file-upload" class="upload-button" title="上传文件">
-                <svg t="1720279770597" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                  xmlns="http://www.w3.org/2000/svg" p-id="10853" width="20" height="20">
-                  <path d="M0 0h1024v1024H0z" fill="currentColor" opacity=".01" p-id="10854"></path>
-                  <path
-                    d="M533.312 128a21.312 21.312 0 0 1 21.376 21.312v320h320a21.312 21.312 0 0 1 21.312 21.376v42.624a21.312 21.312 0 0 1-21.312 21.376h-320v320a21.312 21.312 0 0 1-21.376 21.312h-42.624a21.312 21.312 0 0 1-21.376-21.312v-320h-320A21.312 21.312 0 0 1 128 533.312v-42.624a21.312 21.312 0 0 1 21.312-21.376h320v-320A21.312 21.312 0 0 1 490.688 128h42.624z"
-                    fill="currentColor" fill-opacity=".7" p-id="10855"></path>
-                </svg>
-                <input
-                  type="file"
-                  id="file-upload"
-                  ref="file-upload-ref"
-                  accept="*"
-                  @change="uploadDataFileEvent($event)"
-                  style="display: none;"
-                >
-              </label>
-            </div>
-            <div class="button-container">
-              <button
-                type="button"
-                class="send-button is-primary"
-                @click="handleMsg"
-                :disabled="statusDisabled"
-              >发送</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div id="my-plus-drawer" class="plus-drawer">
-      <div class="menu-drawer-header">
-        <div class="menu-btn plus-drawer-toggle" data-target="#my-plus-drawer" data-side="left">
-          <span class="gplus-icon">
-            <svg t="1723619078616" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="29225"
-              width="24" height="24" class="icon">
-              <path data-v-00771e96=""
-                d="M382.083 103.466c-63.464-1.533-127.026-1.561-190.487 0.056-53.88 1.372-85.947 33.283-87.526 87.481-1.798 61.735-1.627 123.592-0.105 185.34 1.405 57.042 33.666 88.862 89.987 91.055 30.847 1.2 61.778 0.214 92.673 0.214v0.084c29.177 0 58.354 0.006 87.532-0.01 3.43 0 6.875 0.043 10.292-0.216 48.928-3.716 81.464-31.602 83.804-80.677 3.181-66.767 3.15-133.886 0.34-200.68-2.194-52.18-34.273-81.385-86.51-82.647z m0.727 223.135c-1.853 39.629-13.76 53.399-51.558 55.395-30.725 1.622-61.703 1.765-92.399-0.15-32.22-2.01-46.292-15.941-48.33-48.552-2.025-32.392-2.108-65.126 0.084-97.498 2.219-32.758 16.121-45.288 49.214-46.935 29.033-1.446 58.217-1.13 87.29-0.204 42.456 1.353 53.884 13.188 55.727 55.78 0.592 13.67 0.092 27.387 0.092 41.083-0.02 13.695 0.518 27.415-0.12 41.081zM468.883 657.431c-4.914-60.1-41.873-98.957-102.147-102.763-52.991-3.346-106.533-3.413-159.516-0.013-61.945 3.977-100.908 45.842-103.178 107.37-1.834 49.716-1.806 99.605 0 149.324 2.232 61.528 42.13 104.63 102.68 108.128 53.034 3.063 106.506 2.894 159.565 0.06 58.998-3.15 97.39-42.913 102.53-102.565 2.2-25.551 0.367-51.451 0.367-77.191l0.08-0.001c0-27.46 1.85-55.071-0.381-82.349zM382.676 782.81c-2.191 34.758-12.473 47.623-45.629 49.797-34.02 2.23-68.343 1.291-102.466-0.024-25.612-0.987-42.22-15.758-43.434-41.638-1.677-35.784-2.509-71.85 0.088-107.519 2.16-29.666 15.98-40.487 47.82-41.924 30.705-1.386 61.557-1.324 92.274-0.118 37.12 1.456 48.88 13.204 51.308 49.153 1.033 15.313 0.173 30.753 0.173 46.135 0.027 15.382 0.832 30.817-0.134 46.138zM638.575 466.817c66.85 2.183 133.883 2.232 200.728-0.029 48.107-1.626 78.502-34.315 80.95-82.898 1.64-32.522 0.314-65.193 0.314-97.798h0.18c0-29.173 0.002-58.345-0.006-87.518 0-3.433 0.093-6.874-0.12-10.295-3.237-51.777-32.66-83.203-84.46-84.65-65.155-1.824-130.44-1.78-195.6 0.026-49.255 1.363-81.717 31.976-83.38 80.049-2.312 66.843-2.187 133.87-0.181 200.732 1.448 48.3 33.485 80.811 81.575 82.38zM741.2 188.405c93.184 0.015 94.452 1.293 94.464 95.22 0.013 96.831-1.987 98.873-96.789 98.868-94.393-0.003-95.62-3.049-97.83-98.688-2.4-103.803 20.564-97.124 100.155-95.4zM920.572 648.267c-1.48-60.79-30.968-91.401-92.039-94.662-29.17-1.558-58.49-0.269-87.743-0.269v0.082c-30.974 0-61.945-0.023-92.918 0.034-3.43 0.005-6.883 0.302-10.287 0.754-49.282 6.534-79.299 35.872-80.674 84.647a3477.609 3477.609 0 0 0 0.02 196.134c1.362 48.254 32.605 80.758 80.595 84.46 35.921 2.77 72.291 2.164 108.32 0.313 28.821-1.48 47.916-22.114 46.583-45.146-1.247-21.556-18.569-37.536-46.166-40.082-18.794-1.733-37.942 0.3-56.714-1.548-33.033-3.254-45.768-15.985-47.505-49.427a897.595 897.595 0 0 1 0.012-92.884c1.76-33.962 14.537-47.378 47.042-49.022 32.61-1.65 65.425-1.604 98.043-0.06 33.31 1.575 45.544 14.444 48.07 47.957 1.42 18.832-0.68 37.952 1.06 56.734 2.577 27.82 18.189 42.528 42.153 42.564 24.261 0.037 40.096-14.295 41.679-42.527 1.828-32.595 1.266-65.38 0.47-98.052z"
-                p-id="29226" fill="currentColor"></path>
-            </svg>
-          </span>
-        </div>
-        <div class="menu-btn">
-          <router-link to="/" target="_blank">
-            <span class="gplus-icon">
-              <svg t="1723621020266" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
-                p-id="76353" width="24" height="24" class="icon">
-                <path data-v-00771e96=""
-                  d="M824 405.4L530.7 192.7c-1-0.7-2.1-0.9-3.2-1.4l-0.4-0.2c-3-1.7-6.3-2.8-9.7-3.4-1.7-0.3-3.4-0.2-5.2-0.2-1.7 0-3.4-0.1-5.2 0.2-3.4 0.6-6.8 1.8-9.8 3.5l-0.2 0.1c-1.1 0.6-2.2 0.8-3.2 1.5L200.6 405.4c-13.8 9.4-17.3 28-7.7 41.5 9.5 13.6 28.5 16.9 42.3 7.6l1.2-0.9 12.5-9.1v229.7c0 38.4 31.9 69.6 70.9 69.6h152v-13.3h0.3c0-0.6-0.3-1-0.3-1.6V609.6c0-22 18.1-39.8 40.5-39.8s40.5 17.8 40.5 39.8v119.3c0 0.6-0.3 1-0.3 1.6h0.3v13.3h152c39.1 0 70.9-31.2 70.9-69.6V444.6l12.4 9c13.6 9.7 32.6 6.8 42.5-6.5s7-32-6.6-41.7zM715 674.2c0 5.5-4.5 9.9-10.1 9.9h-91.2v-74.6c0-54.9-45.4-99.4-101.3-99.4S411 554.7 411 609.6v74.6h-91.2c-5.6 0-10.1-4.5-10.1-9.9V400.5l202.7-146.9 202.7 147-0.1 273.6z"
-                  fill="currentColor" p-id="76354"></path>
-                <path data-v-00771e96=""
-                  d="M511 1022C228.8 1022 0 793.2 0 511S228.8 0 511 0s511 228.8 511 511-228.8 511-511 511z m0-92.9c230.9 0 418.1-187.2 418.1-418.1S741.9 92.9 511 92.9 92.9 280.1 92.9 511 280.1 929.1 511 929.1z"
-                  fill="currentColor" p-id="76355"></path>
-              </svg>
-            </span>
+        <div class="chat-sidebar__brand-actions">
+          <router-link to="/" class="chat-sidebar__icon-btn" title="回首页" target="_blank">
+            <!-- <i class="el-icon-s-home" /> -->
+            <svg-icon icon-class="home" />
           </router-link>
+          <button
+            v-if="mobileChatdisplay"
+            type="button"
+            class="chat-sidebar__icon-btn"
+            title="关闭"
+            @click="closeSidebar"
+          >
+            <!-- <i class="el-icon-close" /> -->
+            <svg-icon icon-class="close" />
+          </button>
         </div>
       </div>
-      <div class="menu-drawer-container">
-        <!-- <ul><li><a href="/" target="_blank">首页</a></li><li>未知</li></ul> -->
-        <div class="history-msg-list">
-          <div class="history-msg-list-container">
-            <div class="history-msg-list-item">
-              <a href="javascript:;" @click="newChatAI">新聊天</a>
-            </div>
-            <div class="history-msg-list-header">
-              消息：
-              <a href="javascript:;" @click="getAllHistoryChatMsg(chatDataPrompt.username)">
-                <span class="gplus-icon">
-                  <svg t="1723963058338" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg" p-id="4576" width="20" height="20">
-                    <path
-                      d="M710.4 249.6l76.8-76.8c2.133333-2.133333 4.266667-4.266667 6.4-2.133333 2.133333 0 2.133333 4.266667 2.133333 6.4v204.8c0 4.266667-2.133333 8.533333-4.266666 10.666666s-6.4 4.266667-10.666667 4.266667h-204.8c-4.266667 0-6.4 0-6.4-2.133333s0-4.266667 2.133333-6.4l76.8-76.8c-42.666667-27.733333-87.466667-42.666667-136.533333-42.666667-44.8 0-85.333333 10.666667-121.6 32s-66.133333 51.2-87.466667 87.466667-32 78.933333-32 121.6h-85.333333c0-44.8 8.533333-87.466667 25.6-128 17.066667-40.533333 40.533333-74.666667 70.4-104.533334s64-53.333333 104.533333-70.4c40.533333-17.066667 83.2-25.6 128-25.6 70.4 2.133333 136.533333 25.6 196.266667 68.266667z m44.8 262.4h85.333333c0 44.8-8.533333 87.466667-25.6 128-17.066667 40.533333-40.533333 74.666667-70.4 104.533333-29.866667 29.866667-64 53.333333-104.533333 70.4-40.533333 17.066667-83.2 25.6-128 25.6-72.533333 0-138.666667-21.333333-198.4-66.133333l-76.8 76.8c-2.133333 2.133333-4.266667 4.266667-6.4 2.133333-2.133333 0-2.133333-4.266667-2.133333-6.4V642.133333c0-4.266667 2.133333-8.533333 4.266666-10.666666 2.133333-2.133333 6.4-4.266667 10.666667-4.266667h204.8c4.266667 0 6.4 0 6.4 2.133333s0 4.266667-2.133333 6.4l-74.666667 74.666667c42.666667 29.866667 87.466667 42.666667 136.533333 42.666667 44.8 0 85.333333-10.666667 121.6-32 38.4-21.333333 66.133333-51.2 87.466667-87.466667s32-76.8 32-121.6z"
-                      p-id="4577" fill="currentColor"></path>
-                  </svg>
-                </span>
-              </a>
-            </div>
-            <div class="history-msg-list-item" :class="{ selected: selectedHistory(item.historyMsgKey) }"
-              v-for="(item, index) in historyChatMsgList" :key="index">
-              <a href="javascript:;" class="text-ellipsis" @click="getOneHistoryChatMsg(item.historyMsgKey)">
-                <!-- 历史摘要可能是 HTML/脏数据，禁止在模板里直接 JSON.parse -->
-                {{ historyPreviewText(item) }}
-              </a>
-              <span class="history-msg-list-item-close" v-if="username && username != 'guest'"
-                @click.stop="deleteOneHistoryChatMsg(item.historyMsgKey)">
-                <svg t="1723863901472" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                  xmlns="http://www.w3.org/2000/svg" p-id="5956" width="20" height="20">
-                  <path
-                    d="M572.16 512l183.466667-183.04a42.666667 42.666667 0 1 0-60.586667-60.586667L512 451.84l-183.04-183.466667a42.666667 42.666667 0 0 0-60.586667 60.586667l183.466667 183.04-183.466667 183.04a42.666667 42.666667 0 0 0 0 60.586667 42.666667 42.666667 0 0 0 60.586667 0l183.04-183.466667 183.04 183.466667a42.666667 42.666667 0 0 0 60.586667 0 42.666667 42.666667 0 0 0 0-60.586667z"
-                    fill="currentColor" p-id="5957"></path>
-                </svg>
-              </span>
-            </div>
-          </div>
+
+      <button type="button" class="chat-sidebar__new" @click="onNewChat">
+        <!-- <i class="el-icon-plus" /> -->
+        <svg-icon icon-class="plus" />
+        <span>新对话</span>
+      </button>
+
+      <div class="chat-sidebar__section">
+        <div class="chat-sidebar__section-hd">
+          <span>历史会话</span>
+          <button
+            type="button"
+            class="chat-sidebar__icon-btn is-sm"
+            title="刷新"
+            @click="getAllHistoryChatMsg(chatDataPrompt.username)"
+          >
+            <!-- <i class="el-icon-refresh" /> -->
+            <svg-icon icon-class="refresh" />
+          </button>
+        </div>
+        <div class="chat-sidebar__list">
+          <button
+            v-for="(item, index) in historyChatMsgList"
+            :key="item.historyMsgKey || index"
+            type="button"
+            class="chat-sidebar__item"
+            :class="{ 'is-active': selectedHistory(item.historyMsgKey) }"
+            @click="onSelectHistory(item.historyMsgKey)"
+          >
+            <span class="chat-sidebar__item-text">{{ historyPreviewText(item) }}</span>
+            <span
+              v-if="username && username != 'guest'"
+              class="chat-sidebar__item-del"
+              title="删除"
+              @click.stop="deleteOneHistoryChatMsg(item.historyMsgKey)"
+            >
+              <!-- <i class="el-icon-close" /> -->
+              <svg-icon icon-class="close" />
+            </span>
+          </button>
+          <p v-if="!historyChatMsgList || !historyChatMsgList.length" class="chat-sidebar__empty">
+            暂无历史，开始提问吧
+          </p>
         </div>
       </div>
-      <div class="menu-tool">
-          聊天模式：
-          <label class="switch">
+
+      <div class="chat-sidebar__tools">
+        <label class="chat-sidebar__tool">
+          <span>多轮记忆</span>
+          <span class="switch">
             <input type="checkbox" :checked="isHistory" @change="setHistoryChat" />
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="menu-tool">
-          语音模式：
-          <label class="switch">
+            <span class="slider" />
+          </span>
+        </label>
+        <label class="chat-sidebar__tool">
+          <span>语音播报</span>
+          <span class="switch">
             <input type="checkbox" :checked="isTextVoice" @change="setTextVoice" />
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="menu-tool">
-          暗黑主题：
-          <label class="switch">
+            <span class="slider" />
+          </span>
+        </label>
+        <label class="chat-sidebar__tool">
+          <span>深色主题</span>
+          <span class="switch">
             <input type="checkbox" :checked="darkTheme" @change="setTheme" />
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="sticky-bottom-user-center">
-          <div class="user-center_item">
-            <div class="menu-btn">
-              <a href="javascript:;" v-if="$common.isEmpty(username)">
-                <span class="gplus-icon">
-                  <svg t="1723621240837" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
-                    p-id="82245" width="24" height="24" class="icon">
-                    <path data-v-00771e96=""
-                      d="M512 0C229.248 0 0 229.248 0 512c0 282.816 229.248 512 512 512s512-229.184 512-512C1024 229.248 794.752 0 512 0zM512 960c-247.36 0-448-200.512-448-448 0-247.424 200.64-448 448-448s448 200.576 448 448C960 759.488 759.36 960 512 960z"
-                      p-id="82246" fill="currentColor"></path>
-                    <path data-v-00771e96=""
-                      d="M645.632 544.96c60.224-41.792 99.904-111.232 99.904-189.824 0-127.424-103.68-231.04-231.104-231.04s-231.104 103.616-231.104 231.04c0 78.656 39.616 148.032 99.904 189.824-126.656 51.968-216.192 176.384-216.192 321.408 0 18.624 15.04 33.6 33.6 33.6 18.496 0 33.536-14.976 33.536-33.6 0-154.432 125.696-280.128 280.256-280.128s280.256 125.696 280.256 280.128c0 18.624 15.04 33.6 33.536 33.6 18.56 0 33.536-14.976 33.536-33.6C861.76 721.344 772.224 596.864 645.632 544.96zM350.528 355.072c0-90.368 73.472-163.968 163.904-163.968s163.968 73.536 163.968 163.968c0 90.432-73.536 163.904-163.968 163.904S350.528 445.504 350.528 355.072z"
-                      p-id="82247" fill="currentColor"></path>
-                  </svg>
-                </span>
-              </a>
-              <router-link to="/admin" v-else>
-                <span class="gplus-icon">
-                  <img :src="avatar">
-                </span>
-              </router-link>
-            </div>
-            <div class="item-mine-text">
-              <div class="truncate">{{ nickname }}</div>
-            </div>
-          </div>
-          <div>
-            <div class="menu-btn">
-              <a href="javascript:void(0);" class="a-btn-1" v-if="!$common.isEmpty(username)" @click="userLogout">
-                <!-- <span class="gplus-icon">
-                  <svg t="1760154026404" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg" p-id="4857" width="24" height="24">
-                    <path
-                      d="M698.592 222.272a42.656 42.656 0 1 1 43.968-73.12A447.712 447.712 0 0 1 960 533.344c0 247.424-200.576 448-448 448s-448-200.576-448-448C64 374.08 147.84 229.28 281.888 148.864A42.656 42.656 0 0 1 325.76 222.08a362.4 362.4 0 0 0-176.416 311.296C149.344 733.632 311.68 896 512 896c200.32 0 362.656-162.368 362.656-362.656 0-128.832-67.648-245.888-176.064-311.04zM512 42.656c23.552 0 42.656 19.104 42.656 42.688v341.312a42.656 42.656 0 1 1-85.312 0V85.344c0-23.584 19.104-42.688 42.656-42.688z"
-                      fill="currentColor" p-id="4858"></path>
-                  </svg>
-                </span> -->
-                注销
-              </a>
-              <a href="javascript:void(0);" class="a-btn-1" v-else @click="userLogin">
-                登录
-              </a>
-            </div>
+            <span class="slider" />
+          </span>
+        </label>
+      </div>
+
+      <div class="chat-sidebar__user">
+        <div class="chat-sidebar__user-meta">
+          <router-link v-if="!$common.isEmpty(username)" to="/admin" class="chat-sidebar__avatar">
+            <img :src="avatar" alt="" />
+          </router-link>
+          <span v-else class="chat-sidebar__avatar is-guest">
+            <!-- <i class="el-icon-user" /> -->
+            <svg-icon icon-class="user" />
+          </span>
+          <div class="chat-sidebar__user-text">
+            <div class="truncate">{{ nickname || '访客' }}</div>
+            <small>{{ username || '未登录' }}</small>
           </div>
         </div>
+        <button
+          v-if="!$common.isEmpty(username)"
+          type="button"
+          class="chat-sidebar__text-btn"
+          @click="userLogout"
+        >退出</button>
+        <button
+          v-else
+          type="button"
+          class="chat-sidebar__text-btn is-primary"
+          @click="userLogin"
+        >登录</button>
+      </div>
     </div>
+
+    <div class="chat-workspace">
+      <header class="chat-box-header" :style="{ top: chatBoxHeaderTop + 'px' }">
+        <button
+          type="button"
+          class="chat-header-btn"
+          :title="mobileChatdisplay ? '打开菜单' : '会话列表'"
+          @click="toggleSidebar"
+        >
+          <!-- <i class="el-icon-s-fold" v-if="!mobileChatdisplay && sidebarOpen" />
+          <i class="el-icon-s-unfold" v-else-if="!mobileChatdisplay" />
+          <i class="el-icon-menu" v-else /> -->
+          <svg-icon icon-class="left" v-if="!mobileChatdisplay && sidebarOpen" />
+          <svg-icon icon-class="right" v-else-if="!mobileChatdisplay" />
+          <svg-icon icon-class="menu" v-else />
+        </button>
+        <span class="chat-box-header__title">AI 智能助手</span>
+        <button type="button" class="chat-header-btn" title="关于" @click="openMsg">
+          <!-- <i class="el-icon-info" /> -->
+          <svg-icon icon-class="info" />
+        </button>
+      </header>
+
+      <div class="chat-shell">
+        <div class="chat-main-content">
+          <div
+            ref="chatBox"
+            class="big-chat-box"
+            id="big-chat-box"
+            :style="chatBoxInlineStyle"
+          >
+            <div v-if="!msgList.length" class="chat-empty-hint">
+              <div class="chat-empty-hint__badge">GeekPlus AI</div>
+              <h2>有什么可以帮你的？</h2>
+              <p>在下方输入问题开始对话，也可从左侧打开历史会话。</p>
+            </div>
+            <div v-for="(item, index) in msgList" :key="index" class="list-chat-msg">
+              <div class="chat-data-meta">
+                <span v-show="item.time" class="chat-date-time">{{ getChatDateTime(item.time) }}</span>
+                <span v-show="item.align === 'left' && item.elapsedMs" class="chat-reply-elapsedMs">已思考：{{ item.elapsedMs }}s</span>
+              </div>
+              <div :class="item && item.align === 'right' ? 'list-chat-item-right' : 'list-chat-item-left'">
+                <span>
+                  <img
+                    class="chat-user-icon"
+                    :src="item.align == 'right' ? userAvatar : aiAvatar"
+                    :alt="item.align == 'right' ? '麦壳' : '极客普拉斯'"
+                  >
+                </span>
+                <span class="list-chat-item-content">
+                  <div v-if="item.type === 'text'">
+                    <span v-html="item.align === 'right' ? item.text : renderMdHtml(item.text)"></span>
+                  </div>
+                  <div v-else-if="item.type === 'image'">
+                    <span>{{ item.text }}</span>
+                    <div class="chat-msg-media-data">
+                      <img :src="item.mediaData" :alt="item.mediaFileName">
+                    </div>
+                    <div>{{ item.mediaFileName }}</div>
+                  </div>
+                  <div v-else>
+                    <span>{{ item.text }}</span>
+                    <div class="chat-msg-media-data">
+                      <object :data="item.mediaData" style="width: 95%;" height="100%">
+                        <embed :src="item.mediaData" style="width: 100%;">
+                        <audio controls height="50" width="100%" :data="item.mediaData"></audio>
+                        <video controls height="50" width="100%" :data="item.mediaData">
+                          <source :src="item.mediaData" type="audio/mpeg">
+                          <source :src="item.mediaData" type="audio/ogg">
+                          <source :src="item.mediaData" type="video/mp4">
+                          <source :src="item.mediaData" type="video/ogg">
+                        </video>
+                        <a :href="item.mediaData" target="_blank">查看</a>
+                      </object>
+                    </div>
+                    <div>{{ item.mediaFileName }}</div>
+                  </div>
+                  <div v-show="item.link"><a :href="item.link" target="_blank">链接</a></div>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-box-footer">
+            <div class="input-container chat-composer">
+              <div v-if="mobileChatdisplay" class="button-container">
+                <button type="button" class="send-button" @click="startAndStopRecording">
+                  {{ recordingTxt }}
+                </button>
+              </div>
+              <div class="textarea-container">
+                <textarea
+                  ref="chatInput"
+                  placeholder="输入消息"
+                  class="plus-text-input onlyoneline"
+                  id="plus-input-content-text"
+                  name="inputChatMsg"
+                  autocomplete="off"
+                  rows="1"
+                  v-model="inputChatMsg"
+                  :autofocus="false"
+                  @keydown="keyDownEvent"
+                  @input="textInputEvent"
+                  @paste.capture.passive="pastingData"
+                ></textarea>
+                <label for="file-upload" class="upload-button" title="上传文件">
+                  <!-- <i class="el-icon-paperclip" /> -->
+                  <svg-icon icon-class="paperclip" />
+                  <input
+                    type="file"
+                    id="file-upload"
+                    ref="file-upload-ref"
+                    accept="*"
+                    @change="uploadDataFileEvent($event)"
+                    style="display: none;"
+                  >
+                </label>
+              </div>
+              <div class="button-container">
+                <button
+                  type="button"
+                  class="send-button is-primary"
+                  @click="handleMsg"
+                  :disabled="statusDisabled"
+                >发送</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <el-dialog :visible.sync="fileDialogVisible" @open="fileDialogOpen" @close="fileDialogClose">
       <div class="file-preview-send-main">
         <div class="file-preview-send-container">
@@ -310,8 +318,6 @@
 import { mapGetters, mapState } from 'vuex'
 import Recorder from 'js-audio-recorder'
 import PlusCropper from "plus-cropper"
-// import PlusDialog from '@/utils/PlusDialog.js'
-import PlusDrawer from '@/utils/plus-drawer.js'
 //import { marked } from 'marked';//9.1.6
 const marked = require('marked'); //9.1.6
 import { geminiAI, geminiAIChat, getHistoryMessage, getAllHistoryMessage, getOneHistoryMessage, deleteOneHistoryMessage, getGeminiTTS, uploadVoiceBlob, geminiStreamChat } from "@/api/chatbot/chatbot"
@@ -335,7 +341,10 @@ export default {
       historyChatData: [], //历史聊天记录，临时存储所有消息聊天历史记录，当需要使用，赋值给chatDataPrompt.historyChatData
       //loading: false,//是否加载中，目前未被使用
       //chatBtnPcDisplay: true,//聊天对话框显示按钮，目前没有被使用
-      mobileChatdisplay: true,//表示移动端显示，否则为桌面端，通过js检测是否是移动端
+      /** 窄屏布局（抽屉侧栏）；宽屏为平铺侧栏。仅按视口宽度判断 */
+      mobileChatdisplay: true,
+      /** 侧栏开合：窄屏抽屉；宽屏可折叠腾出主区 */
+      sidebarOpen: true,
       //reduceH: 40,//页面固定减去的一个高度，为顶部的header部分的高
       chatBoxHeight: 440,//中间聊天内容盒子区域的高度，窗体高度减去底部输入部分
       chatBoxHeaderTop: 0, //适用于移动端iOS键盘抬起，页面内容被往上推，为了定位顶部header，保持top为0
@@ -401,13 +410,15 @@ export default {
     localStorage.setItem("username", this.chatDataPrompt.username);
   },
   mounted() {
-    //调用滑出抽屉菜单，closeButton: false不使用默认的关闭按钮
-    PlusDrawer.init({ closeButton: false });
     const that = this;
+    this.mobileChatdisplay = this.isMobile();
+    // 窄屏默认收起侧栏；宽屏默认展开
+    this.sidebarOpen = !this.mobileChatdisplay;
     this.$nextTick(() => {
       that.textAreaInput = that.$refs.chatInput || document.querySelector("#plus-input-content-text");
       if (that.textAreaInput) {
         that.textInputHeight = that.textAreaInput.offsetHeight || 36;
+        that.syncTextareaHeight(true);
       }
       that.adjustLayout();
       const box = that.$refs.chatBox || document.getElementsByClassName('big-chat-box')[0];
@@ -421,8 +432,12 @@ export default {
       window.fullWidth = document.documentElement.clientWidth || document.body.clientWidth;
       that.windowHeight = window.fullHeight;
       that.windowWidth = window.fullWidth;
-      // 宽度变化时同步移动/桌面模式，避免仅依赖 UA
-      that.mobileChatdisplay = that.isMobile();
+      const nextMobile = that.isMobile();
+      // 跨过断点时重置侧栏开合，避免宽屏仍关着 / 窄屏误常开
+      if (nextMobile !== that.mobileChatdisplay) {
+        that.sidebarOpen = !nextMobile;
+      }
+      that.mobileChatdisplay = nextMobile;
       that.$nextTick(() => that.adjustLayout());
     });
     window.onscroll = () => {
@@ -502,8 +517,8 @@ export default {
     beforeLoadedDocument() {
       this.windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
       this.windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-      // 桌面 / 移动统一一套 DOM；mobileChatdisplay 仅影响录音按钮与高度策略
       this.mobileChatdisplay = this.isMobile();
+      this.sidebarOpen = !this.mobileChatdisplay;
     },
     userLogin() {
       this.showLoginSignup = true;
@@ -757,9 +772,7 @@ export default {
         this.getReplyMsg();
       }
       this.inputChatMsg = "";
-      this.textAreaInput.style.height = "auto";
-      this.textInputHeightAdd = 0;
-      this.adjustLayout();
+      this.syncTextareaHeight(true);
     },
     //发送消息后获取消息回复
     getReplyMsg() {
@@ -808,7 +821,7 @@ export default {
           that.msgError(error);
         });
     },
-    //根据keyValue获取其中一条聊天消息
+    //根据 keyValue 获取一条会话；后端 Redis miss 时登录用户会从 DB 回填（见 API 仓 docs/18）
     getOneHistoryChatMsg(keyValue) {
       const _this = this;
       getOneHistoryMessage({ historyMsgKey: keyValue })
@@ -1078,27 +1091,30 @@ export default {
       await this.refreshChatReply(this.msgList, listMsg);
       await this.scrollEleSmoothTop(true);
     },
-    textInputEvent(e) {
-      let that = this;
-      let textArea = e.target;
-      var inputHeight = that.textInputHeight;
-      var textAreaAddHeight = 0; //输入框增加的高度
-      // 将高度重置为自动，以便根据内容计算高度
-      textArea.style.height = 'auto';
-      // 获取行数,表示是否有换行符，为1表示没有，换行符为0，后面就根据换行符来计算增加高度
-      let currentLines = textArea.value.split("\n").length;
-      textAreaAddHeight = (currentLines - 1) * 24;
-      textArea.style.height = inputHeight + textAreaAddHeight + `px`;
-      // 如果行数超过最大行数，则设置最大高度
-      if (currentLines > 8) {
-        textAreaAddHeight = 8 * 24;
-        textArea.style.height = inputHeight + textAreaAddHeight + `px`;
-        //textarea.style.height = `${textarea.scrollHeight}px`;
-      } else if (currentLines == 1) {
-        textArea.style.height = inputHeight + "px";
+    textInputEvent() {
+      // 微信式：换行/删字都按 scrollHeight 伸缩，不只数 \\n
+      this.syncTextareaHeight(false)
+    },
+    /**
+     * 输入框高度随内容变化（微信式）；reset 用于发送后清空。
+     * mobile 下 adjustLayout 读真实 footer 高度，避免重复减 textInputHeightAdd。
+     */
+    syncTextareaHeight(reset = false) {
+      const el = this.textAreaInput || this.$refs.chatInput
+      if (!el) return
+      const minH = 40
+      const maxH = 160
+      if (reset || !String(this.inputChatMsg || '').length) {
+        el.style.height = `${minH}px`
+        el.style.overflowY = 'hidden'
+      } else {
+        el.style.height = 'auto'
+        const next = Math.min(maxH, Math.max(minH, el.scrollHeight))
+        el.style.height = `${next}px`
+        el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden'
       }
-      that.textInputHeightAdd = textAreaAddHeight;
-      that.adjustLayout();
+      this.textInputHeightAdd = Math.max(0, el.offsetHeight - minH)
+      this.$nextTick(() => this.adjustLayout())
     },
     //键盘输入enter键事件
     keyDownEvent(e) {
@@ -1541,13 +1557,13 @@ export default {
     },
     //重新调整布局，在页面变化时
     adjustLayout() {
-      const headerH = 48;
+      const headerH = 52;
       const footer = this.$el && this.$el.querySelector
         ? this.$el.querySelector('.chat-box-footer')
         : document.querySelector('.chat-box-footer');
-      const footerH = (footer && footer.offsetHeight) || (this.textInputHeight + 28);
-      // 预留顶栏 + 真实底栏高度，避免桌面输入区被 overflow 裁切
-      this.chatBoxHeight = Math.max(180, this.windowHeight - headerH - footerH - (this.textInputHeightAdd || 0));
+      // footer 已含输入框实际高度，勿再减 textInputHeightAdd（会双扣）
+      const footerH = (footer && footer.offsetHeight) || 72;
+      this.chatBoxHeight = Math.max(180, this.windowHeight - headerH - footerH);
     },
     // 处理滚动条一直保持最上方,也就让内容处于最底部contentAtBottom
     async scrollEleSmoothTop(isSmooth = false) {
@@ -1560,12 +1576,24 @@ export default {
         div.scrollTop = div.scrollHeight;
       }
     },
-    //判断是否是移动端（UA + 宽度，窄屏也走移动交互）
+    // 布局断点：≥900 桌面平铺侧栏；<900 抽屉。不用 UA，避免平板横屏误判。
     isMobile() {
       const w = this.windowWidth || (typeof window !== 'undefined' ? window.innerWidth : 1200);
-      if (w < 768) return true;
-      const userAgent = navigator.userAgent || '';
-      return /Android|iPhone|iPad|iPod|BlackBerry|webOS|Windows Phone|SymbianOS|IEMobile|Opera Mini/i.test(userAgent);
+      return w < 900;
+    },
+    toggleSidebar() {
+      this.sidebarOpen = !this.sidebarOpen;
+    },
+    closeSidebar() {
+      this.sidebarOpen = false;
+    },
+    onNewChat() {
+      this.newChatAI();
+      if (this.mobileChatdisplay) this.closeSidebar();
+    },
+    onSelectHistory(key) {
+      this.getOneHistoryChatMsg(key);
+      if (this.mobileChatdisplay) this.closeSidebar();
     },
     domObserverEvent(targetNode) {
       // 选择目标节点
@@ -2161,19 +2189,380 @@ export default {
       }
     } */
 
+
+/* ========== 全页 AI 聊天壳：桌面侧栏平铺 / 窄屏抽屉 ========== */
 .chat-app-container {
-  margin: 0 auto;
+  margin: 0;
   padding: 0;
-  /* 用 flex 占满视口，避免 overflow:hidden 裁掉底栏 */
   min-height: 100vh;
   height: 100vh;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   overflow: hidden;
   background:
-    radial-gradient(1200px 480px at 10% -10%, rgba(31, 111, 235, 0.08), transparent 55%),
-    radial-gradient(900px 420px at 100% 0%, rgba(102, 206, 170, 0.1), transparent 50%),
-    var(--background-color, #f5f7fa);
+    radial-gradient(1200px 480px at 12% -8%, rgba(31, 111, 235, 0.07), transparent 55%),
+    radial-gradient(900px 420px at 100% 0%, rgba(95, 125, 128, 0.1), transparent 50%),
+    var(--background-color, #f3f5f7);
+  color: var(--text-color-2, #1f2329);
+}
+
+.chat-sidebar-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(15, 23, 32, 0.42);
+  backdrop-filter: blur(2px);
+}
+
+.chat-sidebar {
+  --chat-sidebar-w: 280px;
+  width: var(--chat-sidebar-w);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--background-origin, #f7f8fa);
+  border-right: 1px solid rgba(20, 24, 32, 0.08);
+  z-index: 50;
+  transition: transform 0.28s ease, width 0.28s ease, opacity 0.2s ease;
+  box-sizing: border-box;
+}
+
+.chat-app-container.is-desktop:not(.sidebar-open) .chat-sidebar {
+  width: 0;
+  border-right: none;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chat-app-container.is-mobile .chat-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: min(86vw, 300px);
+  transform: translateX(-105%);
+  box-shadow: 8px 0 32px rgba(15, 23, 32, 0.18);
+  border-right: none;
+}
+
+.chat-app-container.is-mobile .chat-sidebar.is-open {
+  transform: translateX(0);
+}
+
+.chat-sidebar__brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 12px 10px;
+  flex-shrink: 0;
+}
+
+.chat-sidebar__brand-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.chat-sidebar__logo {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--gp-border-radius-base, 10px);
+  background: linear-gradient(145deg, #2f6fed, #5f7d80);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chat-sidebar__brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.chat-sidebar__brand-text strong {
+  font-size: 14px;
+  color: var(--text-color-2, #1f2329);
+}
+
+.chat-sidebar__brand-text span {
+  font-size: 12px;
+  color: var(--muted-1-color, #8a919f);
+}
+
+.chat-sidebar__brand-actions {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.chat-sidebar__icon-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--gp-border-radius-base, 8px);
+  background: transparent;
+  color: var(--text-color-2, #566);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  padding: 0;
+}
+
+.chat-sidebar__icon-btn:hover {
+  background: var(--interactive-bg-secondary-hover, rgba(0, 0, 0, 0.06));
+  color: var(--theme-color, #5f7d80);
+}
+
+.chat-sidebar__icon-btn.is-sm {
+  width: 28px;
+  height: 28px;
+}
+
+.chat-sidebar__new {
+  margin: 4px 12px 12px;
+  height: 40px;
+  border: 1px dashed rgba(20, 24, 32, 0.14);
+  border-radius: var(--gp-border-radius-base, 10px);
+  background: var(--background-2, #fff);
+  color: var(--text-color-2, #1f2329);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.chat-sidebar__new:hover {
+  border-color: var(--theme-color, #5f7d80);
+  color: var(--theme-color, #5f7d80);
+  background: var(--theme-color-muted, rgba(95, 125, 128, 0.12));
+}
+
+.chat-sidebar__section {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px;
+}
+
+.chat-sidebar__section-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-1-color, #8a919f);
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.chat-sidebar__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chat-sidebar__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--text-color-2, #1f2329);
+  border-radius: var(--gp-border-radius-base, 8px);
+  padding: 10px 10px;
+  margin-bottom: 2px;
+  cursor: pointer;
+  position: relative;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.chat-sidebar__item-text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-sidebar__item:hover {
+  background: var(--interactive-bg-secondary-hover, rgba(0, 0, 0, 0.05));
+}
+
+.chat-sidebar__item.is-active {
+  background: var(--theme-color-muted, rgba(95, 125, 128, 0.16));
+  color: var(--theme-color-strong, var(--theme-color, #5f7d80));
+  font-weight: 600;
+}
+
+.chat-sidebar__item-del {
+  display: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  flex-shrink: 0;
+}
+
+.chat-sidebar__item:hover .chat-sidebar__item-del,
+.chat-sidebar__item.is-active .chat-sidebar__item-del {
+  display: inline-flex;
+}
+
+.chat-sidebar__item-del:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #c0392b;
+}
+
+.chat-sidebar__empty {
+  margin: 24px 8px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted-1-color, #9aa3ad);
+}
+
+.chat-sidebar__tools {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(20, 24, 32, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chat-sidebar__tool {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-color-2, #566);
+  cursor: pointer;
+}
+
+.chat-sidebar__user {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  margin-top: auto;
+  border-top: 1px solid var(--gp-surface-border, rgba(20, 24, 32, 0.08));
+  /* 与侧栏主体分层：略深底 + 模糊，避免半透明发灰 */
+  background: var(--gp-surface-bg, var(--background-origin, #f0f2f5));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+body[theme-mode='dark'] .chat-sidebar__user,
+[data-theme='dark'] .chat-sidebar__user {
+  background: var(--background-2, rgba(28, 32, 38, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.chat-sidebar__text-btn {
+  border: 1px solid var(--gp-surface-border, rgba(20, 24, 32, 0.12));
+  background: var(--background-origin, #fff);
+  border-radius: var(--gp-border-radius-base, 8px);
+  padding: 5px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text-color-2, #566);
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.chat-sidebar__text-btn:hover {
+  border-color: var(--theme-color, #5f7d80);
+  color: var(--theme-color, #5f7d80);
+}
+
+.chat-sidebar__text-btn.is-primary {
+  background: var(--theme-color, #5f7d80);
+  border-color: transparent;
+  color: #fff;
+}
+
+.chat-sidebar__text-btn.is-primary:hover {
+  filter: brightness(1.05);
+  color: #fff;
+}
+
+.chat-sidebar__user-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.chat-sidebar__avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-2, #e8ecef);
+  color: var(--muted-1-color, #889);
+  text-decoration: none;
+}
+
+.chat-sidebar__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chat-sidebar__user-text {
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.chat-sidebar__user-text .truncate {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-sidebar__user-text small {
+  font-size: 11px;
+  color: var(--muted-1-color, #9aa3ad);
+}
+
+.chat-workspace {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-shell {
@@ -2182,9 +2571,9 @@ export default {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 920px;
+  max-width: 880px;
   margin: 0 auto;
-  padding: 0 12px;
+  padding: 0 16px;
   box-sizing: border-box;
 }
 
@@ -2194,20 +2583,11 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
-  /* 桌面卡片感 */
-  background: var(--background-origin, rgba(255, 255, 255, 0.72));
-  border-radius: 0;
-  box-shadow: none;
+  background: transparent;
 }
 
 .chat-app-container.is-desktop .chat-main-content {
-  margin-top: 12px;
-  margin-bottom: 12px;
-  border-radius: 16px;
-  border: 1px solid rgba(20, 24, 32, 0.06);
-  box-shadow: 0 10px 36px rgba(20, 24, 32, 0.06);
-  overflow: hidden;
-  backdrop-filter: blur(8px);
+  margin: 0 0 12px;
 }
 
 .chat-box-header {
@@ -2215,36 +2595,81 @@ export default {
   top: 0;
   flex-shrink: 0;
   width: 100%;
-  height: 48px;
-  line-height: 48px;
+  height: 52px;
   text-align: center;
-  background-color: var(--navbarBackground, rgba(255, 255, 255, 0.92));
+  background-color: var(--navbarBackground, rgba(255, 255, 255, 0.88));
   color: var(--navbarFont, #1f2329);
   font-weight: 650;
   display: flex;
   flex-flow: row;
-  flex-wrap: nowrap;
   justify-content: space-between;
   align-items: center;
   z-index: 3;
   border-bottom: 1px solid rgba(20, 24, 32, 0.06);
   backdrop-filter: blur(10px);
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
+.chat-header-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--gp-border-radius-base, 8px);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.chat-header-btn:hover {
+  background: var(--interactive-bg-secondary-hover, rgba(0, 0, 0, 0.06));
 }
 
 .chat-box-header__title {
   letter-spacing: 0.02em;
+  font-size: 15px;
 }
 
 .chat-empty-hint {
   text-align: center;
   color: #8a919f;
   font-size: 14px;
-  padding: 64px 16px 24px;
+  padding: 72px 20px 28px;
+}
+
+.chat-empty-hint__badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--theme-color, #5f7d80);
+  background: var(--theme-color-muted, rgba(95, 125, 128, 0.14));
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+
+.chat-empty-hint h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-color-2, #1f2329);
+}
+
+.chat-empty-hint p {
+  margin: 0 auto;
+  max-width: 360px;
+  line-height: 1.55;
 }
 
 .big-chat-box {
   overflow-y: auto;
-  padding: 12px 10px 8px;
+  padding: 16px 8px 12px;
   flex: 1 1 auto;
   min-height: 0;
   -webkit-overflow-scrolling: touch;
@@ -2253,15 +2678,15 @@ export default {
 .list-chat-item-left .list-chat-item-content,
 .list-chat-item-right .list-chat-item-content {
   max-width: min(78%, 640px);
-  border-radius: 12px;
-  padding: 10px 12px;
-  line-height: 1.55;
+  border-radius: var(--gp-surface-radius-sm, 12px);
+  padding: 10px 14px;
+  line-height: 1.6;
   box-shadow: 0 1px 2px rgba(20, 24, 32, 0.04);
 }
 
 .list-chat-item-left .list-chat-item-content {
   margin-right: 40px;
-  background-color: var(--background-2, #fff);
+  background-color: var(--background-origin, #fff);
   color: var(--text-color-2, #1f2329);
   border: 1px solid rgba(20, 24, 32, 0.06);
   border-top-left-radius: 4px;
@@ -2284,23 +2709,55 @@ export default {
   width: 100%;
   margin: 0 auto;
   flex-shrink: 0;
-  padding: 8px 10px 12px;
+  padding: 10px 4px 16px;
   box-sizing: border-box;
-  /* background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.65)); */
-  border-top: 1px solid rgba(20, 24, 32, 0.05);
+  border-top: none;
 }
 
 .chat-composer {
-  border-radius: 14px !important;
-  background: var(--background-2, #fff) !important;
-  border: 1px solid rgba(20, 24, 32, 0.08);
-  box-shadow: 0 4px 16px rgba(20, 24, 32, 0.04);
+  border-radius: var(--gp-surface-radius, 12px) !important;
+  background: var(--background-origin, #fff) !important;
+  border: 1px solid rgba(20, 24, 32, 0.1) !important;
+  box-shadow: 0 8px 28px rgba(20, 24, 32, 0.06) !important;
+  padding: 6px 8px !important;
+  align-items: flex-end !important;
+}
+
+.chat-composer .upload-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-1-color, #8a919f);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.chat-composer .upload-button:hover {
+  color: var(--theme-color, #5f7d80);
+}
+
+.chat-composer .plus-text-input {
+  min-height: 40px;
+  max-height: 160px;
+  height: 40px;
+  font-size: 15px;
+  line-height: 1.45;
+  resize: none !important;
+  overflow-y: hidden;
+  box-sizing: border-box;
+  padding: 8px 36px 8px 10px;
+  border-radius: var(--gp-border-radius-base, 10px);
+  border: 1px solid transparent;
+  background: transparent;
 }
 
 .send-button.is-primary {
   background: #1f6feb !important;
   color: #fff !important;
   border-color: #1f6feb !important;
+  border-radius: var(--gp-border-radius-base, 10px) !important;
+  min-width: 64px;
+  height: 36px;
 }
 
 .fade-enter-active,
@@ -2312,8 +2769,6 @@ export default {
 .fade-leave-active {
   opacity: 0;
 }
-
-/* fade-transform */
 
 .fade-transform-leave-active,
 .fade-transform-enter-active {
@@ -2345,16 +2800,9 @@ export default {
   padding: 5px;
 }
 
-.chat-box-header div {
-  flex: 0 0 auto;
-  align-self: center;
-  padding-left: 8px;
-  padding-right: 8px;
-}
-
 .list-chat-msg {
   font-size: 1.05em;
-  margin: 12px auto;
+  margin: 14px auto;
 }
 
 .list-chat-msg .chat-data-meta {
@@ -2418,10 +2866,10 @@ export default {
   box-shadow: 0 1px 4px rgba(20, 24, 32, 0.08);
 }
 
-@media screen and (max-width: 767px) {
+@media screen and (max-width: 899px) {
   .chat-shell {
     max-width: 100%;
-    padding: 0;
+    padding: 0 10px;
   }
 
   .chat-app-container.is-mobile .chat-main-content {
@@ -2431,174 +2879,8 @@ export default {
   }
 
   .chat-box-footer {
-    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   }
-}
-
-.menu-drawer {
-  position: fixed;
-  top: 0;
-  left: -235px;
-  width: 235px;
-  height: 100%;
-  background-color: var(--background, #F2F4F6);
-  transition: left 0.3s ease-in-out;
-  display: inline-flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  flex-wrap: nowrap;
-  z-index: 9;
-  /* 确保抽屉在内容上方 */
-}
-
-.menu-drawer.open {
-  top: 0;
-  left: 0;
-}
-
-.menu-drawer-header {
-  width: 100%;
-  display: inline-flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.menu-drawer-container {
-  flex: 1 1 auto;
-  width: 100%;
-  display: inline-flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  flex-wrap: nowrap;
-  overflow-y: auto;
-}
-
-.menu-btn {
-  width: 40px;
-  height: 40px;
-  text-align: center;
-  line-height: 40px;
-  display: grid;
-  align-content: center;
-}
-
-.history-msg-list {
-  width: 100%;
-  padding: 0;
-  margin: 0;
-  flex: 1 1 auto;
-  font-size: 16px;
-}
-
-.history-msg-list-header {
-  padding: 6px;
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  font-size: 14px;
-}
-
-.history-msg-list-container {
-  padding: 4px 4px;
-  display: grid;
-}
-
-.history-msg-list-item {
-  display: inherit;
-  cursor: pointer;
-  position: relative;
-  font-size: 14px;
-  align-items: center;
-  padding: 8px;
-  border-radius: 5px;
-}
-
-.text-ellipsis {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.history-msg-list-item:hover {
-  background: var(--interactive-bg-secondary-hover);
-}
-
-.history-msg-list-item.selected {
-  background: var(--interactive-bg-secondary-press);
-}
-
-.history-msg-list-item:hover .history-msg-list-item-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.history-msg-list-item-close {
-  position: absolute;
-  top: 8px;
-  right: 3px;
-  display: none;
-  width: 16px;
-  height: 16px;
-  line-height: 1;
-  text-align: center;
-  background: hsl(0deg 4% 82% / 90%);
-  color: #141414;
-  border-radius: 10px;
-}
-
-.history-msg-list-item-close svg {
-  width: 15px;
-  height: 15px;
-}
-
-ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  flex: 1 1 auto;
-}
-
-li {
-  padding: 10px 20px;
-  border-bottom: 1px solid var(--color-border-2, #c0c9cbb3);
-  color: #131312;
-}
-
-.menu-tool {
-  display: inline-flex;
-  flex-direction: row;
-  justify-content: center;
-  flex-wrap: nowrap;
-  align-items: center;
-  font-size: 0.8rem;
-  padding: 2px 10px;
-}
-
-.sticky-bottom-user-center {
-  width: 100%;
-  padding: 10px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.user-center_item {
-  display: inline-flex;
-}
-
-.item-mine-text {
-  display: inline-flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  font-size: 0.8rem;
 }
 
 /********************switch自定义切换按钮样式**********************/

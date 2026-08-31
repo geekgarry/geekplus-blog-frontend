@@ -12,6 +12,10 @@
 <script>
 import { addClass, removeClass } from '@/utils'
 
+/**
+ * 管理端右侧设置抽屉壳：由 settings.showSettings 控制显隐。
+ * 须常驻挂载（layout 勿 v-if），否则打开时 watcher 不触发，body 滚动锁失效。
+ */
 export default {
   name: 'RightPanel',
   props: {
@@ -35,52 +39,67 @@ export default {
           value: val
         })
       }
-    },
-    theme() {
-      return this.$store.state.settings.theme
-    },
+    }
   },
   watch: {
-    show(value) {
-      if (value && !this.clickNotClose) {
-        this.addEventClick()
-      }
-      if (value) {
-        addClass(document.body, 'showRightPanel')
-      } else {
-        removeClass(document.body, 'showRightPanel')
+    show: {
+      immediate: true,
+      handler(value) {
+        this.syncBodyLock(value)
+        if (value && !this.clickNotClose) {
+          this.addEventClick()
+        } else {
+          this.removeEventClick()
+        }
       }
     }
   },
   mounted() {
     this.insertToBody()
-    this.addEventClick()
   },
   beforeDestroy() {
+    this.removeEventClick()
+    removeClass(document.body, 'showRightPanel')
     const elx = this.$refs.rightPanel
-    elx.remove()
+    if (elx && elx.parentNode) {
+      elx.parentNode.removeChild(elx)
+    }
   },
   methods: {
+    syncBodyLock(open) {
+      if (open) {
+        addClass(document.body, 'showRightPanel')
+      } else {
+        removeClass(document.body, 'showRightPanel')
+      }
+    },
     addEventClick() {
+      // 先卸再挂，避免重复监听
+      this.removeEventClick()
       window.addEventListener('click', this.closeSidebar)
     },
+    removeEventClick() {
+      window.removeEventListener('click', this.closeSidebar)
+    },
     closeSidebar(evt) {
-      const parent = evt.target.closest('.rightPanel')
+      const parent = evt.target && evt.target.closest
+        ? evt.target.closest('.rightPanel')
+        : null
       if (!parent) {
         this.show = false
-        window.removeEventListener('click', this.closeSidebar)
       }
     },
     insertToBody() {
       const elx = this.$refs.rightPanel
-      const body = document.querySelector('body')
-      body.insertBefore(elx, body.firstChild)
+      if (!elx) return
+      document.body.insertBefore(elx, document.body.firstChild)
     }
   }
 }
 </script>
 
 <style>
+/* 打开设置时锁住背后页面滚动（滚动条占位宽约 15px） */
 .showRightPanel {
   overflow: hidden;
   position: relative;
@@ -111,6 +130,15 @@ export default {
   transform: translate(100%);
   background: var(--background-origin, #fff);
   z-index: 40000;
+  /* 配置项增多后需可纵向滚动；勿用 overflow:hidden 裁切 */
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rightPanel-items {
+  min-height: 100%;
+  box-sizing: border-box;
 }
 
 .show {

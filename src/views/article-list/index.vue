@@ -463,7 +463,7 @@ export default {
 
 .article-card {
   margin-bottom: 0;
-  border-radius: 10px;
+  border-radius: var(--gp-surface-radius, 14px);
   background: var(--gp-surface-bg, var(--background, #f8f9fa));
   color: var(--text-color-2);
   display: block;
@@ -492,7 +492,7 @@ export default {
   width: 168px;
   max-width: 38%;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius-sm, 10px);
   position: relative;
 }
 
@@ -503,7 +503,7 @@ export default {
   padding-bottom: 62%;
   position: relative;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius-sm, 10px);
 }
 
 .article-cover:hover .article-image {
@@ -519,7 +519,7 @@ export default {
   object-position: center;
   display: block;
   transition: transform 0.35s ease;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius-sm, 10px);
 }
 
 .article-details {
@@ -599,7 +599,7 @@ export default {
 @media screen and (max-width: 768px) {
   .article-card {
     padding: 10px;
-    border-radius: 8px;
+    border-radius: var(--gp-surface-radius-sm, 10px);
   }
 
   .article-header {

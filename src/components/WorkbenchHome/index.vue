@@ -533,7 +533,7 @@ export default {
   padding: var(--gp-surface-padding, 14px 16px);
   background: var(--gp-surface-bg, var(--background));
   border: 1px solid var(--gp-surface-border, var(--border-color));
-  border-radius: var(--gp-surface-radius-sm, 10px);
+  border-radius: var(--gp-surface-radius, 10px);
   box-shadow: var(--gp-surface-shadow, 0 2px 14px var(--box-shadow));
 }
 
@@ -544,7 +544,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--gp-surface-radius-sm, 10px);
+  border-radius: var(--gp-surface-radius, 10px);
   color: var(--gp-menu-active-color, var(--theme-color));
   background: var(--gp-menu-active-bg, var(--theme-color-muted));
   font-size: 20px;
@@ -573,7 +573,7 @@ export default {
   padding: var(--gp-surface-padding, 14px 16px 8px);
   background: var(--gp-surface-bg, var(--background));
   border: 1px solid var(--gp-surface-border, var(--border-color));
-  border-radius: var(--gp-surface-radius-sm, 10px);
+  border-radius: var(--gp-surface-radius, 10px);
   box-shadow: var(--gp-surface-shadow, 0 2px 14px var(--box-shadow));
 }
 

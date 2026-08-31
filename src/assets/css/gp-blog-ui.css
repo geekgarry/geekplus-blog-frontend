@@ -514,7 +514,7 @@
   width: 100%;
   height: 38px;
   padding: 0 12px;
-  border-radius: 10px;
+  border-radius: var(--gp-surface-radius, 10px);
   border: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.1));
   background: var(--gp-surface-bg, var(--background, #faf8f5));
   color: var(--text-color-2);
@@ -535,7 +535,7 @@
   gap: 4px;
   height: 38px;
   padding: 0 14px;
-  border-radius: 10px;
+  border-radius: var(--gp-surface-radius, 10px);
   border: 1px solid var(--gp-surface-border, rgba(58, 56, 53, 0.1));
   background: var(--gp-surface-bg, #faf8f5);
   color: var(--text-color-2);
@@ -575,7 +575,7 @@
 }
 
 .gp-btn--append {
-  border-radius: 0 10px 10px 0;
+  border-radius: 0 var(--gp-surface-radius, 10px) var(--gp-surface-radius, 10px) 0;
   /* margin-left: -1px; */
 }
 
@@ -585,7 +585,7 @@
 }
 
 .gp-input-group .gp-input {
-  border-radius: 10px 0 0 10px;
+  border-radius: var(--gp-surface-radius, 10px) 0 0 var(--gp-surface-radius, 10px);
 }
 
 /* 博客页内残留 Element：柔化官方蓝，对齐站点主题 */
@@ -684,7 +684,7 @@
 .gp-tool-link {
   display: inline-block;
   padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius, 8px);
   font-size: 13px;
   font-weight: 600;
   color: var(--theme-color);
@@ -729,7 +729,7 @@
   padding: 8px 10px;
   background: var(--background-2);
   border: 1px solid var(--border-color);
-  border-radius: var(--gp-surface-radius-sm, 10px);
+  border-radius: var(--gp-surface-radius, 10px);
 }
 
 .gp-tool-toolbar__sep {
@@ -844,7 +844,8 @@
 .gp-tool-page .el-textarea__inner,
 .gp-tool-app .el-textarea__inner,
 .gp-settings-panel .el-textarea__inner {
-  border-radius: 8px !important;
+  /* 跟随管理端控件圆角，勿写死 8px 盖掉设置 */
+  border-radius: var(--gp-border-radius-base, 4px) !important;
   border-color: var(--border-color-2) !important;
   background-color: var(--background-origin) !important;
   color: var(--text-color-2) !important;
@@ -853,11 +854,11 @@
 }
 
 .gp-tool-page .el-input-number.is-controls-right .el-input-number__decrease {
-  border-radius: 0 0 8px;
+  border-radius: 0 0 var(--gp-border-radius-base, 4px);
 }
 
 .gp-tool-page .el-input-number.is-controls-right .el-input-number__increase {
-  border-radius: 0 8px 0 0;
+  border-radius: 0 var(--gp-border-radius-base, 4px) 0 0;
 }
 
 .gp-tool-page .el-textarea__inner,
@@ -880,7 +881,7 @@
 .gp-tool-page .el-select .el-input__inner,
 .gp-tool-app .el-select .el-input__inner,
 .gp-settings-panel .el-select .el-input__inner {
-  border-radius: 8px !important;
+  border-radius: var(--gp-border-radius-base, 4px) !important;
 }
 
 .gp-tool-page .el-input-number,
@@ -898,7 +899,7 @@
 .gp-tool-app .el-button--mini,
 .gp-tool-page .el-button--small,
 .gp-tool-app .el-button--small {
-  border-radius: 8px;
+  border-radius: var(--gp-border-radius-base, 4px);
 }
 
 .gp-tool-page .el-radio-button__inner,
@@ -942,7 +943,7 @@
 .gp-settings-panel .el-color-picker__trigger {
   width: 100%;
   height: 36px;
-  border-radius: 8px;
+  border-radius: var(--gp-border-radius-base, 4px);
   border: 1px solid var(--border-color-2);
   padding: 3px;
   background: var(--background-origin);

@@ -1,24 +1,32 @@
 /**
- * 前台布局切换：top=顶栏 | side=侧栏 | workbench=工作台导航
+ * 前台布局切换：top=顶栏导航 | side=侧栏导航
  * 状态在 settings.blogLayout，经 localStorage 持久化。
- * workbench 模式仍走 Vertical 壳，顶栏隐藏 BlogNavMenu，改展示「应用工作台」入口。
+ *
+ * 历史值 workbench（顶栏换成「应用工作台」入口）已废弃：读到时迁回 top，始终展示 BlogNavMenu。
+ * 工作台页面仍可从个人中心 / `/workbench` 进入，不占用布局模式。
  */
 import { getGpWebTitleInfo } from '@/api/geekplus/geekplus'
 import { runWhenIdle } from '@/utils/deferRequest'
 
-const BLOG_LAYOUT_ORDER = ['top', 'side', 'workbench']
+const BLOG_LAYOUT_ORDER = ['top', 'side']
 
 const BLOG_LAYOUT_META = {
   top: { title: '顶部导航', nextTitle: '切换为侧栏导航', icon: 'topbar' },
-  side: { title: '侧栏导航', nextTitle: '切换为工作台导航', icon: 'sidebar' },
-  workbench: { title: '工作台导航', nextTitle: '切换为顶部导航', icon: 'menu-line' }
+  side: { title: '侧栏导航', nextTitle: '切换为顶部导航', icon: 'sidebar' }
+}
+
+/** 规范化并迁移废弃的 workbench */
+export function normalizeBlogLayout (raw) {
+  if (raw === 'side') return 'side'
+  // workbench / 其它非法值 → 顶栏导航
+  return 'top'
 }
 
 export default {
   computed: {
     blogLayout() {
       const val = (this.$store.state.settings && this.$store.state.settings.blogLayout) || 'top'
-      return BLOG_LAYOUT_ORDER.includes(val) ? val : 'top'
+      return normalizeBlogLayout(val)
     },
     blogLayoutToggleTitle() {
       const meta = BLOG_LAYOUT_META[this.blogLayout] || BLOG_LAYOUT_META.top
@@ -28,8 +36,9 @@ export default {
       const meta = BLOG_LAYOUT_META[this.blogLayout] || BLOG_LAYOUT_META.top
       return meta.icon
     },
+    /** @deprecated 恒为 false；保留计算属性避免模板残留引用报错 */
     isWorkbenchNavLayout() {
-      return this.blogLayout === 'workbench'
+      return false
     }
   },
   methods: {

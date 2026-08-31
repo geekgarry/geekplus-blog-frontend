@@ -24,18 +24,11 @@
         </div>
       </div>
       <blog-nav-menu
-        v-if="!isWorkbenchNavLayout"
         mode="drawer"
         :menus="addNavMenuRoutes"
         :show-admin-entry="!$common.isEmpty(username)"
         @navigate="onNavMenuNavigate"
       />
-      <div v-else class="drawer-workbench-entry">
-        <router-link class="drawer-workbench-entry__link" to="/workbench" @click.native="onNavMenuNavigate">
-          <svg-icon icon-class="menu-line" />
-          <span>应用工作台</span>
-        </router-link>
-      </div>
     </div>
     <div class="search-wrapper" v-show="isSearchDrawerOpen">
       <div class="search-overlay" @click="toggleSearch"></div>
@@ -89,21 +82,13 @@
             </div>
           </router-link>
 
-          <!-- 导航列表：workbench 模式改展示工作台入口，避免与顶栏菜单重复 -->
+          <!-- 顶栏导航菜单（始终展示栏目；工作台从个人中心进入） -->
           <blog-nav-menu
-            v-if="!isMobile && !isWorkbenchNavLayout"
+            v-if="!isMobile"
             mode="desktop"
             :menus="addNavMenuRoutes"
             @navigate="onNavMenuNavigate"
           />
-          <router-link
-            v-else-if="!isMobile && isWorkbenchNavLayout"
-            class="gp-workbench-nav-entry"
-            to="/workbench"
-          >
-            <svg-icon icon-class="menu-line" />
-            <span>应用工作台</span>
-          </router-link>
 
           <!-- 导航搜索按钮 -->
           <div class="navbar-header-menu" :class="{ enter: navbar.enter }">
@@ -1110,7 +1095,7 @@ export default {
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  border-radius: var(--gp-surface-radius-sm, 10px);
+  border-radius: var(--gp-surface-radius, 10px);
   color: var(--gp-menu-active-color, var(--theme-color-strong, var(--theme-color)));
   background: var(--gp-menu-active-bg, var(--theme-color-muted));
   border: 1px solid var(--gp-surface-border, var(--border-color));

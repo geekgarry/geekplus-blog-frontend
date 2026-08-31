@@ -44,9 +44,16 @@
         />
       </el-form-item>
       <el-form-item label="前端模板">
+        <!-- uiType × queryMode 决定 vue / vue-flat / vue-antd / vue-antd-flat -->
         <el-radio-group v-model="uiType" size="mini">
           <el-radio-button label="element">Element UI</el-radio-button>
           <el-radio-button label="antd">Ant Design Vue</el-radio-button>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="查询方式">
+        <el-radio-group v-model="queryMode" size="mini">
+          <el-radio-button label="dynamic">动态条件</el-radio-button>
+          <el-radio-button label="flat">扁平表单</el-radio-button>
         </el-radio-group>
       </el-form-item>
       <el-form-item>
@@ -444,26 +451,33 @@
         <el-button @click="tableInfoCancel">取 消</el-button>
       </div>
     </el-dialog>
-    <!-- 代码预览：border-card 标签 + 可横向滚动的代码区 -->
+    <!-- 代码预览：按后端/前端分组；代码区跟随黑白主题 -->
     <el-dialog
       :title="preview.title"
       :visible.sync="preview.open"
-      width="85%"
-      top="4vh"
+      width="88%"
+      top="3vh"
       append-to-body
       custom-class="gen-code-preview-dialog"
+      @opened="onPreviewOpened"
     >
-      <div v-if="previewFileCount" class="gen-code-preview__hint">
-        共 {{ previewFileCount }} 个生成文件！
+      <div class="gen-code-preview__meta">
+        <span v-if="previewFileCount">共 {{ previewFileCount }} 个生成文件</span>
+        <span v-if="previewFrontendCount" class="gen-code-preview__meta-front">
+          含前端 {{ previewFrontendCount }} 个（Vue / API JS / HTML）
+        </span>
       </div>
       <el-tabs v-model="preview.activeName" type="border-card" class="gen-code-preview__tabs">
         <el-tab-pane
-          v-for="(item, key) in preview.data"
+          v-for="(item, key) in previewSortedFiles"
           :label="previewTabLabel(item.fileName)"
-          :name="previewTabName(item.fileName)"
-          :key="key"
+          :name="previewTabName(item.fileName, key)"
+          :key="'pv-' + key"
         >
           <div class="gen-code-preview__toolbar">
+            <el-tag size="mini" :type="previewFileTagType(item.fileName)" effect="plain">
+              {{ previewFileGroup(item.fileName) }}
+            </el-tag>
             <span class="gen-code-preview__filename" :title="item.fileName">{{ item.fileName }}</span>
             <el-button
               type="text"
@@ -474,7 +488,12 @@
             >复制代码</el-button>
           </div>
           <div class="gen-code-preview__scroll">
-            <pre class="gen-code-preview__pre"><code class="hljs gen-code-preview__code" v-text="item.fileContent" v-highlight></code></pre>
+            <pre class="gen-code-preview__pre"><code
+              class="hljs gen-code-preview__code"
+              :class="previewLangClass(item.fileName)"
+              v-text="item.fileContent"
+              v-highlight
+            /></pre>
           </div>
         </el-tab-pane>
       </el-tabs>
@@ -535,6 +554,8 @@ export default {
       showSearch: true,
       /** 代码生成前端模板：element（默认）| antd */
       uiType: 'element',
+      /** 查询方式：dynamic（动态条件）| flat（扁平表单字段） */
+      queryMode: 'dynamic',
       rules: {
         tableName: [
           { required: true, message: "数据表名称不为空", trigger: "blur" }
@@ -614,7 +635,21 @@ export default {
     previewFileCount() {
       const data = this.preview.data
       return Array.isArray(data) ? data.length : 0
-    }
+    },
+    /** 前端相关文件数（Vue / JS / HTML） */
+    previewFrontendCount() {
+      return this.previewSortedFiles.filter((f) => this.isFrontendPreviewFile(f.fileName)).length
+    },
+    /** 后端在前、前端在后，便于找到 Vue/API */
+    previewSortedFiles() {
+      const list = Array.isArray(this.preview.data) ? [...this.preview.data] : []
+      const rank = (name) => {
+        if (this.isFrontendPreviewFile(name)) return 2
+        if (/\.(sql)$/i.test(name || '')) return 3
+        return 1
+      }
+      return list.sort((a, b) => rank(a.fileName) - rank(b.fileName))
+    },
   },
   created() {
     this.getGenTableList();
@@ -737,39 +772,95 @@ export default {
     clipboardSuccess() {
       this.msgSuccess("复制成功");
     },
-    /** 预览 Tab 唯一 name：去扩展名，兼容 .java/.vue 等非 .ftl */
-    previewTabName(fileName) {
-      if (!fileName) return 'file'
-      const dot = fileName.lastIndexOf('.')
-      return dot > 0 ? fileName.slice(0, dot) : fileName
+    isFrontendPreviewFile(fileName) {
+      const n = String(fileName || '').toLowerCase()
+      return n.endsWith('.vue') || n.endsWith('.js') || n.endsWith('.html') || n.includes('/api/')
     },
-    /** 预览 Tab 展示文案：短名 + 语言后缀 */
+    previewFileGroup(fileName) {
+      const n = String(fileName || '').toLowerCase()
+      if (n.endsWith('.vue')) return '前端 Vue'
+      if (n.endsWith('.js') || n.includes('/api/')) return '前端 API'
+      if (n.endsWith('.html')) return '前端 HTML'
+      if (n.endsWith('.xml')) return 'MyBatis'
+      if (n.endsWith('.sql')) return 'SQL'
+      if (n.endsWith('.java')) return '后端 Java'
+      return '其它'
+    },
+    previewFileTagType(fileName) {
+      const g = this.previewFileGroup(fileName)
+      if (g.indexOf('前端') === 0) return 'success'
+      if (g === 'SQL') return 'warning'
+      if (g === 'MyBatis') return 'info'
+      return ''
+    },
+    previewLangClass(fileName) {
+      const n = String(fileName || '').toLowerCase()
+      if (n.endsWith('.vue') || n.endsWith('.html') || n.endsWith('.xml')) return 'language-xml'
+      if (n.endsWith('.js')) return 'language-javascript'
+      if (n.endsWith('.sql')) return 'language-sql'
+      if (n.endsWith('.java')) return 'language-java'
+      return 'language-plaintext'
+    },
+    /** 预览 Tab 唯一 name：路径可能重复短名，带上 index */
+    previewTabName(fileName, index) {
+      if (!fileName) return 'file-' + index
+      const base = fileName.replace(/\\/g, '/').split('/').pop() || fileName
+      const dot = base.lastIndexOf('.')
+      const short = dot > 0 ? base.slice(0, dot) : base
+      return short + '-' + index
+    },
+    /** 预览 Tab 展示：短文件名 + 语言 */
     previewTabLabel(fileName) {
-      const name = this.previewTabName(fileName)
-      if (!fileName || fileName.indexOf('.') < 0) return name
-      const ext = fileName.slice(fileName.lastIndexOf('.') + 1).toLowerCase()
-      const langMap = { java: 'Java', vue: 'Vue', js: 'JS', xml: 'XML', sql: 'SQL', ftl: '模板' }
-      return langMap[ext] ? `${name} · ${langMap[ext]}` : name
+      if (!fileName) return 'file'
+      const base = String(fileName).replace(/\\/g, '/').split('/').pop() || fileName
+      const dot = base.lastIndexOf('.')
+      const name = dot > 0 ? base.slice(0, dot) : base
+      const ext = dot > 0 ? base.slice(dot + 1).toLowerCase() : ''
+      const langMap = {
+        java: 'Java',
+        vue: 'Vue',
+        js: 'JS',
+        xml: 'XML',
+        sql: 'SQL',
+        html: 'HTML',
+        ftl: '模板',
+      }
+      const prefix = this.isFrontendPreviewFile(fileName) ? '前端·' : ''
+      return langMap[ext] ? `${prefix}${name} · ${langMap[ext]}` : `${prefix}${name}`
+    },
+    onPreviewOpened() {
+      // 打开后确保 activeName 落在有效 Tab（优先前端）
+      this.$nextTick(() => {
+        if (this.previewSortedFiles.length && !this.preview.activeName) {
+          this.preview.activeName = this.previewTabName(this.previewSortedFiles[0].fileName, 0)
+        }
+      })
     },
     /** 预览按钮 */
     handlePreview(row) {
-      previewTableCode(row.tableId, this.uiType).then((response) => {
+      previewTableCode(row.tableId, this.uiType, this.queryMode).then((response) => {
         const list = response.data || []
         this.preview.data = list
         this.preview.open = true
-        if (list.length) {
-          this.preview.activeName = this.previewTabName(list[0].fileName)
-        }
+        this.$nextTick(() => {
+          if (list.length) {
+            // 优先落到第一个前端文件，方便核对 Vue/API
+            const sorted = this.previewSortedFiles
+            const frontIdx = sorted.findIndex((f) => this.isFrontendPreviewFile(f.fileName))
+            const idx = frontIdx >= 0 ? frontIdx : 0
+            this.preview.activeName = this.previewTabName(sorted[idx].fileName, idx)
+          }
+        })
       });
     },
     //直接生成代码
     handleGenCode(row) {
-      downLoadZip("/generator/download/" + row.tableName + "?uiType=" + this.uiType, "geekplus");
+      downLoadZip("/generator/download/" + row.tableName + "?uiType=" + this.uiType + "&queryMode=" + this.queryMode, "geekplus");
     },
     //通过生成表生成代码
     handleGenCodeByGenTable(row) {
       const tableIds = row.tableId || this.ids
-      downLoadZip("/generator/downloadByGenTable/" + tableIds + "?uiType=" + this.uiType, "geekplus");
+      downLoadZip("/generator/downloadByGenTable/" + tableIds + "?uiType=" + this.uiType + "&queryMode=" + this.queryMode, "geekplus");
     },
     /** 发布菜单（ZIP 与菜单写入分离，见 docs/lowcode） */
     handlePublishMenu(row) {

@@ -10,8 +10,36 @@
 | **用户改色** | `commitUserThemeColor(store, hex)` | 管理端 ThemePicker（经 Settings） |
 | **冷启动** | `initSiteTheme(store, { isDay })` | 任意 SPA 根 `App.created` |
 | **维护** | `refreshAfterModeChange()` / `refreshAfterElementCss()` | 博客深浅色 / 管理端 Layout |
+| **整站圆角** | `applyBorderRadius(px)`（Settings → `borderRadius`） | 管理端设置抽屉；冷启动在 `bootstrapSiteTheme` |
 
-消费端（博客页、组件）**只读** `var(--theme-color)`，不要 `setProperty`。
+消费端（博客页、组件）**只读** `var(--theme-color)` / `var(--gp-border-radius-base)` / `var(--gp-surface-radius*)`，不要擅自 `setProperty`（圆角仅 Settings / bootstrap 写入）。
+
+## 整站圆角（双轨）
+
+与 Plus Admin `--gp-border-radius-base` 同名对齐；博客表面用独立 `--gp-surface-radius*`。
+
+| 设置项 | settings / LS 键 | CSS 变量 | 默认 |
+|--------|------------------|----------|------|
+| **控件圆角** | `borderRadius` | `--gp-border-radius-base` | 4（与 SCSS `$base-border-radius` 同值） |
+| **博客圆角** | `blogSurfaceRadius` | `--gp-surface-radius`；`--gp-surface-radius-sm` = surface − 4 | 14 → sm 10 |
+
+二者独立调节。覆盖表：`src/styles/gp-border-radius.css`（控件侧）。前台卡片等直接读 `--gp-surface-radius*`。
+
+管理端业务样式写法（编译期回退对齐 variables）：
+
+```scss
+@import '@/styles/variables.scss';
+border-radius: var(--gp-border-radius-base, #{$base-border-radius});
+```
+
+前台表面：
+
+```css
+border-radius: var(--gp-surface-radius, 14px);
+border-radius: var(--gp-surface-radius-sm, 10px); /* 小块 / 内嵌 */
+```
+
+**不改**：分段 `el-radio-button` / 圆形按钮 / 头像等。
 
 ## 一体 SPA（当前仓库）
 

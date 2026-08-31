@@ -101,10 +101,10 @@ export default {
     },
     activeStyle(tag) {
       if (!this.isActive(tag)) return {};
+      // 圆角走 CSS 变量，勿写死 inline，否则盖不住设置抽屉的整站圆角
       return {
         "background-color": this.themeColor,
         "border-color": this.themeColor,
-        "border-radius": "3px",
       };
     },
     isAffix(tag) {
@@ -276,7 +276,7 @@ export default {
       height: 28px;
       line-height: 28px;
       //border: 1px solid #d8dce5;
-      border-radius: 3px;
+      border-radius: var(--gp-border-radius-base, 4px);
       color: var(--text-color,#495060);
       background: var(--background,#fff);
       padding: 0 8px;
@@ -327,7 +327,7 @@ export default {
     justify-content: center;
     width: 28px;
     height: 28px;
-    border-radius: 4px;
+    border-radius: var(--gp-border-radius-base, 4px);
     cursor: pointer;
     color: var(--text-color, #495060);
     transition: background 0.2s, color 0.2s;
@@ -343,7 +343,7 @@ export default {
     position: absolute;
     list-style-type: none;
     padding: 5px 0;
-    border-radius: 4px;
+    border-radius: var(--gp-border-radius-base, 4px);
     font-size: 12px;
     font-weight: 400;
     color: #333;

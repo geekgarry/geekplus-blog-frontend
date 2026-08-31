@@ -4,6 +4,8 @@
 > 关键词：BlogShell、blogLayout、top/side、localStorage  
 > 源码：`src/layout/blog/BlogShell.vue`、`blogLayoutMixin.js`、`vertical/`、`horizontal/`、`settings.js`
 
+> **2026-08-30**：已废弃 `blogLayout=workbench`（曾把顶栏换成「应用工作台」入口）。布局仅 `top`↔`side`；旧值自动迁回 `top`。工作台页面仍访问 `/workbench`。
+
 ---
 
 ## 开头先讲个真实场景

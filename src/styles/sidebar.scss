@@ -77,7 +77,8 @@
     .el-menu-item,
     .el-submenu__title {
       color: var(--text-color-2, #303133) !important;
-      border-radius: 8px;
+      /* 与设置抽屉「控件圆角」同步；hover/active 共用同一圆角 */
+      border-radius: var(--gp-border-radius-base, 4px);
       margin: 2px 8px;
       height: 44px;
       line-height: 44px;
@@ -329,13 +330,13 @@
     overflow-y: auto;
     background-color: var(--gp-surface-bg, var(--background, #fff)) !important;
     border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
-    border-radius: var(--gp-surface-radius-sm, 10px);
+    border-radius: var(--gp-surface-radius, 10px);
     box-shadow: var(--gp-surface-shadow-hover, 0 6px 18px rgba(15, 23, 42, 0.06));
     padding: 6px 0;
 
     .el-menu-item {
       color: var(--text-color-2, #303133) !important;
-      border-radius: 6px;
+      border-radius: var(--gp-border-radius-base, 4px);
       margin: 2px 6px;
 
       &.is-active {

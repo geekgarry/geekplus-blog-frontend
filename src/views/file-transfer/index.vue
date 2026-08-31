@@ -341,7 +341,7 @@ export default {
 
 .gp-transfer__drop {
   border: 1.5px dashed var(--gp-surface-border, rgba(15, 23, 42, 0.12));
-  border-radius: var(--gp-surface-radius-sm, 10px);
+  border-radius: var(--gp-surface-radius, 10px);
   padding: 36px 16px;
   text-align: center;
   cursor: pointer;

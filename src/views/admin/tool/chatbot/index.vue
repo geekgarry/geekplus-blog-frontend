@@ -537,8 +537,9 @@ export default {
 </script>
 
 <style lang="scss">
+@import '@/styles/variables.scss';
 .ai-chat-dialog {
-  border-radius: 14px;
+  border-radius: var(--gp-border-radius-base, #{$base-border-radius});
   overflow: hidden;
 
   .el-dialog__header {
@@ -583,6 +584,8 @@ export default {
 </style>
 
 <style lang="scss" scoped>
+@import '@/styles/variables.scss';
+
 .ai-chat-header {
   display: flex;
   align-items: center;
@@ -667,7 +670,7 @@ export default {
 .ai-bubble {
   max-width: min(78%, 400px);
   padding: 8px 12px;
-  border-radius: 12px;
+  border-radius: var(--gp-border-radius-base, #{$base-border-radius});
   font-size: 14px;
   line-height: 1.55;
   word-break: break-word;
@@ -713,7 +716,7 @@ export default {
   ::v-deep pre {
     overflow-x: auto;
     padding: 8px;
-    border-radius: 6px;
+    border-radius: var(--gp-border-radius-base, #{$base-border-radius});
     background: #f3f4f6;
   }
 
@@ -737,7 +740,7 @@ export default {
   align-items: center;
   gap: 6px;
   padding: 4px 8px;
-  border-radius: 8px;
+  border-radius: var(--gp-border-radius-base, #{$base-border-radius});
   background: #f3f5f8;
   font-size: 12px;
   color: #4a5568;
@@ -768,7 +771,7 @@ export default {
   width: 32px;
   height: 32px;
   border: 1px solid #e4e7ed;
-  border-radius: 8px;
+  border-radius: var(--gp-border-radius-base, #{$base-border-radius});
   background: #fff;
   color: #606266;
   display: inline-flex;

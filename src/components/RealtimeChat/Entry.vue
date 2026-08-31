@@ -107,7 +107,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@import '@/styles/variables.scss';
+
 .gp-rt-fab {
   position: fixed;
   right: 22px;
@@ -140,7 +142,8 @@ export default {
   background: transparent;
   color: var(--text-color-2, #566);
   font-size: 12px;
-  border-radius: 6px;
+  /* 与管理端 $base-border-radius / --gp-border-radius-base 对齐 */
+  border-radius: var(--gp-border-radius-base, #{$base-border-radius});
   padding: 2px 8px;
   cursor: pointer;
   margin-right: 8px;

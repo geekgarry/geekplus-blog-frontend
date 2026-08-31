@@ -438,7 +438,7 @@ export default {
   margin: 80px auto;
   text-align: center;
   padding: 40px 24px;
-  border-radius: 16px;
+  border-radius: var(--gp-surface-radius, 16px);
   background: var(--dash-panel);
   border: 1px solid var(--dash-border);
 
@@ -506,7 +506,7 @@ export default {
   gap: 12px;
   align-items: center;
   padding: 16px 18px;
-  border-radius: 14px;
+  border-radius: var(--gp-surface-radius, 14px);
   background: var(--dash-panel);
   border: 1px solid var(--dash-border);
 }
@@ -554,7 +554,7 @@ export default {
 }
 
 .dash-panel {
-  border-radius: 14px;
+  border-radius: var(--gp-surface-radius, 14px);
   background: var(--dash-panel);
   border: 1px solid var(--dash-border);
   padding: 16px 18px 18px;
@@ -651,9 +651,10 @@ export default {
 }
 
 .recent-item__cover {
+  --recent-item-cover-radius: var(--gp-surface-radius-sm, 10px);
   width: 88px;
   height: 64px;
-  border-radius: 8px;
+  border-radius: var(--recent-item-cover-radius, 8px);
   flex-shrink: 0;
   overflow: hidden;
   background: #1e293b;

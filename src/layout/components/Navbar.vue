@@ -402,7 +402,7 @@ export default {
   color: var(--gp-menu-active-color, var(--theme-color-strong, var(--theme-color)));
   background: var(--gp-menu-active-bg, var(--theme-color-muted));
   border: 1px solid var(--gp-surface-border, var(--border-color));
-  border-radius: var(--gp-surface-radius-sm, 8px);
+  border-radius: var(--gp-surface-radius, 8px);
   text-decoration: none;
   font-size: 13px;
   transition: background 0.2s, border-color 0.2s;

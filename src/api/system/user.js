@@ -63,13 +63,40 @@ export function logout() {
     method: 'post'
   })
 }
-//获取所有用户
-// 部门筛选：支持 deptId（单部门）或 deptIds（逗号分隔，含子孙）或 includeChildren=true+deptId
+//获取所有用户（默认 GET；POST 见 listUserPost）
 export function listUser(query){
+  const params = { ...(query || {}) }
+  const headers = {}
+  if (params.conditionsJson) {
+    headers['X-GP-Conditions-Json'] = params.conditionsJson
+  }
   return request({
     url: '/sys/user/list',
     method: 'get',
-    params:query
+    params,
+    headers
+  })
+}
+
+/** 列表 POST 备用：body 传筛选项 */
+export function listUserPost(query){
+  const q = query || {}
+  const { pageNum, pageSize, ...body } = q
+  const conditionsJson = body.conditionsJson
+  const headers = {}
+  if (conditionsJson) {
+    headers['X-GP-Conditions-Json'] = conditionsJson
+  }
+  const params = { pageNum, pageSize }
+  if (conditionsJson) {
+    params.conditionsJson = conditionsJson
+  }
+  return request({
+    url: '/sys/user/list',
+    method: 'post',
+    params,
+    data: body,
+    headers
   })
 }
 //获取在线用户

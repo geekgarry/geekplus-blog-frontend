@@ -797,7 +797,7 @@ function normalizeSlides(data, theme, settings) {
   padding: 8px 10px;
   background: var(--background-2);
   border: 1px solid var(--border-color);
-  border-radius: var(--gp-surface-radius-sm, 10px);
+  border-radius: var(--gp-surface-radius, 10px);
 }
 .ppt-toolbar__sep {
   width: 1px;

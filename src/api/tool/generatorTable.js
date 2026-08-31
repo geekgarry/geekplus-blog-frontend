@@ -71,31 +71,31 @@ export function genAddGenTableInfo(dataForm) {
     })
 }
 
-// 预览生成代码（uiType: element | antd）
-export function previewTableCode(tableId, uiType = 'element') {
+// 预览生成代码（uiType: element|antd；queryMode: dynamic|flat）
+export function previewTableCode(tableId, uiType = 'element', queryMode = 'dynamic') {
     return request({
         url: '/generator/previewCodeByGenTable/' + tableId,
         method: 'get',
-        params: { uiType }
+        params: { uiType, queryMode }
     })
 }
 
-// 按表名下载（uiType: element | antd）
-export function downloadCode(tableName, uiType = 'element') {
+// 按表名下载（uiType × queryMode）
+export function downloadCode(tableName, uiType = 'element', queryMode = 'dynamic') {
     return request({
         url: '/generator/download/' + tableName,
         method: 'get',
-        params: { uiType },
+        params: { uiType, queryMode },
         responseType: "blob"
     })
 }
 
-// 按 gen_table 下载（uiType: element | antd）
-export function downloadByGenTable(tableIds, uiType = 'element') {
+// 按 gen_table 下载（uiType × queryMode）
+export function downloadByGenTable(tableIds, uiType = 'element', queryMode = 'dynamic') {
     return request({
         url: '/generator/downloadByGenTable/' + tableIds,
         method: 'get',
-        params: { uiType },
+        params: { uiType, queryMode },
         responseType: "blob"
     })
 }

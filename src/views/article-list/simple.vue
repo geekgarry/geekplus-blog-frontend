@@ -383,7 +383,7 @@ export default {
   color: var(--text-color-2);
   padding: 16px 18px;
   margin-bottom: 0;
-  border-radius: 10px;
+  border-radius: var(--gp-surface-radius, 14px);
   border: 1px solid transparent;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 
@@ -471,7 +471,7 @@ export default {
 @media screen and (max-width: 768px) {
   .post-item {
     padding: 12px 14px;
-    border-radius: 8px;
+    border-radius: var(--gp-surface-radius-sm, 10px);
 
     h3.item-title {
       font-size: 15px;

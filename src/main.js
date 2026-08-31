@@ -53,6 +53,8 @@ import "./assets/css/gp-critical.css";
 import "./assets/css/index.css";
 import "./assets/css/gp-blog-ui.css";
 import "./assets/css/gp-motion.css";
+/* 必须在 index.css 之后：否则其中的 border-radius:4px !important 会盖掉变量 */
+import "./styles/gp-border-radius.css";
 import { hideBootLoader } from "@/utils/bootLoader";
 
 // 尽早预取当前博客外壳，缩短 BlogShell 空窗

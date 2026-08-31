@@ -166,7 +166,7 @@ export default {
   z-index: 3100;
   background: var(--gp-surface-bg, var(--background, #fafafa));
   border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.05));
-  border-radius: var(--gp-surface-radius-sm, 10px);
+  border-radius: var(--gp-surface-radius, 10px);
   box-shadow: var(--gp-surface-shadow-hover, 0 6px 18px rgba(15, 23, 42, 0.06));
   will-change: opacity, transform;
 }
@@ -179,7 +179,7 @@ export default {
   margin: 0 0 4px;
   padding: 8px 10px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--gp-surface-radius-sm, 10px);
   background: transparent;
   color: var(--text-color-2);
   font-size: 13px;

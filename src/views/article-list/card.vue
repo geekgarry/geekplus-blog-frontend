@@ -613,7 +613,7 @@ export default {
 }
 
 .post-item {
-  border-radius: 10px;
+  border-radius: var(--gp-surface-radius, 14px);
   background: var(--gp-surface-bg, var(--background, #f8f9fa));
   color: var(--text-color-2);
   display: flex;
@@ -629,7 +629,7 @@ export default {
     position: relative;
     padding-top: 62%;
     overflow: hidden;
-    border-radius: 10px 10px 0 0;
+    border-radius: var(--gp-surface-radius, 14px) var(--gp-surface-radius, 14px) 0 0;
     background: #eef1f5;
     cursor: pointer;
 

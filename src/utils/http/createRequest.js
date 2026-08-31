@@ -110,12 +110,35 @@ export function createRequest(options = {}) {
       axiosLib.defaults.headers['Content-Type'] || 'application/json;charset=utf-8'
   }
 
+  /**
+   * 完整编码 GET query。axios 默认会保留 []，Tomcat（RFC 3986）遇 conditionsJson 等会直接 400。
+   */
+  const serializeParams = (params) => {
+    if (!params || typeof params !== 'object') return ''
+    const parts = []
+    const push = (k, v) => {
+      if (v === undefined || v === null) return
+      const raw = typeof v === 'object' ? JSON.stringify(v) : String(v)
+      parts.push(`${encodeURIComponent(k)}=${encodeURIComponent(raw)}`)
+    }
+    Object.keys(params).forEach((key) => {
+      const val = params[key]
+      if (Array.isArray(val)) {
+        val.forEach((item) => push(key, item))
+        return
+      }
+      push(key, val)
+    })
+    return parts.join('&')
+  }
+
   const pendingRequests = new Map()
   const service = axiosLib.create(
     Object.assign(
       {
         baseURL: options.baseURL,
-        timeout: options.timeout != null ? options.timeout : 25000
+        timeout: options.timeout != null ? options.timeout : 25000,
+        paramsSerializer: serializeParams
       },
       options.axiosConfig || {}
     )

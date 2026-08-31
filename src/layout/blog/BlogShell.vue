@@ -28,7 +28,7 @@ export default {
       return (this.$store.state.settings && this.$store.state.settings.blogLayout) || 'top'
     },
     layoutComp() {
-      // workbench 与 top 共用顶栏壳；side 仍走侧栏壳
+      // top（及历史 workbench）→ 顶栏壳；side → 侧栏壳
       if (this.blogLayout === 'side') return this.HorizontalBlog
       return this.VerticalBlog
     }

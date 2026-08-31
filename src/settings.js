@@ -13,6 +13,17 @@ module.exports = {
   adminWatermark: false,
 
   /**
+   * 整站控件圆角（px）：--gp-border-radius-base（管理端 Element / TagsView 等）
+   */
+  borderRadius: 4,
+
+  /**
+   * 博客前台表面圆角（px）：--gp-surface-radius（卡片/轮播等）；--gp-surface-radius-sm = surface - 4
+   * 默认 14，与历史 color.css 一致
+   */
+  blogSurfaceRadius: 14,
+
+  /**
    * 是否系统布局配置
    */
   showSettings: false,
@@ -23,7 +34,8 @@ module.exports = {
   leftMenuBar: true,
 
   /**
-   * 博客前台布局：top=顶栏 | side=侧栏 | workbench=工作台导航（入口见 /workbench）
+   * 博客前台布局：top=顶栏导航 | side=侧栏导航
+   * （历史 workbench 已废弃，读入时迁回 top）
    */
   blogLayout: 'top',
 

@@ -1,16 +1,40 @@
 import defaultSettings from '@/settings'
-import { applyThemeColor, DEFAULT_THEME, THEME_SETTING_KEY } from '@/theme'
-// import sidebarVariables from '@/styles/variables.scss'
+import {
+  applyThemeColor,
+  applyBorderRadius,
+  applyBlogSurfaceRadius,
+  DEFAULT_THEME,
+  THEME_SETTING_KEY,
+  BORDER_RADIUS_SETTING_KEY,
+  BLOG_SURFACE_RADIUS_SETTING_KEY,
+  DEFAULT_BORDER_RADIUS,
+  DEFAULT_BLOG_SURFACE_RADIUS,
+  normalizeBorderRadius,
+  normalizeBlogSurfaceRadius,
+  resolveStoredBorderRadius,
+  resolveStoredBlogSurfaceRadius
+} from '@/theme'
 
 /**
- * 站点偏好 settings 模块（博客 blogLayout + 管理端布局项 + 主题色）
+ * 站点偏好 settings 模块（博客 blogLayout + 管理端布局项 + 主题色 + 双轨圆角）
  *
- * 主题色契约：
- * - state.themeColor 与 localStorage themeColor 同步（CHANGE_SETTING）
- * - 用户改色：仅 changeSetting + key===themeColor 时调用 applyThemeColor
- * - 冷启动对齐 store 用 commit，不走 action，见 @/theme/bootstrap syncThemeColorToStore
+ * 圆角契约：
+ * - borderRadius → --gp-border-radius-base（控件）
+ * - blogSurfaceRadius → --gp-surface-radius*（前台博客表面）
  */
-const { showSettings, leftMenuBar, tagsView, fixedHeader, sidebarLogo, webGrey, blogLayout, adminMenuLayout, adminWatermark } = defaultSettings
+const {
+  showSettings,
+  leftMenuBar,
+  tagsView,
+  fixedHeader,
+  sidebarLogo,
+  webGrey,
+  blogLayout,
+  adminMenuLayout,
+  adminWatermark,
+  borderRadius,
+  blogSurfaceRadius
+} = defaultSettings
 
 function readAdminMenuLayout() {
   try {
@@ -18,7 +42,6 @@ function readAdminMenuLayout() {
     if (saved === 'sidebar' || saved === 'topbar' || saved === 'workbench') {
       return saved
     }
-    // 兼容旧版 leftMenuBar：1=侧栏，0=顶栏
     const legacy = localStorage.getItem('leftMenuBar')
     if (legacy === '0') return 'topbar'
     if (legacy === '1') return 'sidebar'
@@ -28,26 +51,58 @@ function readAdminMenuLayout() {
   return adminMenuLayout || 'sidebar'
 }
 
-/** 与 adminMenuLayout 同步，供仍读 leftMenuBar 的旧模板使用 */
 function adminMenuLayoutToLeftMenuBar(mode) {
   if (mode === 'topbar') return '0'
   return '1'
 }
 
+function readBorderRadius() {
+  try {
+    return resolveStoredBorderRadius()
+  } catch (e) {
+    return normalizeBorderRadius(borderRadius != null ? borderRadius : DEFAULT_BORDER_RADIUS)
+  }
+}
+
+function readBlogSurfaceRadius() {
+  try {
+    return resolveStoredBlogSurfaceRadius()
+  } catch (e) {
+    return normalizeBlogSurfaceRadius(
+      blogSurfaceRadius != null ? blogSurfaceRadius : DEFAULT_BLOG_SURFACE_RADIUS
+    )
+  }
+}
+
+function readBlogLayout() {
+  try {
+    const raw = localStorage.getItem('blogLayout')
+    if (raw === 'side') return 'side'
+    if (raw === 'workbench') {
+      // 废弃顶栏「应用工作台」替换导航：迁回 top
+      localStorage.setItem('blogLayout', 'top')
+      return 'top'
+    }
+    if (raw === 'top') return 'top'
+  } catch (e) { /* ignore */ }
+  return blogLayout === 'side' ? 'side' : 'top'
+}
+
 const state = {
   webGrey: JSON.parse(localStorage.getItem('webGrey')) || webGrey,
-  /** 全站主题 hex；键名见 @/theme/constants THEME_SETTING_KEY */
   themeColor: localStorage.getItem(THEME_SETTING_KEY) || DEFAULT_THEME,
+  /** 控件圆角 px */
+  borderRadius: readBorderRadius(),
+  /** 博客前台表面圆角 px（--gp-surface-radius） */
+  blogSurfaceRadius: readBlogSurfaceRadius(),
   showSettings: showSettings,
   leftMenuBar: localStorage.getItem('leftMenuBar') || (leftMenuBar ? '1' : '0'),
   tagsView: localStorage.getItem('tagsView') || (tagsView ? '1' : '0'),
   fixedHeader: localStorage.getItem('fixedHeader') || (fixedHeader ? '1' : '0'),
   sidebarLogo: localStorage.getItem('sidebarLogo') || (sidebarLogo ? '1' : '0'),
-  /** top | side | workbench —— 博客前台 BlogShell 布局偏好 */
-  blogLayout: localStorage.getItem('blogLayout') || blogLayout || 'top',
-  /** sidebar | topbar | workbench —— 管理端菜单形式 */
+  /** top | side —— 前台外壳；历史 workbench 已迁回 top */
+  blogLayout: readBlogLayout(),
   adminMenuLayout: readAdminMenuLayout(),
-  /** 管理端水印 */
   adminWatermark: localStorage.getItem('adminWatermark') != null
     ? localStorage.getItem('adminWatermark')
     : (adminWatermark ? '1' : '0'),
@@ -58,18 +113,23 @@ const mutations = {
   CHANGE_SETTING: (state, { key, value }) => {
     // eslint-disable-next-line no-prototype-builtins
     if (state.hasOwnProperty(key)) {
-      state[key] = value
-      localStorage.setItem(key, value)
-      // adminMenuLayout 变更时同步 leftMenuBar，避免 Navbar/Layout 旧逻辑分叉
+      let next = value
+      if (key === BORDER_RADIUS_SETTING_KEY) next = normalizeBorderRadius(value)
+      else if (key === BLOG_SURFACE_RADIUS_SETTING_KEY) next = normalizeBlogSurfaceRadius(value)
+      else if (key === 'blogLayout') {
+        // 拒绝再写入 workbench
+        next = value === 'side' ? 'side' : 'top'
+      }
+      state[key] = next
+      localStorage.setItem(key, next)
       if (key === 'adminMenuLayout') {
         state.leftMenuBar = adminMenuLayoutToLeftMenuBar(value)
         localStorage.setItem('leftMenuBar', state.leftMenuBar)
       }
-      // 使用浏览器本地存储；远程全站下发见 utils/siteTheme.js（暂未启用）
     }
   },
   SWITCH_MENU_BAR: (state, { key, value }) => {
-    if (state.hasOwnProperty(key)){
+    if (state.hasOwnProperty(key)) {
       state[key] = value
     }
   },
@@ -79,15 +139,19 @@ const mutations = {
 }
 
 const actions = {
-  /**
-   * 通用设置写入。主题色是唯一会触发 applyThemeColor 的 key（用户改色单链路落点）
-   * 调用方：ThemePicker → commitUserThemeColor → 本 action
-   */
   changeSetting({ commit }, data) {
     commit('CHANGE_SETTING', data)
-    if (data && data.key === THEME_SETTING_KEY && typeof data.value === 'string') {
-      // defer:false 立刻覆盖 Element，避免选色后控件仍闪 #409EFF
+    if (!data || !data.key) return
+    if (data.key === THEME_SETTING_KEY && typeof data.value === 'string') {
       applyThemeColor(data.value, { defer: false })
+      return
+    }
+    if (data.key === BORDER_RADIUS_SETTING_KEY) {
+      applyBorderRadius(data.value)
+      return
+    }
+    if (data.key === BLOG_SURFACE_RADIUS_SETTING_KEY) {
+      applyBlogSurfaceRadius(data.value)
     }
   },
   switchMenuBar({ commit }, data) {
@@ -104,4 +168,3 @@ export default {
   mutations,
   actions
 }
-

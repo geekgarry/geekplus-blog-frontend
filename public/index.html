@@ -50,8 +50,20 @@
         var tc = localStorage.getItem('themeColor') || '#5f7d80';
         /* FOUC 占位：Vue initSiteTheme 挂载后会覆盖完整 --theme-color* token */
         document.documentElement.style.setProperty('--theme-color', tc);
+        /* 圆角 FOUC：控件 borderRadius + 博客 blogSurfaceRadius 双轨 */
+        var br = parseInt(localStorage.getItem('borderRadius'), 10);
+        if (!isFinite(br) || br < 0) br = 4;
+        if (br > 32) br = 32;
+        var sr = parseInt(localStorage.getItem('blogSurfaceRadius'), 10);
+        if (!isFinite(sr) || sr < 0) sr = 14;
+        if (sr > 32) sr = 32;
+        var ssm = Math.max(0, sr - 4);
+        document.documentElement.style.setProperty('--gp-border-radius-base', br + 'px');
+        document.documentElement.style.setProperty('--border-radius', br + 'px');
+        document.documentElement.style.setProperty('--gp-surface-radius', sr + 'px');
+        document.documentElement.style.setProperty('--gp-surface-radius-sm', ssm + 'px');
         document.documentElement.style.setProperty('--gp-boot-bg', bg);
-        window.__gpBootTheme = { dark: dark, bg: bg, themeColor: tc };
+        window.__gpBootTheme = { dark: dark, bg: bg, themeColor: tc, borderRadius: br, blogSurfaceRadius: sr };
       } catch (e) { /* ignore */ }
     })();
   </script>

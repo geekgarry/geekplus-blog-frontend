@@ -13,7 +13,7 @@
   appearance: none;
   background-color: var(--background-origin, #ffffff);
   background-image: none;
-  border-radius: 4px;
+  border-radius: var(--gp-border-radius-base, 4px);
   border: 1px solid var(--border-color-2, #dcdfe6);
   box-sizing: border-box;
   color: var(--text-color-2, #606266);
@@ -73,7 +73,7 @@
 .el-textarea__inner {
   -webkit-appearance: none;
   appearance: none;
-  border-radius: 4px;
+  border-radius: var(--gp-border-radius-base, 4px);
   color: var(--text-color-2, #606266);
   background-color: var(--background-origin, #ffffff);
   border: 1px solid var(--border-color-2, #dcdfe6);

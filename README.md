@@ -173,6 +173,59 @@ Node 版本建议与团队现网一致（Vue CLI 5 / webpack 体系）。首次�
 
 > **约定**：以后每一次**重点优化 / 架构改动 / 体验向修复**，必须在本小节**置顶追加**一条（日期 + 摘要 + 关键路径）。日常文案微调可不记。
 
+### 2026-08-31
+
+- **AI 聊天输入框**：微信式随内容增高、删字收回（scrollHeight）；侧栏底部账号区背景/按钮样式优化。
+  - 代码：`src/views/chatbot/index.vue`
+- **AI 聊天页桌面平铺布局**：≥900px 左侧会话导航 + 右侧对话区；窄屏保留抽屉 + 遮罩；侧栏 UI 对齐常见 AI 产品（新对话 / 历史 / 偏好 / 账号）。
+  - 代码：`src/views/chatbot/index.vue`
+- **博客圆角 sm 覆盖主值修复**：`applyBlogSurfaceRadius` / FOUC 误把 sm 写进同名 `--gp-surface-radius`，设置「博客圆角=14」实际变成 10；现拆成 `--gp-surface-radius` + `--gp-surface-radius-sm`。
+  - 代码：`theme/borderRadius.js`、`public/index.html`、`styles/gp-border-radius.css`、`assets/css/color.css`
+- **设置抽屉体验**：RightPanel 常驻挂载 + 点击监听/滚动锁收口；去掉与「菜单形式」冲突的旧「左侧菜单」开关。
+  - 代码：`components/RightPanel`、`layout/index.vue`、`layout/components/Settings`
+- **管理端菜单懒加载走 loadView**：`generaMenu` 不再用动态 `require([...])`。
+  - 代码：`store/modules/permission.js`
+
+### 2026-08-30
+
+- **设置抽屉可滚动**：RightPanel 内容超出视口时允许纵向滚动。
+  - 代码：`components/RightPanel/index.vue`
+- **navMenu / permission 消除 Critical dependency**：动态视图改 `require.context(..., 'lazy')`（前台排除 admin，后台限定 admin）。
+  - 代码：`store/modules/navMenu.js`、`store/modules/permission.js`
+- **设置抽屉菜单形式不溢出**：三项 radio 改为标签上置 + 均分宽度，适配 RightPanel ~260px。
+  - 代码：`layout/components/Settings/index.vue`
+- **管理端圆角契约收口**：`--gp-border-radius-base` 编译默认对齐 `$base-border-radius`（4px）；AI 助手 / RealtimeChat 工具钮与面板改读该变量。
+  - 代码：`styles/variables.scss`、`gp-border-radius.css`、`views/admin/tool/chatbot`、`components/RealtimeChat/`
+- **恢复顶栏栏目导航**：废弃 `blogLayout=workbench`（顶栏被换成「应用工作台」）；布局切换仅 top↔side，旧值自动迁回 top；工作台仍走 `/workbench` / 个人中心。
+  - 代码：`blogLayoutMixin.js`、`layout/blog/vertical`、`store/modules/settings.js`
+- **圆角双轨**：设置抽屉「控件圆角」与「博客圆角」独立；前者写 `--gp-border-radius-base`，后者写前台 `--gp-surface-radius*`（sm = surface−4），互不派生覆盖。
+  - 代码：`src/theme/borderRadius.js`、`layout/components/Settings`、`store/modules/settings.js`
+  - 文档：`src/theme/README.md`
+- **整站控件圆角**：管理端设置抽屉新增「控件圆角」（0/2/4/6/8/12px），写入 `--gp-border-radius-base`；Element 官方控件经 `gp-border-radius.css` 覆盖。
+  - 代码：`src/theme/borderRadius.js`、`styles/gp-border-radius.css`、`layout/components/Settings`、`store/modules/settings.js`
+  - 文档：`src/theme/README.md`
+- **代码演练场 keep-alive**：切 TagsView 其它页再回来保留编辑（`noCache: false` + 路由/组件名 `AdminCodePlayground`）；关标签销毁，不做 localStorage。
+  - 代码：`src/router/local-routes.js`、`views/admin/tool/codePlayground/`、`CodePlayground` 的 `activated` 重算 Ace
+  - 文档：`docs/代码演练场-CodePlayground.md`
+- **Ace 光标错位修复**：逻辑光标在字上、画面漂到字右侧（可删 `>` 但竖线偏右）。根因是全局 `* { font-family: Helvetica/PingFang… }` 作用到每个 Ace token `<span>`，文字变比例字体，而 FontMetrics 仍按等宽量宽 → `characterWidth` 偏大。同步加固半像素行高（`ace_content` 的 `margin-top: -x.5px`）、演练场改传整数像素高度、禁止对 Ace 设 CSS `line-height`。
+  - 代码：`src/components/AceEditor/index.vue`（`.ace_editor *` 强制等宽 + `syncEditorMetrics`）、`src/components/CodePlayground/index.vue`（`acePixelHeight`）
+  - 文档：`docs/代码演练场-CodePlayground.md`（「Ace 光标错位」节）
+- **代码演练场**：可复用 `CodePlayground`（左 Ace / 右 iframe），支持 HTML、Vue 2 CDN、React 18 + Babel；后台系统工具页引用。Quill/TinyMCE 仅适合富文本，源码编辑改用 Ace（新增 `brace` / `vue2-ace-editor`）。
+  - 代码：`src/components/CodePlayground/`、`src/components/AceEditor/`、`src/views/admin/tool/codePlayground/`
+  - 文档：`docs/代码演练场-CodePlayground.md`
+
+### 2026-08-30
+
+- **代码生成预览**：补齐前端 Vue/API/HTML（后端单模板失败不再中断）；文件名改为真实路径；预览 UI 适配黑白主题。
+  - 后端：`CodeGenerateByTemplate.genPreviewCodeByTemplate`
+  - 前端：`views/admin/tool/generator/index.vue`、`styles/admin.scss`
+
+### 2026-08-29
+
+- **动态条件查询方案 A + 代码生成四模板**：列表改 POST（body 传 `conditionsJson`/扁平字段，分页走 query）；`DynamicQueryForm` 按 `valueType` 适配输入（空值条件禁用值框）；生成器支持 `uiType`×`queryMode`（动态/扁平 × Element/Ant）。
+  - 前端：`DynamicQueryForm/`、`api/system/user.js`、`api/tool/generatorTable.js`、`views/admin/tool/generator/index.vue`
+  - 文档：`docs/动态条件查询-用户管理.md`；后端模板见 API 仓 `docs/16` / `docs/17`
+
 ### 2026-08-26
 
 - **管理端控制台改版**：首页改为「数据概览 + 系统介绍」双 Tab；KPI/近 7 日登录操作图表、模块分布、地域地图、服务器指标与最近日志；介绍 Tab 对齐 README 架构/技术选型/变更摘要。
