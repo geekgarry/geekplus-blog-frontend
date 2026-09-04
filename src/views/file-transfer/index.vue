@@ -1,8 +1,20 @@
 <template>
   <!-- 临时文件中转：仿瞬匣式免登录上传 / 分享（自定义样式，不依赖 Element） -->
   <div class="gp-transfer">
-    <header class="gp-transfer__hero">
-      <div class="gp-transfer__hero-content"></div>
+    <!-- 深色电影感 Hero：结构保持原样；data-hero-tone 切换配色混合方案 -->
+    <header class="gp-transfer__hero" :data-hero-tone="heroTone">
+      <div class="gp-transfer__hero-content" aria-hidden="true"></div>
+      <div class="gp-transfer__tone-picker" role="group" aria-label="Hero 配色方案">
+        <button
+          v-for="tone in heroToneOptions"
+          :key="tone.id"
+          type="button"
+          class="gp-transfer__tone-chip"
+          :class="{ active: heroTone === tone.id }"
+          :title="tone.desc"
+          @click="heroTone = tone.id"
+        >{{ tone.label }}</button>
+      </div>
       <p class="gp-transfer__eyebrow">免费文件传输 · 无需登录</p>
       <h1 class="gp-transfer__title">文件安全抵达，按时悄然隐去。</h1>
       <p class="gp-transfer__lead">
@@ -128,7 +140,15 @@ export default {
       burnAfterRead: false,
       uploading: false,
       progress: 0,
-      results: []
+      results: [],
+      // Hero 深色渐变配色：点选对比；定稿后可删 picker，只留 heroTone 常量
+      heroTone: 'original',
+      heroToneOptions: [
+        { id: 'original', label: '旧石板', desc: '石板蓝 → 深青绿 + 青绿/天蓝光斑' },
+        { id: 'mist', label: '雾青', desc: '墨青 → 站点雾霾青绿，贴近主题色' },
+        { id: 'ocean', label: '墨海', desc: '夜墨 → 深海蓝 + 青蓝光斑' },
+        { id: 'sage', label: '石墨鼠尾', desc: '暖石墨 → 鼠尾草绿 + 柔琥珀光' }
+      ]
     }
   },
   methods: {
@@ -259,44 +279,123 @@ export default {
   margin: 0 auto;
   padding: 24px 16px 48px;
   color: var(--text-color-2);
+  box-sizing: border-box;
 }
 
+/*
+ * 深色电影感 Hero（结构保持原样）：底色双点渐变 + 双径向光斑。
+ * 通过 data-hero-tone 切换配色混合；默认 A original。
+ */
 .gp-transfer__hero {
+  --hero-from: #0f172b;
+  --hero-to: #0b4f4a;
+  --hero-glow-a: rgb(45, 212, 191);
+  --hero-glow-b: rgb(56, 189, 248);
+  --hero-eyebrow: rgba(255, 255, 255, 0.72);
+  --hero-lead: rgba(255, 255, 255, 0.78);
+  --hero-bullet: rgba(255, 255, 255, 0.88);
+  --hero-dot: #5eead4;
+
+  position: relative;
   width: 100%;
   margin-bottom: 24px;
-  --tw-gradient-position: to bottom right in oklab;
-  --tw-gradient-from: #0f172b;
-  --tw-gradient-from-position: 0%;
-  --tw-gradient-to: #0b4f4a;
-  --tw-gradient-to-position: 100%;
-  background-image: linear-gradient(var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
   padding: 48px;
-  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: var(--gp-surface-radius, 14px);
   color: #fff;
+  background-image: linear-gradient(to bottom right, var(--hero-from) 0%, var(--hero-to) 100%);
+  box-shadow: 0 10px 28px rgba(15, 23, 43, 0.28);
+}
+
+/* A 原版：石板蓝 → 深青绿 */
+.gp-transfer__hero[data-hero-tone='original'] {
+  --hero-from: #0f172b;
+  --hero-to: #0b4f4a;
+  --hero-glow-a: rgb(45, 212, 191);
+  --hero-glow-b: rgb(56, 189, 248);
+  --hero-dot: #5eead4;
+}
+
+/* B 雾青：贴近站点 --theme-color #5f7d80 */
+.gp-transfer__hero[data-hero-tone='mist'] {
+  --hero-from: #1a2426;
+  --hero-to: #3d5c5f;
+  --hero-glow-a: rgba(138, 160, 162, 0.95);
+  --hero-glow-b: rgba(196, 184, 174, 0.75);
+  --hero-dot: #a8bdbf;
+}
+
+/* C 墨海：夜墨 → 深海蓝 */
+.gp-transfer__hero[data-hero-tone='ocean'] {
+  --hero-from: #0c1222;
+  --hero-to: #0e3a5c;
+  --hero-glow-a: rgb(56, 189, 248);
+  --hero-glow-b: rgb(99, 102, 241);
+  --hero-dot: #7dd3fc;
+}
+
+/* D 石墨鼠尾：暖石墨 → 鼠尾草 */
+.gp-transfer__hero[data-hero-tone='sage'] {
+  --hero-from: #1c1b1a;
+  --hero-to: #2a3d36;
+  --hero-glow-a: rgba(143, 168, 154, 0.9);
+  --hero-glow-b: rgba(196, 154, 124, 0.55);
+  --hero-dot: #b7c9bc;
 }
 
 .gp-transfer__hero-content {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  border: 0 solid;
-  margin: 0;
-  padding: 0;
-  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
-  background-image: radial-gradient(circle at 20% 20%, rgb(45, 212, 191) 0%, transparent 40%), radial-gradient(circle at 80% 0%, rgb(56, 189, 248) 0%, transparent 35%);
-  opacity: .3;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 20% 20%, var(--hero-glow-a) 0%, transparent 40%),
+    radial-gradient(circle at 80% 0%, var(--hero-glow-b) 0%, transparent 35%);
+  opacity: 0.3;
+}
+
+.gp-transfer__tone-picker {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  max-width: 56%;
+}
+
+.gp-transfer__tone-chip {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.88);
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 11px;
+  line-height: 1.2;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+.gp-transfer__tone-chip.active {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.gp-transfer__eyebrow,
+.gp-transfer__title,
+.gp-transfer__lead,
+.gp-transfer__bullets {
+  position: relative;
+  z-index: 1;
 }
 
 .gp-transfer__eyebrow {
   margin: 0 0 8px;
   font-size: 13px;
-  color: var(--muted-1-color, #999);
+  color: var(--hero-eyebrow);
 }
 
 .gp-transfer__title {
@@ -305,13 +404,14 @@ export default {
   font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1.25;
+  color: #fff;
 }
 
 .gp-transfer__lead {
   margin: 0 0 12px;
   font-size: 14px;
   line-height: 1.65;
-  color: var(--muted-1-color, #666);
+  color: var(--hero-lead);
 }
 
 .gp-transfer__bullets {
@@ -322,48 +422,51 @@ export default {
   padding: 0;
   list-style: none;
   font-size: 13px;
+  color: var(--hero-bullet);
 }
 
 .gp-transfer__bullets li::before {
   content: '•';
   margin-right: 6px;
-  color: var(--theme-color, #6e8b8e);
+  color: var(--hero-dot);
 }
 
 .gp-transfer__panel {
   margin-bottom: 16px;
+  background: var(--background-origin, var(--gp-surface-bg, #fff));
 }
 
 .gp-transfer__hint {
   font-size: 12px;
-  color: var(--muted-1-color, #999);
+  color: var(--muted-1-color, #8a8580);
 }
 
 .gp-transfer__drop {
-  border: 1.5px dashed var(--gp-surface-border, rgba(15, 23, 42, 0.12));
-  border-radius: var(--gp-surface-radius, 10px);
+  border: 1.5px dashed var(--gp-surface-border, rgba(44, 42, 40, 0.12));
+  border-radius: var(--gp-surface-radius-sm, 10px);
   padding: 36px 16px;
   text-align: center;
   cursor: pointer;
-  background: var(--interactive-bg-secondary-hover, rgba(0, 0, 0, 0.03));
+  background: var(--interactive-bg-secondary-hover, rgba(44, 42, 40, 0.06));
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .gp-transfer__drop.is-drag,
 .gp-transfer__drop:hover {
-  border-color: var(--theme-color, #6e8b8e);
-  background: var(--gp-menu-active-bg, rgba(11, 173, 182, 0.08));
+  border-color: var(--theme-color, #5f7d80);
+  background: var(--gp-menu-active-bg, var(--theme-color-muted));
 }
 
 .gp-transfer__drop-title {
   margin: 0 0 6px;
   font-weight: 600;
+  color: var(--text-color-2);
 }
 
 .gp-transfer__drop-sub {
   margin: 0;
   font-size: 13px;
-  color: var(--muted-1-color, #999);
+  color: var(--muted-1-color, #8a8580);
 }
 
 .gp-transfer__files {
@@ -377,7 +480,7 @@ export default {
   align-items: center;
   gap: 10px;
   padding: 8px 0;
-  border-bottom: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.06));
+  border-bottom: 1px solid var(--gp-surface-border, rgba(44, 42, 40, 0.07));
   font-size: 13px;
 }
 
@@ -390,7 +493,7 @@ export default {
 }
 
 .gp-transfer__files .size {
-  color: var(--muted-1-color, #999);
+  color: var(--muted-1-color, #8a8580);
 }
 
 .gp-transfer__settings {
@@ -400,6 +503,7 @@ export default {
 .gp-transfer__settings h3 {
   margin: 0 0 12px;
   font-size: 15px;
+  color: var(--text-color-2);
 }
 
 .gp-field {
@@ -408,6 +512,7 @@ export default {
   gap: 6px;
   margin-bottom: 12px;
   font-size: 13px;
+  color: var(--text-color);
 }
 
 .gp-field--check {
@@ -423,19 +528,20 @@ export default {
 }
 
 .gp-chip {
-  border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.1));
-  background: transparent;
+  border: 1px solid var(--gp-surface-border, rgba(44, 42, 40, 0.1));
+  background: var(--background-2, transparent);
   color: inherit;
   border-radius: 999px;
   padding: 6px 12px;
   cursor: pointer;
   font-size: 13px;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
 .gp-chip.active {
-  border-color: var(--theme-color, #6e8b8e);
-  background: var(--gp-menu-active-bg, rgba(11, 173, 182, 0.12));
-  color: var(--theme-color, #6e8b8e);
+  border-color: var(--theme-color, #5f7d80);
+  background: var(--gp-menu-active-bg, var(--theme-color-muted));
+  color: var(--gp-menu-active-color, var(--theme-color));
 }
 
 .gp-input {
@@ -443,16 +549,16 @@ export default {
   box-sizing: border-box;
   height: 38px;
   padding: 0 12px;
-  border-radius: 8px;
-  border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.12));
-  background: var(--gp-surface-bg, var(--background-origin, #fff));
+  border-radius: var(--gp-border-radius-base, 8px);
+  border: 1px solid var(--gp-surface-border, rgba(44, 42, 40, 0.12));
+  background: var(--background, var(--background-origin, #f7f5f2));
   color: var(--text-color-2);
   font-size: 14px;
 }
 
 .gp-input:focus {
   outline: none;
-  border-color: var(--theme-color, #6e8b8e);
+  border-color: var(--theme-color, #5f7d80);
 }
 
 .gp-transfer__actions {
@@ -465,14 +571,19 @@ export default {
 .gp-btn {
   height: 38px;
   padding: 0 16px;
-  border-radius: 8px;
-  border: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.12));
-  background: var(--gp-surface-bg, #fff);
-  color: inherit;
+  border-radius: var(--gp-border-radius-base, 8px);
+  border: 1px solid var(--gp-surface-border, rgba(44, 42, 40, 0.12));
+  background: var(--default-button-bg, var(--background-1, #efece7));
+  color: var(--text-color-2);
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  white-space: pre;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .gp-btn:disabled {
@@ -481,15 +592,15 @@ export default {
 }
 
 .gp-btn--primary {
-  background: var(--theme-color-muted, #6e8b8e);
-  border-color: var(--theme-color, #6e8b8e);
+  background: var(--theme-color, #5f7d80);
+  border-color: var(--theme-color, #5f7d80);
   color: #fff;
 }
 
 .gp-btn--ghost {
   border: none;
   background: transparent;
-  color: var(--theme-color, #6e8b8e);
+  color: var(--theme-color, #5f7d80);
   height: auto;
   padding: 4px 6px;
 }
@@ -498,20 +609,20 @@ export default {
   margin-top: 12px;
   height: 6px;
   border-radius: 6px;
-  background: rgba(127, 127, 127, 0.15);
+  background: var(--theme-color-muted, rgba(95, 125, 128, 0.14));
   overflow: hidden;
 }
 
 .gp-transfer__progress .bar {
   height: 100%;
-  background: var(--theme-color, #6e8b8e);
+  background: var(--theme-color, #5f7d80);
   transition: width 0.15s ease;
 }
 
-.gp-transfer__result+.gp-transfer__result {
+.gp-transfer__result + .gp-transfer__result {
   margin-top: 18px;
   padding-top: 16px;
-  border-top: 1px solid var(--gp-surface-border, rgba(15, 23, 42, 0.06));
+  border-top: 1px solid var(--gp-surface-border, rgba(44, 42, 40, 0.07));
 }
 
 .gp-transfer__result .meta {
@@ -523,7 +634,7 @@ export default {
 }
 
 .gp-transfer__result .meta span {
-  color: var(--muted-1-color, #999);
+  color: var(--muted-1-color, #8a8580);
 }
 
 .link-row {
@@ -539,15 +650,15 @@ export default {
 }
 
 .qr-canvas {
-  border-radius: 8px;
+  border-radius: var(--gp-border-radius-base, 8px);
   background: #fff;
+  border: 1px solid var(--gp-surface-border, rgba(44, 42, 40, 0.07));
 }
 
 .qr-tip {
   font-size: 13px;
-  color: var(--muted-1-color, #666);
+  color: var(--muted-1-color, #8a8580);
   display: flex;
-  /* line-height: 40px; */
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
@@ -556,5 +667,18 @@ export default {
 
 .qr-tip p {
   margin: 0 0 6px;
+}
+
+@media (max-width: 640px) {
+  .gp-transfer__hero {
+    padding: 36px 18px 28px;
+  }
+
+  .gp-transfer__tone-picker {
+    position: static;
+    max-width: none;
+    justify-content: flex-start;
+    margin-bottom: 12px;
+  }
 }
 </style>

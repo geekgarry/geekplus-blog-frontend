@@ -69,20 +69,31 @@
           <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
         </el-row>
         <el-table v-loading="listLoading" :data="list" element-loading-text="Loading"
-          @selection-change="handleSelectionChange" border fit highlight-current-row>
+          @selection-change="handleSelectionChange" @sort-change="handleSortChange"
+          @filter-change="handleFilterChange" border fit highlight-current-row>
           <el-table-column type="selection" width="55" align="center" />
-          <el-table-column align="center" prop="userId" label="用户ID"></el-table-column>
-          <el-table-column label="用户名" align="center">
+          <el-table-column align="center" prop="userId" label="用户ID" sortable="custom" width="90" />
+          <el-table-column label="用户名" align="center" prop="username" sortable="custom" min-width="100" show-overflow-tooltip>
             <template slot-scope="scope">
               {{ scope.row.username }}
             </template>
           </el-table-column>
-          <el-table-column label="用户昵称" align="center">
+          <el-table-column label="用户昵称" align="center" prop="nickname" sortable="custom" min-width="100" show-overflow-tooltip>
             <template slot-scope="scope">
               <span>{{ scope.row.nickname }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="用户类型" width="110" align="center" prop="userType" :formatter="userTypeFormat">
+          <el-table-column
+            label="用户类型"
+            width="120"
+            align="center"
+            prop="userType"
+            column-key="userType"
+            sortable="custom"
+            :filters="userTypeFilters"
+            :filter-multiple="false"
+            :filter-method="passThroughFilter"
+          >
             <template slot-scope="scope">
               <span v-if="scope.row.userType == 0">普通人员</span>
               <span v-if="scope.row.userType == 1">系统管理员</span>
@@ -90,29 +101,46 @@
               <span v-if="scope.row.userType == 3">开发人员</span>
             </template>
           </el-table-column>
-          <el-table-column label="邮箱" align="center">
+          <el-table-column label="邮箱" align="center" prop="email" sortable="custom" min-width="140" show-overflow-tooltip>
             <template slot-scope="scope">
               {{ scope.row.email }}
             </template>
           </el-table-column>
-          <el-table-column label="性别" align="center">
+          <el-table-column
+            label="性别"
+            align="center"
+            prop="gender"
+            column-key="gender"
+            width="90"
+            sortable="custom"
+            :filters="genderFilters"
+            :filter-multiple="false"
+            :filter-method="passThroughFilter"
+          >
             <template slot-scope="scope">
-              <!-- {{ scope.row.gender == 1 ? "男" : "女" }} -->
               <span v-if="scope.row.gender == 0">男</span>
               <span v-if="scope.row.gender == 1">女</span>
               <span v-if="scope.row.gender == 2">未知</span>
             </template>
           </el-table-column>
-          <el-table-column class-name="status-col" label="停止使用" width="110" align="center">
+          <el-table-column
+            class-name="status-col"
+            label="停止使用"
+            width="110"
+            align="center"
+            prop="status"
+            column-key="status"
+            :filters="statusFilters"
+            :filter-multiple="false"
+            :filter-method="passThroughFilter"
+          >
             <template slot-scope="scope">
-              <!-- <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status }}</el-tag> -->
-              <!-- <span>{{ scope.row.status == 0 ? "正常使用" : "暂停禁用" }}</span> -->
               <el-switch :disabled="(!checkRole(['admin']) && !checkPermi(['system:user:update'])) || scope.row.userId === loginUserId"
                 v-model="scope.row.status" :active-value="1" :inactive-value="0"
                 @change="handleStatusChange(scope.row)"></el-switch>
             </template>
           </el-table-column>
-          <el-table-column align="center" prop="createTime" label="创建时间" width="180">
+          <el-table-column align="center" prop="createTime" label="创建时间" width="180" sortable="custom">
             <template slot-scope="scope">
               <i class="el-icon-time" />
               <span>{{ dateFormat(scope.row.createTime) }}</span>
@@ -400,7 +428,28 @@ export default {
         /** 为 true 时后端按 deptId 展开子树（与 deptIds 二选一或同时支持） */
         includeChildren: undefined,
         conditionsJson: undefined,
+        /** 表头排序：实体属性名 camelCase → DynamicQueryHelper → order by */
+        sortField: undefined,
+        sortType: undefined,
       },
+      /** 表头筛选（单选）：column-key → 选中值列表；并入 conditionsJson eq */
+      tableFilters: {},
+      // 列筛选选项（与 USER_QUERY_FIELDS 枚举一致）
+      userTypeFilters: [
+        { text: "普通人员", value: 0 },
+        { text: "系统管理员", value: 1 },
+        { text: "网站管理员", value: 2 },
+        { text: "开发人员", value: 3 },
+      ],
+      genderFilters: [
+        { text: "男", value: 0 },
+        { text: "女", value: 1 },
+        { text: "未知", value: 2 },
+      ],
+      statusFilters: [
+        { text: "正常", value: 0 },
+        { text: "禁用", value: 1 },
+      ],
       /** 当前选中的部门名（列表提示） */
       activeDeptName: "",
       form: {},
@@ -515,9 +564,11 @@ export default {
     },
     getList(conditions) {
       this.listLoading = true;
-      const dyn = conditions ||
+      let dyn = conditions ||
         (this.$refs.dynamicQuery && this.$refs.dynamicQuery.getConditions()) ||
         [];
+      // 表头筛选并入动态条件（单选 eq）；同字段以表头为准覆盖查询表单里已有项
+      dyn = this.mergeTableFiltersIntoConditions(dyn);
       // 互斥：只传 conditionsJson，不传 username 等扁平筛选项（后端有 dq 走 DynamicWhere，无 dq 才扁平）
       const built = buildDynamicQueryParams(dyn, {}, {
         attachConditionsJson: true,
@@ -536,6 +587,8 @@ export default {
         deptId: this.queryParams.deptId,
         deptIds: this.queryParams.deptIds,
         includeChildren: this.queryParams.includeChildren,
+        sortField: this.queryParams.sortField,
+        sortType: this.queryParams.sortType,
       };
       if (built.conditionsJson) {
         req.conditionsJson = built.conditionsJson;
@@ -547,6 +600,50 @@ export default {
       }).catch(() => {
         this.listLoading = false;
       });
+    },
+    /** 表头排序 → 后端 sortField/sortType（DynamicQueryHelper） */
+    handleSortChange({ prop, order }) {
+      if (!order) {
+        this.queryParams.sortField = undefined;
+        this.queryParams.sortType = undefined;
+      } else {
+        this.queryParams.sortField = prop;
+        this.queryParams.sortType = order === "ascending" ? "asc" : "desc";
+      }
+      this.queryParams.pageNum = 1;
+      this.getList();
+    },
+    /** 表头筛选 → 写入 tableFilters 后重查 */
+    handleFilterChange(filters) {
+      this.tableFilters = filters || {};
+      this.queryParams.pageNum = 1;
+      this.getList();
+    },
+    /**
+     * 把表头单选筛选合并进动态条件：同 field 先去掉查询表单项，再追加 eq。
+     * 后端无 in 运算，故 filter-multiple=false。
+     */
+    mergeTableFiltersIntoConditions(conditions) {
+      const list = Array.isArray(conditions) ? conditions.slice() : [];
+      const filterKeys = Object.keys(this.tableFilters || {});
+      if (!filterKeys.length) return list;
+      const activeKeys = new Set();
+      filterKeys.forEach((key) => {
+        const vals = this.tableFilters[key];
+        if (vals && vals.length) activeKeys.add(key);
+      });
+      const pruned = list.filter((c) => !c || !activeKeys.has(c.field));
+      activeKeys.forEach((key) => {
+        const vals = this.tableFilters[key];
+        if (vals && vals.length) {
+          pruned.push({ field: key, op: "eq", value: vals[0] });
+        }
+      });
+      return pruned;
+    },
+    /** 服务端筛选时本地恒 true，避免 el-table 再滤一遍把结果滤空 */
+    passThroughFilter() {
+      return true;
     },
     onDynamicSearch(conditions) {
       // 仅翻到第一页并查询，不清空动态条件输入
@@ -868,7 +965,7 @@ export default {
 .dept-tree-scroll >>> .el-tree {
   display: inline-block;
   min-width: 100%;
-  min-width: max-content;
+  /* min-width: max-content; */
 }
 .dept-tree-scroll >>> .el-tree-node__content {
   height: auto;

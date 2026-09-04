@@ -29,13 +29,12 @@
         <el-switch active-value="1" inactive-value="0" v-model="sidebarLogo" class="drawer-switch" />
       </div>
 
-      <!-- 三项 radio 竖排/均分，避免 RightPanel 窄宽溢出 -->
+      <!-- 管理端菜单：仅侧栏 / 顶栏；后台工作台未落地，勿再提供 workbench 选项（前台 /workbench 另属博客） -->
       <div class="drawer-item drawer-item--stack">
         <span>管理端菜单形式</span>
         <el-radio-group v-model="adminMenuLayout" size="mini" class="drawer-radio drawer-radio--fill">
           <el-radio-button label="sidebar">侧栏</el-radio-button>
           <el-radio-button label="topbar">顶栏</el-radio-button>
-          <el-radio-button label="workbench">工作台</el-radio-button>
         </el-radio-group>
       </div>
 
@@ -173,11 +172,13 @@ export default {
     adminMenuLayout: {
       get() {
         const val = this.$store.state.settings.adminMenuLayout
-        if (val === 'sidebar' || val === 'topbar' || val === 'workbench') return val
-        return this.$store.state.settings.leftMenuBar === '1' ? 'sidebar' : 'topbar'
+        // 历史 workbench 已废弃，展示为侧栏
+        if (val === 'topbar') return 'topbar'
+        return 'sidebar'
       },
       set(val) {
-        this.$store.dispatch('settings/changeSetting', { key: 'adminMenuLayout', value: val })
+        const next = val === 'topbar' ? 'topbar' : 'sidebar'
+        this.$store.dispatch('settings/changeSetting', { key: 'adminMenuLayout', value: next })
       }
     },
     adminWatermark: {

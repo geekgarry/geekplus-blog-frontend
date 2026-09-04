@@ -60,7 +60,7 @@ import 'element-ui/lib/theme-chalk/message.css'
 import 'element-ui/lib/theme-chalk/notification.css'
 import 'element-ui/lib/theme-chalk/display.css'
 import '@/styles/element-icons-font-display.css'
-import '@/styles/element-input-overrides.css'
+/* 颜色/圆角覆盖统一在 main.js 末尾加载 element-overrides.css（须压过 theme-chalk） */
 
 const components = [
   Pagination,

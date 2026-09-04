@@ -433,6 +433,10 @@ export default {
 }
 .dashboard-toolbar {
   margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 .kpi-row {
   margin-bottom: 4px;
@@ -441,15 +445,18 @@ export default {
   margin-bottom: 16px;
   border-radius: var(--gp-surface-radius, 14px);
   border: 1px solid var(--gp-surface-border, rgba(44, 42, 40, 0.07));
+  background: var(--gp-surface-bg, var(--background-origin));
+  color: var(--text-color-2);
   &__label {
     font-size: 13px;
-    color: var(--greyFont, #7a7672);
+    color: var(--muted-1-color, var(--greyFont, #7a7672));
     margin-bottom: 8px;
   }
   &__value {
     font-size: 28px;
     font-weight: 700;
     line-height: 1.2;
+    color: var(--text-color-2);
   }
   &__suffix {
     font-size: 14px;
@@ -459,7 +466,7 @@ export default {
   &__delta {
     margin-top: 8px;
     font-size: 12px;
-    color: var(--greyFont, #7a7672);
+    color: var(--muted-1-color, var(--greyFont, #7a7672));
   }
 }
 .chart-row {
@@ -470,6 +477,8 @@ export default {
   margin-bottom: 16px;
   border-radius: var(--gp-surface-radius, 14px);
   border: 1px solid var(--gp-surface-border, rgba(44, 42, 40, 0.07));
+  background: var(--gp-surface-bg, var(--background-origin));
+  color: var(--text-color-2);
 }
 .chart-head {
   font-weight: 600;
@@ -514,26 +523,30 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  background: rgba(250, 249, 247, 0.82);
+  /* 随深浅色：勿写死奶白蒙层 */
+  background: var(--disabled-background, var(--maxWhiteMask, rgba(250, 249, 247, 0.82)));
+  color: var(--text-color-2);
   text-align: center;
 }
 .metric-card__mask-icon {
   font-size: 28px;
-  color: var(--greyFont, #7a7672);
+  color: var(--muted-1-color, var(--greyFont, #7a7672));
   margin-bottom: 8px;
 }
 .metric-card__mask-title {
   font-size: 15px;
   font-weight: 600;
+  color: var(--text-color-2);
 }
 .metric-card__mask-desc {
   margin-top: 6px;
   font-size: 12px;
-  color: var(--greyFont, #7a7672);
+  color: var(--muted-1-color, var(--greyFont, #7a7672));
   code {
     padding: 0 4px;
-    border-radius: 4px;
-    background: var(--lightGray, #e4e0db);
+    border-radius: var(--gp-border-radius-base, 4px);
+    background: var(--background-1, var(--lightGray, #e4e0db));
+    color: var(--text-color-2);
   }
 }
 </style>

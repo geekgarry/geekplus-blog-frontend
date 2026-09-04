@@ -2716,7 +2716,7 @@ body[theme-mode='dark'] .chat-sidebar__user,
 
 .chat-composer {
   border-radius: var(--gp-surface-radius, 12px) !important;
-  background: var(--background-origin, #fff) !important;
+  background: var(--background-1, #e8e7e7) !important;
   border: 1px solid rgba(20, 24, 32, 0.1) !important;
   box-shadow: 0 8px 28px rgba(20, 24, 32, 0.06) !important;
   padding: 6px 8px !important;

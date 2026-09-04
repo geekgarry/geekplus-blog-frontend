@@ -1,7 +1,7 @@
 <template>
   <div :class="classObj" class="app-wrapper">
     <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
-    <!--当 adminMenuLayout=sidebar 显示侧栏；topbar 显示顶栏菜单；workbench 隐藏传统菜单-->
+    <!--当 adminMenuLayout=sidebar 显示侧栏；topbar 显示顶栏菜单-->
     <sidebar class="sidebar-container" v-if="device==='mobile'||showAdminSidebar" />
     <div :class="{hasTagsView:needTagsView, 'main-container':showAdminSidebar}">
       <div :class="{'fixed-header':fixedHeader, topMenuBar: !showAdminSidebar}">
@@ -34,8 +34,8 @@ import { markBootReady } from '@/utils/bootLoader'
 import { refreshAfterElementCss } from '@/theme'
 import '@/styles/admin.scss'
 import '@/styles/sidebar.scss'
-/* admin.scss 在 layout 懒加载，再盖一层圆角变量，避免写死 4px 盖掉设置 */
-import '@/styles/gp-border-radius.css'
+/* admin.scss 懒加载后再申明 Element 覆盖，压过管理端硬编码色 */
+import '@/styles/element-overrides.css'
 import '@/plugins/element-admin'
 
 export default {
@@ -79,20 +79,16 @@ export default {
     fixedHeader() {
       return this.$store.state.settings.fixedHeader == '1' ? true : false
     },
-    //获取menuInLeft值（与 adminMenuLayout 同步，workbench 时视为顶栏宽布局）
+    // 与 adminMenuLayout 同步（仅 sidebar | topbar）
     leftMenuBar() {
       return this.$store.state.settings.leftMenuBar == '1' ? true : false
     },
     adminMenuLayout() {
       const val = this.$store.state.settings.adminMenuLayout
-      if (val === 'sidebar' || val === 'topbar' || val === 'workbench') return val
-      return this.leftMenuBar ? 'sidebar' : 'topbar'
+      return val === 'topbar' ? 'topbar' : 'sidebar'
     },
     showAdminSidebar() {
       return this.adminMenuLayout === 'sidebar'
-    },
-    isAdminWorkbenchNav() {
-      return this.adminMenuLayout === 'workbench'
     },
     classObj() {
       return {
@@ -100,8 +96,7 @@ export default {
         hideSidebar: !this.sidebar.opened && (this.device==='mobile' || this.showAdminSidebar),
         openSidebar: this.sidebar.opened,
         withoutAnimation: this.sidebar.withoutAnimation,
-        mobile: this.device === 'mobile',
-        adminWorkbenchNav: this.isAdminWorkbenchNav
+        mobile: this.device === 'mobile'
       }
     }
   },

@@ -1,10 +1,17 @@
 <template>
-  <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+  <el-form
+    ref="form"
+    class="gp-profile-form"
+    :model="form"
+    :rules="rules"
+    :label-width="formLabelWidth"
+    :label-position="formLabelPosition"
+  >
     <el-form-item label="用户名称" prop="username">
       <el-input v-model="form.username" maxlength="30" placeholder="登录用户名" />
     </el-form-item>
     <el-form-item label="用户昵称" prop="nickname">
-      <el-input v-model="form.nickname" />
+      <el-input v-model="form.nickname" placeholder="显示昵称" />
     </el-form-item>
     <el-form-item v-if="isBlogSiteAdmin()" label="所属部门" prop="deptId">
       <treeselect
@@ -16,10 +23,10 @@
       />
     </el-form-item>
     <el-form-item label="手机号码" prop="phoneNumber">
-      <el-input v-model="form.phoneNumber" maxlength="11" />
+      <el-input v-model="form.phoneNumber" maxlength="11" placeholder="11 位手机号" />
     </el-form-item>
     <el-form-item label="邮箱" prop="email">
-      <el-input v-model="form.email" maxlength="50" />
+      <el-input v-model="form.email" maxlength="50" placeholder="邮箱地址" />
     </el-form-item>
     <el-form-item label="性别">
       <el-radio-group v-model="form.gender">
@@ -29,11 +36,18 @@
       </el-radio-group>
     </el-form-item>
     <el-form-item label="备注" prop="remark">
-      <el-input v-model="form.remark" type="textarea" :rows="3" maxlength="200" show-word-limit placeholder="个人备注" />
+      <el-input
+        v-model="form.remark"
+        type="textarea"
+        :rows="3"
+        maxlength="200"
+        show-word-limit
+        placeholder="个人备注"
+      />
     </el-form-item>
-    <el-form-item>
-      <el-button type="primary" size="mini" :loading="saving" @click="submit">保存</el-button>
-      <el-button type="danger" size="mini" @click="close">关闭</el-button>
+    <el-form-item class="gp-profile-form__actions">
+      <el-button type="primary" size="small" :loading="saving" @click="submit">保存</el-button>
+      <el-button size="small" @click="close">关闭</el-button>
     </el-form-item>
   </el-form>
 </template>
@@ -54,6 +68,7 @@ export default {
     return {
       saving: false,
       deptOptions: [],
+      viewportW: typeof window !== "undefined" ? window.innerWidth : 1024,
       form: {
         userId: undefined,
         username: undefined,
@@ -96,6 +111,14 @@ export default {
       },
     };
   },
+  computed: {
+    formLabelWidth() {
+      return this.viewportW < 576 ? "auto" : "88px";
+    },
+    formLabelPosition() {
+      return this.viewportW < 576 ? "top" : "right";
+    },
+  },
   watch: {
     user: {
       immediate: true,
@@ -118,33 +141,34 @@ export default {
   created() {
     this.getListDeptOptions();
   },
+  mounted() {
+    this._onResize = () => {
+      this.viewportW = window.innerWidth;
+    };
+    window.addEventListener("resize", this._onResize, { passive: true });
+  },
+  beforeDestroy() {
+    if (this._onResize) window.removeEventListener("resize", this._onResize);
+  },
   methods: {
     isBlogSiteAdmin,
     submit() {
       this.$refs["form"].validate((valid) => {
         if (!valid) return;
-        this.$confirm(
-          "修改个人资料后需重新登录，是否继续？",
-          "提示",
-          {
-            confirmButtonText: "确定",
-            cancelButtonText: "取消",
-            type: "warning",
-          }
-        )
-          .then(() => {
-            this.saving = true;
-            return updateUserProfile(this.form);
-          })
+        // 基本资料保存后仅同步会话展示字段，无需重新登录（改密才需要）
+        this.saving = true;
+        updateUserProfile(this.form)
           .then((response) => {
-            this.msgSuccess(response.msg || "修改成功，请重新登录");
-            const redirect = this.$route.fullPath;
-            return this.$store.dispatch("user/logout").then(() => {
-              this.$router.push({
-                path: "/login",
-                query: { redirect },
+            this.msgSuccess(response.msg || "修改成功");
+            this.$store.commit("user/SET_NICKNAME", this.form.nickname);
+            this.$store.commit("user/SET_USERNAME", this.form.username);
+            if (this.$store.state.user.sysUser) {
+              this.$store.commit("user/SET_USER", {
+                ...this.$store.state.user.sysUser,
+                ...this.form,
               });
-            });
+            }
+            this.$emit("updated", { ...this.form });
           })
           .catch(() => {})
           .then(() => {
@@ -179,3 +203,39 @@ export default {
   },
 };
 </script>
+
+<style scoped lang="scss">
+.gp-profile-form {
+  max-width: 560px;
+
+  ::v-deep .el-form-item__label {
+    color: var(--text-color, #4f4c48);
+  }
+
+  ::v-deep .vue-treeselect {
+    line-height: 1;
+  }
+}
+
+.gp-profile-form__actions {
+  margin-bottom: 0;
+  padding-top: 4px;
+}
+
+@media (max-width: 575px) {
+  .gp-profile-form {
+    max-width: none;
+  }
+
+  .gp-profile-form__actions {
+    ::v-deep .el-form-item__content {
+      display: flex;
+      gap: 8px;
+    }
+
+    .el-button {
+      flex: 1;
+    }
+  }
+}
+</style>

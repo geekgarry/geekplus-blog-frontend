@@ -588,7 +588,7 @@
   border-radius: var(--gp-surface-radius, 10px) 0 0 var(--gp-surface-radius, 10px);
 }
 
-/* 博客页内残留 Element：柔化官方蓝，对齐站点主题 */
+/* 博客页内残留 Element：主题色对齐（全局覆盖见 styles/element-overrides.css） */
 .gp-page .el-button--text,
 .gp-page .el-button--primary.is-plain {
   color: var(--text-color-2, #fbfafa);

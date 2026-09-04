@@ -173,6 +173,25 @@ Node 版本建议与团队现网一致（Vue CLI 5 / webpack 体系）。首次�
 
 > **约定**：以后每一次**重点优化 / 架构改动 / 体验向修复**，必须在本小节**置顶追加**一条（日期 + 摘要 + 关键路径）。日常文案微调可不记。
 
+### 2026-09-02
+
+- **管理端菜单**：设置去掉未落地的「工作台」选项（历史值迁回侧栏）；顶栏一级/下拉菜单与站点 Token、行高统一。  
+  - 代码：`layout/components/Settings`、`store/modules/settings.js`、`styles/sidebar.scss`、`layout/components/Topbar`
+- **个人中心 / 头像裁剪 UI**：圆形展示与 1:1 裁剪预览对齐；弹窗与表单适配移动端；身份卡 + 资料卡统一 Token 视觉。  
+  - 代码：`views/admin/system/user/profile/*`
+- **Tip / 组合框 / Tag 对比度**：浅色主题 tip 不再炭黑；文件搜索 append 收窄并抬升底色；Tag 默认/info 加强对比。  
+  - 代码：`styles/element-overrides.css`、`layout/components/Navbar.vue`、`views/admin/system/file/index.vue`
+- **用户列表表头排序筛选**：列排序走 `sortField/sortType`；类型/性别/状态表头筛选并入 `conditionsJson`。  
+  - 代码：`views/admin/system/user/index.vue`
+- **Element 控件形态回正**：组合输入框恢复原生贴合（不再拆成两颗胶囊）；Tooltip dark/light 分色；全局输入补回左右 padding。  
+  - 代码：`styles/element-overrides.css`、`components/HeaderSearch/index.vue`
+- **文件管理图标视图深浅色**：卡片底/边框/预览区/选中态/侧栏/右键菜单改走 Token。  
+  - 代码：`views/admin/system/file/index.vue`
+- **Element 深色漏色修复**：`bumpElementThemeStyles` 原先把 chalk 放最后盖掉 Token；现改为 chalk → primary → `element-overrides`；去掉表头 th 圆角「胶囊块」；输入组合框/下拉/表格/抽屉全面 `!important` Token 化。  
+  - 代码：`utils/elementTheme.js`、`styles/element-overrides.css`、`views/admin/dashboard/index.vue`
+- **文件管理点选回填**：预览走带 `Plus-Token` 的 blob（避免 img/video 直链 401）；操作列拆成「不固定操作 + 固定右侧选择/删除」；业务页去掉「勾选后再点底部确定」。  
+  - 代码：`views/admin/system/file/index.vue`、`components/FilePickModal`、`api/system/file-manager.js`（`fetchFilePreviewBlob`）；写文章 / 文章资源库 / 站点音乐 / 轮播图
+
 ### 2026-08-31
 
 - **AI 聊天输入框**：微信式随内容增高、删字收回（scrollHeight）；侧栏底部账号区背景/按钮样式优化。

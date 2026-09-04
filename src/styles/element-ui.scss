@@ -1,23 +1,11 @@
-// cover some element-ui styles
-
-.el-breadcrumb__inner,
-.el-breadcrumb__inner a {
-  font-weight: 400 !important;
-}
-
-.el-upload {
-  input[type="file"] {
-    display: none !important;
-  }
-}
-
-.el-upload__input {
-  display: none;
-}
+/**
+ * Element UI 布局 / 已知 bug 修复（无颜色）
+ * 颜色与圆角见 element-overrides.css
+ */
 
 .cell {
   .el-tag {
-    margin-right: 0px;
+    margin-right: 0;
   }
 }
 
@@ -41,20 +29,11 @@
     text-align: center;
 
     .el-tag {
-      margin-right: 0px;
+      margin-right: 0;
     }
   }
 }
 
-// to fixed https://github.com/ElemeFE/element/issues/2461
-.el-dialog {
-  transform: none;
-  left: 0;
-  position: relative;
-  margin: 0 auto;
-}
-
-// refine element ui upload
 .upload-container {
   .el-upload {
     width: 100%;
@@ -64,21 +43,4 @@
       height: 200px;
     }
   }
-}
-
-// dropdown
-.el-dropdown-menu {
-  a {
-    display: block
-  }
-}
-
-// fix date-picker ui bug in filter-item
-.el-range-editor.el-input__inner {
-  display: inline-flex !important;
-}
-
-// to fix el-date-picker css style
-.el-range-separator {
-  box-sizing: content-box;
 }

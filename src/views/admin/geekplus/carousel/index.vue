@@ -37,11 +37,10 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item> -->
-      <el-form-item label="是否展示" >
-        <!-- <el-input v-model="form.workVisible" placeholder="请输入0（展示在简历中）或1（不展示）" :disabled="onlyread" /> -->
-        <el-select v-model="form.isDisplay" placeholder="请选择是否首页展示" :disabled="onlyread" >
-          <el-option label="不展示" value='0' />
-          <el-option label="展示" value='1' />
+      <el-form-item label="是否展示" prop="isDisplay">
+        <el-select v-model="queryParams.isDisplay" placeholder="请选择是否首页展示" clearable size="small">
+          <el-option label="不展示" value="0" />
+          <el-option label="展示" value="1" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -95,10 +94,14 @@
       <el-table-column label="轮播图标题" align="center" show-overflow-tooltip prop="carouselTitle" />
       <el-table-column label="轮播图信息" align="center" show-overflow-tooltip prop="carouselInfo" />
       <el-table-column label="轮播图链接" align="center" show-overflow-tooltip prop="carouselLink" />
-      <el-table-column label="首页展示" align="center" width="130" prop="isDisplay" >
+      <el-table-column label="首页展示" align="center" width="130" prop="isDisplay">
         <template slot-scope="scope">
-          <span v-if="scope.row.isDisplay=='0'" style="color:#8B0000">不展示</span>
-          <span v-if="scope.row.isDisplay=='1'" style="color:#13ce66">展示</span>
+          <el-switch
+            v-model="scope.row.isDisplay"
+            active-value="1"
+            inactive-value="0"
+            @change="handleIsDisplayChange(scope.row)"
+          />
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" fixed="right" width="130" class-name="small-padding fixed-width">
@@ -173,7 +176,7 @@
           </el-col>
           <el-col :span="7">
             <el-tooltip content="浏览并选择图片" placement="top">
-              <el-button type="primary" @click="displayImageList">浏览图片</el-button>
+                    <el-button type="primary" @click="openFilePick">浏览图片</el-button>
             </el-tooltip>
 
           </el-col>
@@ -187,12 +190,14 @@
         <el-form-item label="轮播图链接" prop="carouselLink">
           <el-input v-model="form.carouselLink" placeholder="请输入跑马灯轮播图链接地址" />
         </el-form-item>
-        <el-form-item label="是否展示" >
-          <!-- <el-input v-model="form.workVisible" placeholder="请输入0（展示在简历中）或1（不展示）" :disabled="onlyread" /> -->
-          <el-select v-model="form.isDisplay" placeholder="请选择是否首页展示" :disabled="onlyread" >
-            <el-option label="不展示" value='0' />
-            <el-option label="展示" value='1' />
-          </el-select>
+        <el-form-item label="是否展示" prop="isDisplay">
+          <el-switch
+            v-model="form.isDisplay"
+            active-value="1"
+            inactive-value="0"
+            active-text="展示"
+            inactive-text="隐藏"
+          />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -201,51 +206,27 @@
       </div>
     </el-dialog>
 
-    <!-- 显示所有轮播图的对话框 -->
-    <el-dialog :title="title" :visible.sync="displayAllImage" width="600px" append-to-body>
-      <el-row :gutter="20" >
-        <el-col :span="6" v-for="carouselImg in allCarouselImg" :key="carouselImg">
-          <div style="text-align: -webkit-center;">
-            <!-- <el-image
-              style="width: 100px; height: 100px"
-              :src="carouselImg"
-              :fit="fit"></el-image> -->
-            <el-image
-              style="width: 100px; height: 100px; "
-              :src="carouselImg"
-              fit="contain"
-              :preview-src-list="allCarouselImg"
-              lazy >
-              <div slot="placeholder" class="image-slot">
-                加载中<span class="dot">...</span>
-              </div>
-            </el-image>
-            <div style="">
-              <el-tooltip content="点击删除文件" placement="top">
-                <el-button @click="deleteFileByPath(carouselImg)" type="danger" icon="el-icon-delete" circle></el-button>
-              </el-tooltip>
-              <el-tooltip content="选择当前文件" placement="top">
-                <el-button @click="getImgUrl(carouselImg)" type="success" icon="el-icon-check" circle></el-button>
-              </el-tooltip>
-            </div>
-          </div>
-        </el-col>
-      </el-row>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="displayAllImage = false">取 消</el-button>
-        <el-button type="primary" @click="displayAllImage = false">确 定</el-button>
-      </span>
-    </el-dialog>
+    <file-pick-modal
+      :visible="displayAllImage"
+      kind="image"
+      initial-path="/upload"
+      title="选择轮播图"
+      @cancel="displayAllImage = false"
+      @pick="onPickFile"
+    />
   </div>
 </template>
 
 <script>
 import { listCarousel, getCarousel, delCarousel, addCarousel, updateCarousel,
-  exportCarousel, listAllImageSrc, uploadFile, deleteFile } from "@/api/geekplus/carousel";
+  exportCarousel, uploadFile, deleteFile } from "@/api/geekplus/carousel";
+import FilePickModal from "@/components/FilePickModal";
+import { fileUrlFromRow } from "@/utils/fileUrl";
 
 export default {
   name: "Carousel",
   components: {
+    FilePickModal
   },
   data() {
     return {
@@ -303,7 +284,10 @@ export default {
     getList() {
       this.loading = true;
       listCarousel(this.queryParams).then(response => {
-        this.carouselList = response.rows;
+        this.carouselList = (response.rows || []).map(row => ({
+          ...row,
+          isDisplay: String(row.isDisplay == null ? "0" : row.isDisplay)
+        }));
         this.total = response.total;
         this.loading = false;
       });
@@ -321,6 +305,7 @@ export default {
         carouselTitle: null,
         carouselInfo: null,
         carouselLink: null,
+        isDisplay: "1",
         createTime: null,
         updateTime: null
       };
@@ -349,15 +334,18 @@ export default {
       this.title = "添加首页跑马灯轮播图";
     },
     //显示图片资源列表对话框，然后开始请求图片资源
-    displayImageList(){
-      listAllImageSrc().then((response)=>{
-        //console.log(response)
-        this.displayAllImage=true;
-        this.allCarouselImg=response.data;//this.localImgToWebImg(response.data);
-        //console.log(response);
-      }).catch((error)=>{
-        console.log(error);
-      })
+    openFilePick() {
+      this.displayAllImage = true;
+    },
+    onPickFile(row) {
+      const url = fileUrlFromRow(row);
+      if (!url) {
+        this.$message.warning('无法解析文件地址');
+        return;
+      }
+      this.form.carouselImg = url;
+      this.displayAllImage = false;
+      this.$message.success('已回填');
     },
     //把服务器获取的图片路径拼接成公网地址
     localImgToWebImg(imgList){
@@ -376,7 +364,6 @@ export default {
     },
     //点击选择获取图片地址
     getImgUrl(imgUrl){
-      //console.log(imgUrl);
       this.form.carouselImg=imgUrl;
       this.displayAllImage=false;
     },
@@ -386,8 +373,23 @@ export default {
       const id = row.id || this.ids
       getCarousel(id).then(response => {
         this.form = response.data;
+        this.form.isDisplay = String(this.form.isDisplay == null ? "1" : this.form.isDisplay);
         this.open = true;
         this.title = "修改首页跑马灯轮播图";
+      });
+    },
+    handleIsDisplayChange(row) {
+      const text = row.isDisplay === "1" ? "展示" : "隐藏";
+      this.$confirm('确认要"' + text + '""' + (row.carouselTitle || row.id) + '"吗?', "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(function () {
+        return updateCarousel(row);
+      }).then(() => {
+        this.msgSuccess(text + "成功");
+      }).catch(function () {
+        row.isDisplay = row.isDisplay === "1" ? "0" : "1";
       });
     },
     /** 提交按钮 */

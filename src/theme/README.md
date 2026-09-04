@@ -23,7 +23,7 @@
 | **控件圆角** | `borderRadius` | `--gp-border-radius-base` | 4（与 SCSS `$base-border-radius` 同值） |
 | **博客圆角** | `blogSurfaceRadius` | `--gp-surface-radius`；`--gp-surface-radius-sm` = surface − 4 | 14 → sm 10 |
 
-二者独立调节。覆盖表：`src/styles/gp-border-radius.css`（控件侧）。前台卡片等直接读 `--gp-surface-radius*`。
+二者独立调节。覆盖表：`src/styles/element-overrides.css`（控件侧，含圆角）。前台卡片等直接读 `--gp-surface-radius*`。
 
 管理端业务样式写法（编译期回退对齐 variables）：
 

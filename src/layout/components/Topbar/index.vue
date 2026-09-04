@@ -275,8 +275,8 @@ export default {
   border: none;
   overflow: hidden;
   box-sizing: border-box;
-  background-color: var(--gp-surface-bg, #f7f7f7);
-  box-shadow: var(--gp-nav-shadow, 0 1px 4px rgba(15, 23, 42, 0.06));
+  /* 与 Navbar 同色，避免顶栏菜单条另起一块灰底 */
+  background-color: transparent;
   color: var(--text-color-2, #303133);
 }
 

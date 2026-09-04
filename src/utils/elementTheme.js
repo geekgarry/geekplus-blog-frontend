@@ -149,15 +149,34 @@ function ensureStyleTag(id) {
   return el
 }
 
-/** 把主题相关 style 挪到 head 末尾，压过异步按需 CSS */
+/** 把主题相关 style 挪到 head 末尾，压过异步按需 CSS。
+ * 顺序必须：chalk（主题色替换）→ primary 轻量覆盖 → element-overrides（深浅色表面）。
+ * 旧实现把 chalk 放最后，导致白底 #FFF 盖掉 Token 覆盖（下拉/输入组合框白块）。
+ */
 export function bumpElementThemeStyles() {
-  if (typeof document === 'undefined') return
-  ;[OVERRIDE_STYLE_ID, CHALK_STYLE_ID].forEach((id) => {
-    const el = document.getElementById(id)
+  if (typeof document === 'undefined' || !document.head) return
+  const move = (el) => {
     if (el && el.parentNode === document.head) {
       document.head.appendChild(el)
     }
-  })
+  }
+  // 开发态 style-loader 注入的 style 无 href，用文件头签名标记
+  try {
+    document.querySelectorAll('style').forEach((s) => {
+      const t = s.textContent || ''
+      if (t.indexOf('Element UI 深浅色 / 圆角统一覆盖') !== -1 || t.indexOf('data-gp-element-surface-marker') !== -1) {
+        s.setAttribute('data-gp-element-surface', '1')
+      }
+    })
+  } catch (e) { /* ignore */ }
+
+  move(document.getElementById(CHALK_STYLE_ID))
+  move(document.getElementById(OVERRIDE_STYLE_ID))
+  try {
+    document.querySelectorAll(
+      'link[href*="element-overrides"], style[data-gp-element-surface]'
+    ).forEach(move)
+  } catch (e) { /* ignore */ }
 }
 
 /**

@@ -173,10 +173,13 @@ export default {
     ::v-deep .el-input__inner {
       border-radius: 0;
       border: 0;
-      padding-left: 0;
-      padding-right: 0;
+      /* 收起时宽为 0；须 !important 才能压过 element-overrides 的全局 padding */
+      padding-left: 0 !important;
+      padding-right: 0 !important;
       box-shadow: none !important;
-      border-bottom: 1px solid var(--border-color,#d9d9d9);
+      border-bottom: 1px solid var(--border-color, #d9d9d9);
+      color: var(--text-color-2, #606266);
+      background: transparent !important;
       vertical-align: middle;
     }
   }
@@ -185,6 +188,12 @@ export default {
     .header-search-select {
       width: 210px;
       margin-left: 10px;
+
+      /* 展开后左右留白，后缀清除图标侧略宽 */
+      ::v-deep .el-input__inner {
+        padding-left: 8px !important;
+        padding-right: 28px !important;
+      }
     }
   }
 }

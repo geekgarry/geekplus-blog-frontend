@@ -1,5 +1,5 @@
 <template>
-  <div class="file-manager-container">
+  <div class="file-manager-container" :class="{ 'is-picker': picker }">
     <!-- 顶部导航与搜索栏 -->
     <div class="nav-bar">
       <div class="nav-buttons hidden-xs-only">
@@ -27,16 +27,44 @@
 
     <!-- 批量操作工具栏 -->
     <div class="toolbar">
-      <div class="breadcrumb-container">
-        <el-breadcrumb separator-class="el-icon-arrow-right">
-          <el-breadcrumb-item><a @click="navigateTo('/')"><i class="el-icon-s-home"></i> 根目录</a></el-breadcrumb-item>
+      <!-- 面包屑：点空白可切成路径编辑；段名仍可单独跳转（类似资源管理器） -->
+      <div
+        class="breadcrumb-container"
+        :class="{ 'is-editing': breadcrumbEditing }"
+        :title="breadcrumbEditing ? '' : '点击空白处编辑路径'"
+        @click="onBreadcrumbBarClick"
+      >
+        <el-breadcrumb v-show="!breadcrumbEditing" separator-class="el-icon-arrow-right">
+          <el-breadcrumb-item>
+            <a @click.stop="navigateTo('/')"><i class="el-icon-s-home"></i> 根目录</a>
+          </el-breadcrumb-item>
           <el-breadcrumb-item v-for="(folder, index) in breadcrumbs" :key="index">
-            <a @click="navigateTo(folder.path)">{{ folder.name }}</a>
+            <a @click.stop="navigateTo(folder.path)">{{ folder.name }}</a>
           </el-breadcrumb-item>
         </el-breadcrumb>
+        <el-input
+          v-if="breadcrumbEditing"
+          ref="breadcrumbPathInput"
+          size="mini"
+          class="breadcrumb-path-input"
+          v-model="inputPath"
+          placeholder="输入路径，回车跳转；Esc 取消"
+          @keyup.enter.native="confirmBreadcrumbEdit"
+          @keyup.esc.native="cancelBreadcrumbEdit"
+          @blur="onBreadcrumbEditBlur"
+          @click.native.stop
+        >
+          <i slot="prefix" class="el-input__icon el-icon-folder-opened"></i>
+        </el-input>
       </div>
 
       <div class="actions">
+        <template v-if="picker">
+          <el-button class="hidden-xs-only" type="primary" size="small" icon="el-icon-upload" @click="openUploadDrawer"
+            :loading="uploading" title="上传">上传</el-button>
+          <el-button size="small" circle icon="el-icon-refresh" @click="fetchFiles(currentPath, false)" title="刷新"></el-button>
+        </template>
+        <template v-else>
         <el-button v-if="clipboard.length > 0" type="warning" size="small" icon="el-icon-document-checked"
           @click="handlePaste">
           粘贴 ({{ clipboard.length }})
@@ -81,10 +109,12 @@
           icon="el-icon-s-grid" @click="toggleView('icons')" title="图标视图"></el-button>
         <el-button size="small" circle icon="el-icon-refresh" @click="fetchFiles(currentPath, false)"
           title="刷新"></el-button>
+        </template>
       </div>
     </div>
 
-    <el-drawer title="上传文件 / 文件夹" :visible.sync="uploadDrawerVisible" direction="rtl" size="420px" append-to-body>
+    <el-drawer title="上传文件 / 文件夹" :visible.sync="uploadDrawerVisible" direction="rtl" size="420px" append-to-body
+      custom-class="fm-upload-drawer">
       <div class="upload-drawer">
         <div class="upload-ops">
           <el-button type="primary" @click="triggerFileSelect">上传文件</el-button>
@@ -145,11 +175,18 @@
 
     <!-- 文件列表表格 -->
     <div v-if="viewMode === 'table'">
-      <el-table v-loading="loading" :data="fileList" style="width: 100%" height="calc(100vh - 260px)"
-        @selection-change="handleSelectionChange" @sort-change="handleSortChange"
-        :default-sort="{ prop: 'isDirectory', order: 'descending' }">
+      <el-table
+        ref="fileTable"
+        v-loading="loading"
+        :data="fileList"
+        style="width: 100%"
+        :height="tableHeight"
+        @selection-change="handleSelectionChange"
+        @sort-change="handleSortChange"
+        :default-sort="{ prop: 'isDirectory', order: 'descending' }"
+      >
 
-        <el-table-column type="selection" width="55" align="center"></el-table-column>
+        <el-table-column v-if="!picker" type="selection" width="55" align="center"></el-table-column>
 
         <el-table-column prop="name" label="名称" sortable="custom" min-width="250" show-overflow-tooltip>
           <template slot-scope="scope">
@@ -177,11 +214,39 @@
           <template slot-scope="scope">{{ formatDate(scope.row.updateTime) }}</template>
         </el-table-column>
 
-        <el-table-column label="操作" min-width="150" fixed="right">
+        <!-- 操作列禁止换行，避免行高参差导致 fixed 列错位 -->
+        <el-table-column v-if="!picker" label="操作" width="228" class-name="fm-ops-col">
           <template slot-scope="scope">
-            <el-button type="text" size="small" icon="el-icon-edit" @click="openRenameDialog(scope.row)">重命名</el-button>
-            <el-button type="text" size="small" icon="el-icon-download" v-if="!scope.row.isDirectory"
-              @click="downloadFile(scope.row)">下载</el-button>
+            <div class="fm-ops">
+              <el-button type="text" size="small" icon="el-icon-edit" @click="openRenameDialog(scope.row)">重命名</el-button>
+              <el-button type="text" size="small" icon="el-icon-download" v-if="!scope.row.isDirectory"
+                @click="downloadFile(scope.row)">下载</el-button>
+              <el-button type="text" size="small" icon="el-icon-view" v-if="canPreview(scope.row)"
+                @click="handleFileAction(scope.row)">预览</el-button>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column v-if="!picker" label="删除" width="72" fixed="right" class-name="fm-fixed-action-col" align="center">
+          <template slot-scope="scope">
+            <el-button type="text" size="small" style="color:#F56C6C" @click="handleDelete(scope.row)">删除</el-button>
+          </template>
+        </el-table-column>
+        <el-table-column v-if="picker" label="操作" width="180" class-name="fm-ops-col">
+          <template slot-scope="scope">
+            <div class="fm-ops">
+              <span v-if="scope.row.isDirectory" class="fm-action-muted">进入</span>
+              <template v-else>
+                <el-button type="text" size="small" v-if="canPreview(scope.row)" @click="handleFileAction(scope.row)">预览</el-button>
+                <el-button type="text" size="small" @click="handleCopyPath(scope.row)">复制路径</el-button>
+              </template>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column v-if="picker" label="选择" width="72" fixed="right" class-name="fm-fixed-action-col" align="center">
+          <template slot-scope="scope">
+            <el-button v-if="!scope.row.isDirectory && matchesAccept(scope.row)" type="text" size="small" class="fm-picker-select"
+              @click="emitPick(scope.row)">选择</el-button>
+            <span v-else class="fm-action-muted">—</span>
           </template>
         </el-table-column>
       </el-table>
@@ -196,7 +261,7 @@
             @dblclick="handleItemClick(row)" @click="handleIconSelection(row, index, $event)"
             @contextmenu.stop="showContextMenu(row, index, $event)" draggable="true"
             @dragstart="onDragStart(row, $event)">
-            <div class="icon-checkbox">
+            <div v-if="!picker" class="icon-checkbox">
               <el-checkbox :value="isSelected(row)"
                 @change="handleIconSelection(row, index, { shiftKey: false, ctrlKey: true })" @click.stop></el-checkbox>
             </div>
@@ -235,11 +300,13 @@
               <div v-if="isDocumentType(row)" class="icon-snippet" @mouseenter="loadTextSnippet(row)">{{
                 textSnippetCache[row.path] || '悬停载入预览...' }}</div>
               <div class="icon-actions">
+                <el-button v-if="picker && !row.isDirectory && matchesAccept(row)" type="text" size="mini"
+                  @click.stop="emitPick(row)">选择</el-button>
                 <el-button type="text" icon="el-icon-document-copy" size="mini" @click.stop="handleCopyPath(row)"
                   title="复制路径"></el-button>
-                <el-button type="text" icon="el-icon-edit" size="mini" @click.stop="openRenameDialog(row)"
+                <el-button v-if="!picker" type="text" icon="el-icon-edit" size="mini" @click.stop="openRenameDialog(row)"
                   title="重命名"></el-button>
-                <el-button type="text" size="mini" icon="el-icon-download" v-if="!row.isDirectory"
+                <el-button v-if="!picker && !row.isDirectory" type="text" size="mini" icon="el-icon-download"
                   @click.stop="downloadFile(row)" title="下载"></el-button>
               </div>
             </div>
@@ -387,13 +454,13 @@
     <el-dialog :title="previewFileObj ? previewFileObj.name : '预览'" :visible.sync="previewDialogVisible" top="5vh"
       @close="closePreview" append-to-body width="900px">
       <div class="preview-content" v-loading="previewLoading">
-        <el-image v-if="previewType === 'image'" :lazy="true" :src="previewUrl" fit="contain"
+        <el-image v-if="previewType === 'image' && previewUrl" :lazy="true" :src="previewUrl" fit="contain"
           style="width: 100%; height: 60vh;" :preview-src-list="[previewUrl]"></el-image>
-        <video v-else-if="previewType === 'video'" :src="previewUrl" controls
+        <video v-else-if="previewType === 'video' && previewUrl" :src="previewUrl" controls
           style="width: 100%; max-height: 60vh;"></video>
-        <audio v-else-if="previewType === 'audio'" :src="previewUrl" controls
-          style="width: 100%; margin-top: 0px;"></audio>
-        <iframe v-else-if="previewType === 'document'" :src="previewUrl" frameborder="0"
+        <audio v-else-if="previewType === 'audio' && previewUrl" :src="previewUrl" controls
+          style="width: 100%; max-width: 480px; margin-top: 0px;"></audio>
+        <iframe v-else-if="previewType === 'document' && previewUrl" :src="previewUrl" frameborder="0"
           style="width: 100%; height: 65vh;"></iframe>
         <div v-else-if="previewType === 'text'" class="text-preview-wrap">
           <!-- 大文件提示：避免误开超大文本卡死页面 -->
@@ -474,7 +541,7 @@
 
 <script>
 // import axios from 'axios';
-import { list_file, search_file, delete_batch_file, delete_file, rename_file, upload_file, create_file, copy_file, move_file, compress_file, list_recycle_file, restore_recycle_file, delete_recycle_file, check_exist, read_text_file, save_text_file, downloadRecycleFile, downloadCommonFile, getDownloadUrl } from '@/api/system/file-manager';
+import { list_file, search_file, delete_batch_file, delete_file, rename_file, upload_file, create_file, copy_file, move_file, compress_file, list_recycle_file, restore_recycle_file, delete_recycle_file, check_exist, read_text_file, save_text_file, downloadRecycleFile, downloadCommonFile, getDownloadUrl, fetchFilePreviewBlob } from '@/api/system/file-manager';
 import { copyToClipboard } from '@/utils/clipboard';
 import { downloadFileByProgress } from "@/utils/downloadZip"
 export default {
@@ -484,12 +551,30 @@ export default {
     initialPath: {
       type: String,
       default: '/'
+    },
+    /** 点选回填：显示右侧「选择」列，不勾选确认 */
+    picker: {
+      type: Boolean,
+      default: false
+    },
+    /** ['audio'] | ['image'] | ['video'] | [] 不限 */
+    acceptKinds: {
+      type: Array,
+      default() { return []; }
+    },
+    inModal: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
     return {
       currentPath: '/',
       inputPath: '/',
+      // 面包屑路径编辑态（点空白切入；段链跳转不受影响）
+      breadcrumbEditing: false,
+      // blur 与 Esc 竞态：取消时跳过 blur 里的确认跳转
+      breadcrumbEditSkipBlur: false,
       searchKeyword: '',
       isSearchMode: false,
       fileList: [],
@@ -523,6 +608,8 @@ export default {
       previewDialogVisible: false,
       previewFileObj: null,
       previewUrl: '',
+      previewObjectUrl: '',
+      previewLoadSeq: 0,
       previewType: '',
       // 仅元信息进 Vue；正文写在 textarea DOM，避免大文本响应式卡顿
       previewTextMeta: { warn: '', blocked: '', readonly: false, length: 0 },
@@ -592,11 +679,17 @@ export default {
     },
     swRegistered() {
       return this.$store.getters.swRegistered;
-    }
+    },
+    tableHeight() {
+      return (this.picker || this.inModal) ? '420px' : 'calc(100vh - 260px)';
+    },
   },
   created() {
-    const initial = this.initialPath.trim() || '/';
+    const initial = (this.initialPath || '/').trim() || '/';
     this.fetchFiles(initial, false);
+  },
+  beforeDestroy() {
+    this.revokePreviewObjectUrl();
   },
   methods: {
     // ---------------- 基础列表与搜索 ----------------
@@ -618,6 +711,7 @@ export default {
           this.currentPath = targetPath;
           this.inputPath = targetPath;
           this.sortFiles('isDirectory', 'descending');
+          this.syncFixedTableRowHeights();
 
           if (pushHistory) {
             if (this.historyIndex < this.history.length - 1) this.history = this.history.slice(0, this.historyIndex + 1);
@@ -641,7 +735,10 @@ export default {
       this.queryParams.keyword = this.searchKeyword.trim();
       try {
         const res = await search_file(this.queryParams);
-        if (res.code === 200) this.fileList = res.data;
+        if (res.code === 200) {
+          this.fileList = res.data;
+          this.syncFixedTableRowHeights();
+        }
       } catch (error) {
         this.$message.error(error || '搜索文件不存在');
       } finally {
@@ -927,15 +1024,13 @@ export default {
     // ---------------- 批量操作与剪贴板 ----------------
     handleSelectionChange(val) {
       this.selectedFiles = val;
-      // console.log('当前选中：', this.selectedFiles);
+      if (this.picker) return;
       var selectedWithFullPath = this.selectedFiles.map(f => ({ ...f, fullPath: f.url || f.path }));
       if (this.selectedFiles.length === 0) {
-        // 如果没有选中任何文件，不触发事件但传递空数组
-        selectedWithFullPath = []; // 确保传递一个空数组而不是 undefined
+        selectedWithFullPath = [];
         return;
       }
-      //console.log('当前选中改变增加全文路径：', selectedWithFullPath);
-      this.$emit('select-file', selectedWithFullPath); // 触发一个名为 'select-file' 的事件，返回给引用的父组件并传递数据
+      this.$emit('select-file', selectedWithFullPath);
     },
     handleCopy() {
       this.clipboard = this.selectedFiles.map(f => f.path);
@@ -1008,11 +1103,98 @@ export default {
     goBack() { if (this.historyIndex > 0) { this.historyIndex--; this.fetchFiles(this.history[this.historyIndex], false); } },
     goForward() { if (this.historyIndex < this.history.length - 1) { this.historyIndex++; this.fetchFiles(this.history[this.historyIndex], false); } },
     goUp() { if (this.currentPath === '/') return; const parts = this.currentPath.split('/').filter(p => p); parts.pop(); this.navigateTo(parts.length === 0 ? '/' : '/' + parts.join('/')); },
-    jumpToPath() { if (this.inputPath !== this.currentPath) this.navigateTo(this.inputPath); },
+    // 统一路径形态，避免多余斜杠导致跳转失败
+    normalizePath(path) {
+      let s = String(path == null ? '' : path).trim().replace(/\\/g, '/');
+      if (!s) return '/';
+      if (!s.startsWith('/')) s = `/${s}`;
+      s = s.replace(/\/+/g, '/');
+      if (s.length > 1 && s.endsWith('/')) s = s.slice(0, -1);
+      return s;
+    },
+    jumpToPath() {
+      const next = this.normalizePath(this.inputPath);
+      this.inputPath = next;
+      if (next !== this.currentPath) this.navigateTo(next);
+    },
+    // 点面包屑空白（非整段链接）进入路径编辑
+    onBreadcrumbBarClick() {
+      if (this.breadcrumbEditing) return;
+      this.startBreadcrumbEdit();
+    },
+    startBreadcrumbEdit() {
+      this.breadcrumbEditSkipBlur = false;
+      this.inputPath = this.currentPath;
+      this.breadcrumbEditing = true;
+      this.$nextTick(() => {
+        const input = this.$refs.breadcrumbPathInput;
+        if (!input) return;
+        input.focus();
+        // 全选便于直接覆盖输入
+        if (typeof input.select === 'function') input.select();
+        else if (input.$el) {
+          const native = input.$el.querySelector('input');
+          if (native && native.select) native.select();
+        }
+      });
+    },
+    confirmBreadcrumbEdit() {
+      this.breadcrumbEditSkipBlur = true;
+      this.jumpToPath();
+      this.breadcrumbEditing = false;
+    },
+    cancelBreadcrumbEdit() {
+      this.breadcrumbEditSkipBlur = true;
+      this.inputPath = this.currentPath;
+      this.breadcrumbEditing = false;
+    },
+    // 失焦：路径有改动则跳转，否则仅退出编辑
+    onBreadcrumbEditBlur() {
+      if (this.breadcrumbEditSkipBlur) {
+        this.breadcrumbEditSkipBlur = false;
+        return;
+      }
+      const next = this.normalizePath(this.inputPath);
+      if (next !== this.currentPath) {
+        this.inputPath = next;
+        this.navigateTo(next);
+      } else {
+        this.inputPath = this.currentPath;
+      }
+      this.breadcrumbEditing = false;
+    },
     //跳转到指定路径，后端接口会优先使用 pageNum 并计算原始全部数据分页的值判断pageNum是否超出分页范围进行分页查询，前端不需要计算分页参数了
-    navigateTo(path) { this.fetchFiles(path, true); },
+    navigateTo(path) { this.fetchFiles(this.normalizePath(path), true); },
 
-    handleItemClick(row) { row.isDirectory ? this.navigateTo(row.path) : this.handleFileAction(row); },
+    handleItemClick(row) {
+      if (row.isDirectory) {
+        this.navigateTo(row.path);
+        return;
+      }
+      if (this.picker) {
+        if (this.matchesAccept(row)) this.emitPick(row);
+        else this.$message.warning('请选择符合要求的文件类型');
+        return;
+      }
+      this.handleFileAction(row);
+    },
+    canPreview(row) {
+      if (!row || row.isDirectory) return false;
+      return this.isImageType(row) || this.isVideoType(row) || this.isAudioType(row) || this.isTextEditableType(row) || (row.type || '').toLowerCase() === 'pdf';
+    },
+    matchesAccept(row) {
+      if (!row || row.isDirectory) return false;
+      const kinds = this.acceptKinds || [];
+      if (!kinds.length) return true;
+      if (kinds.includes('audio') && this.isAudioType(row)) return true;
+      if (kinds.includes('image') && this.isImageType(row)) return true;
+      if (kinds.includes('video') && this.isVideoType(row)) return true;
+      return false;
+    },
+    emitPick(row) {
+      this.$emit('pick', row);
+      this.$emit('select-file', [{ ...row, fullPath: row.url || row.path }]);
+    },
     handleFileAction(row) {
       const type = row.type ? row.type.toLowerCase() : '';
       if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'jpe', 'jfi', 'jfif', 'bmp', 'svg', 'heif', 'heifs', 'heic', 'heics', 'avci', 'avcs', 'avif', 'avifs'].includes(type)) this.openPreview(row, 'image');
@@ -1065,16 +1247,23 @@ export default {
         }
       } else {
         this.previewLoading = true;
+        const seq = ++this.previewLoadSeq;
+        this.revokePreviewObjectUrl();
         try {
-          if (row.url === "" || row.url === null) {
-            this.previewUrl = this.baseAPI + getDownloadUrl(row.path, true);
-          } else {
-            this.previewUrl = row.url;
+          const objectUrl = await fetchFilePreviewBlob(row.path || row.fullPath);
+          if (seq !== this.previewLoadSeq || !this.previewDialogVisible) {
+            URL.revokeObjectURL(objectUrl);
+            return;
           }
+          this.previewObjectUrl = objectUrl;
+          this.previewUrl = objectUrl;
         } catch (error) {
-          this.$message.error('预览文件失败: ' + error.message);
+          if (seq !== this.previewLoadSeq) return;
+          const status = error && error.response && error.response.status;
+          this.$message.error(status === 401 ? '预览失败：未登录或令牌无效' : ((error && error.message) || '预览文件失败'));
+          this.previewDialogVisible = false;
         } finally {
-          this.previewLoading = false;
+          if (seq === this.previewLoadSeq) this.previewLoading = false;
         }
       }
     },
@@ -1097,7 +1286,15 @@ export default {
         this.previewSaveLoading = false;
       }
     },
+    revokePreviewObjectUrl() {
+      if (this.previewObjectUrl) {
+        URL.revokeObjectURL(this.previewObjectUrl);
+        this.previewObjectUrl = '';
+      }
+    },
     closePreview() {
+      this.previewLoadSeq += 1;
+      this.revokePreviewObjectUrl();
       this.previewUrl = '';
       this.previewFileObj = null;
       this.previewType = '';
@@ -1322,7 +1519,10 @@ export default {
       const res = await rename_file({ path: this.currentRow.path, newName: this.newName });
       if (res.code === 200) { this.$message.success('重命名成功'); this.renameDialogVisible = false; this.fetchFiles(this.currentPath, false); }
     },
-    handleSortChange({ prop, order }) { this.sortFiles(prop, order); },
+    handleSortChange({ prop, order }) {
+      this.sortFiles(prop, order);
+      this.syncFixedTableRowHeights();
+    },
     sortFiles(prop, order) {
       if (!order) return;
       this.fileList.sort((a, b) => {
@@ -1336,6 +1536,28 @@ export default {
         return 0;
       });
     },
+    /**
+     * 同步主表与 fixed-right 行高。
+     * Element 固定列是另一份 DOM：操作列换行/多按钮导致主行变高时，右侧「删除」仍按默认行高，就会错位。
+     */
+    syncFixedTableRowHeights() {
+      this.$nextTick(() => {
+        requestAnimationFrame(() => {
+          const table = this.$refs.fileTable;
+          if (!table || !table.$el) return;
+          if (typeof table.doLayout === 'function') table.doLayout();
+          const root = table.$el;
+          const bodyRows = root.querySelectorAll('.el-table__body-wrapper tbody tr');
+          const fixedRows = root.querySelectorAll('.el-table__fixed-right .el-table__fixed-body-wrapper tbody tr');
+          const leftFixedRows = root.querySelectorAll('.el-table__fixed .el-table__fixed-body-wrapper tbody tr');
+          bodyRows.forEach((row, i) => {
+            const h = `${row.getBoundingClientRect().height}px`;
+            if (fixedRows[i]) fixedRows[i].style.height = h;
+            if (leftFixedRows[i]) leftFixedRows[i].style.height = h;
+          });
+        });
+      });
+    },
     getFileIcon(row) {
       if (row.isDirectory) return 'el-icon-folder';
       const type = row.type ? row.type.toLowerCase() : '';
@@ -1344,10 +1566,13 @@ export default {
       if (['zip', 'rar'].includes(type)) return 'el-icon-collection';
       return 'el-icon-document';
     },
-    getIconColor(row) { return row.isDirectory ? '#E6A23C' : '#606266'; },
+    // 文件图标色：目录用警示橙；普通文件走主题字色 Token，深浅自适应
+    getIconColor(row) { return row.isDirectory ? '#E6A23C' : 'var(--text-color, #606266)'; },
     toggleView(mode) {
       if (mode !== 'table' && mode !== 'icons') return;
       this.viewMode = mode;
+      // 切回表格时 fixed 列需等 DOM 重建后再对齐行高
+      if (mode === 'table') this.syncFixedTableRowHeights();
     },
     isImageType(row) {
       const type = (row.type || '').toLowerCase();
@@ -1601,33 +1826,60 @@ export default {
 <style scoped>
 .file-manager-container {
   padding: 20px;
-  /* background: #fff; */
-  border-radius: 4px;
+  color: var(--text-color-2);
+  border-radius: var(--gp-border-radius-base, 4px);
+  background: transparent;
+}
+.file-manager-container.is-picker {
+  padding: 0;
+}
+.fm-action-muted {
+  color: var(--muted-1-color, #c0c4cc);
+}
+.fm-picker-select {
+  font-weight: 500;
+  color: var(--theme-color, #5f7d80);
 }
 
+/* 导航条：纸感底 + Token 边框，适配浅/深色；按钮色由 element-overrides 统一 */
 .nav-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   margin-bottom: 10px;
-  padding: 10px;
-  /* background: #f5f7fa; */
-  border-radius: 4px;
-  gap: 15px;
+  padding: 10px 12px;
+  gap: 12px;
+  background: var(--background-1, var(--background, #f5f7fa));
+  border: 1px solid var(--border-color, rgba(44, 42, 40, 0.07));
+  border-radius: var(--gp-border-radius-base, 4px);
+  box-sizing: border-box;
 }
 
 .nav-buttons {
   display: flex;
-  gap: 5px;
+  gap: 6px;
+  align-items: center;
 }
 
 .path-input-container {
   flex: 1;
   max-width: 400px;
+  min-width: 160px;
 }
 
 .search-container {
   width: 250px;
+  max-width: 100%;
+}
+
+/* 搜索组合框 append 图标钮：收窄宽度，避免「搜索条」右侧过长 */
+.search-container ::v-deep .el-input-group__append {
+  padding: 0 4px !important;
+}
+
+.search-container ::v-deep .el-input-group__append .el-button {
+  padding: 0 8px !important;
+  min-width: 36px;
 }
 
 .toolbar {
@@ -1636,18 +1888,54 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
-  padding: 0 10px;
+  padding: 8px 10px;
+  gap: 8px;
+  background: var(--background-origin, transparent);
+  border-radius: var(--gp-border-radius-base, 4px);
 }
 
 .breadcrumb-container {
   flex: 1 auto;
   margin: 5px auto;
+  min-width: 120px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: var(--gp-border-radius-base, 4px);
+  cursor: text;
+  transition: background-color 0.15s ease;
+}
+
+.breadcrumb-container:not(.is-editing):hover {
+  background: var(--background-hover, rgba(0, 0, 0, 0.04));
+}
+
+.breadcrumb-container.is-editing {
+  cursor: default;
+  background: transparent;
+  padding: 0;
+}
+
+.breadcrumb-container ::v-deep .el-breadcrumb {
+  line-height: 28px;
+  font-size: 13px;
+}
+
+.breadcrumb-container ::v-deep .el-breadcrumb__inner a {
+  color: var(--text-color-2);
+  cursor: pointer;
+}
+
+.breadcrumb-path-input {
+  width: 100%;
+  max-width: 520px;
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -1658,16 +1946,20 @@ export default {
 .file-name-cell {
   display: flex;
   align-items: center;
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .file-name-cell:hover .name-text {
-  color: #409EFF;
+  color: var(--theme-color, #5f7d80);
   text-decoration: underline;
 }
 
 .file-name-cell i {
   font-size: 20px;
   margin-right: 5px;
+  color: var(--theme-color, #5f7d80);
+  flex-shrink: 0;
 }
 
 .file-name-cell .i-btn {
@@ -1675,24 +1967,56 @@ export default {
   border: none;
   background: none;
   padding: 3px;
+  color: var(--text-color);
+  flex-shrink: 0;
 }
 
 .name-text {
   font-size: 14px;
   user-select: none;
+  color: var(--text-color-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 操作列单行排布：避免按钮换行把主表行撑高，与 fixed「删除」列脱节 */
+.fm-ops {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.fm-ops .el-button {
+  margin-left: 0;
+  margin-right: 4px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.file-manager-container ::v-deep .fm-ops-col .cell {
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.file-manager-container ::v-deep .fm-fixed-action-col .cell {
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .danger-text {
-  color: #F56C6C;
+  color: var(--red, #F56C6C);
 }
 
 .preview-content {
   display: flex;
   justify-content: center;
-  /* background-color: #f8f9fa; align-items: center; */
   min-height: 100px;
-  border-radius: 4px;
+  border-radius: var(--gp-border-radius-base, 4px);
   overflow: hidden;
+  background: var(--background-1, transparent);
 }
 
 /* 文本预览：独立滚动层，减轻大选区时的布局抖动 */
@@ -1764,27 +2088,29 @@ export default {
   flex: 1;
 }
 
+/* 图标视图卡片：边框/底/选中态走 Token，深浅色一致 */
 .icon-card {
   width: 160px;
   min-height: 220px;
-  border: 1px solid #e4e7ed;
-  border-radius: 8px;
+  border: 1px solid var(--border-color-2, #e4e7ed);
+  border-radius: var(--gp-border-radius-base, 8px);
   padding: 8px;
-  background: #fff;
+  background: var(--background-origin, #fff);
   display: flex;
   flex-direction: column;
   position: relative;
-  transition: box-shadow .2s;
+  transition: box-shadow .2s, border-color .2s, background-color .2s;
   cursor: pointer;
 }
 
 .icon-card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, .12);
+  box-shadow: var(--gp-surface-shadow, 0 4px 20px rgba(0, 0, 0, .12));
+  border-color: var(--borderHoverColor, #c0c4cc);
 }
 
 .icon-card.selected {
-  border-color: #409EFF;
-  background: #ecf5ff;
+  border-color: var(--theme-color, #5f7d80);
+  background: var(--theme-color-muted, rgba(95, 125, 128, 0.14));
 }
 
 .icon-checkbox {
@@ -1800,8 +2126,8 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f9fafb;
-  border-radius: 4px;
+  background: var(--background-1, #f9fafb);
+  border-radius: var(--gp-border-radius-base, 4px);
   position: relative;
   overflow: hidden;
 }
@@ -1836,7 +2162,7 @@ export default {
 .icon-name {
   font-size: 13px;
   line-height: 1.2;
-  color: #303133;
+  color: var(--text-color-2, #303133);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1845,14 +2171,14 @@ export default {
 .icon-type,
 .icon-size {
   font-size: 11px;
-  color: #909399;
+  color: var(--muted-1-color, #909399);
   margin-top: 2px;
 }
 
 .icon-snippet {
   margin-top: 4px;
   font-size: 11px;
-  color: #606266;
+  color: var(--text-color, #606266);
   height: 36px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1867,11 +2193,11 @@ export default {
 .icon-side-panel {
   width: 280px;
   min-width: 280px;
-  background: #ffffff;
-  border: 1px solid #e4e7ed;
-  border-radius: 10px;
+  background: var(--background-origin, #fff);
+  border: 1px solid var(--border-color-2, #e4e7ed);
+  border-radius: var(--gp-surface-radius-sm, 10px);
   padding: 16px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--gp-surface-shadow, 0 8px 20px rgba(0, 0, 0, 0.08));
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1892,7 +2218,7 @@ export default {
 .side-panel-title {
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-color-2, #303133);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1900,18 +2226,18 @@ export default {
 
 .side-panel-subtitle {
   font-size: 12px;
-  color: #909399;
+  color: var(--muted-1-color, #909399);
   margin-top: 4px;
 }
 
 .side-panel-close {
   cursor: pointer;
-  color: #909399;
+  color: var(--muted-1-color, #909399);
   font-size: 16px;
 }
 
 .side-panel-close:hover {
-  color: #606266;
+  color: var(--text-color, #606266);
 }
 
 .side-panel-actions {
@@ -1925,20 +2251,20 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
-  color: #606266;
+  border-bottom: 1px solid var(--border-color, #f0f0f0);
+  color: var(--text-color, #606266);
   font-size: 13px;
 }
 
 .side-panel-row span:first-child {
-  color: #909399;
+  color: var(--muted-1-color, #909399);
 }
 
 .side-panel-snippet {
   padding: 12px;
-  background: #f4f6fa;
-  border-radius: 8px;
-  color: #606266;
+  background: var(--background-1, #f4f6fa);
+  border-radius: var(--gp-border-radius-base, 8px);
+  color: var(--text-color, #606266);
   font-size: 12px;
   line-height: 1.6;
 }
@@ -1946,17 +2272,17 @@ export default {
 .side-panel-snippet-label {
   margin-bottom: 6px;
   font-size: 12px;
-  color: #909399;
+  color: var(--muted-1-color, #909399);
 }
 
 .context-menu {
   position: fixed;
   z-index: 999;
   min-width: 180px;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, .12);
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+  background: var(--background-origin, #fff);
+  border: 1px solid var(--border-color-2, rgba(0, 0, 0, .12));
+  border-radius: var(--gp-border-radius-base, 8px);
+  box-shadow: var(--gp-surface-shadow, 0 10px 30px rgba(0, 0, 0, .12));
   overflow: hidden;
 }
 
@@ -1969,13 +2295,13 @@ export default {
 .context-menu li {
   padding: 10px 16px;
   font-size: 13px;
-  color: #303133;
+  color: var(--text-color-2, #303133);
   cursor: pointer;
   transition: background .2s;
 }
 
 .context-menu li:hover {
-  background: #f5f7fa;
+  background: var(--hover-background, #f5f7fa);
 }
 
 .detail-panel {
@@ -1993,12 +2319,12 @@ export default {
 .detail-title {
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-color-2, #303133);
 }
 
 .detail-subtitle {
   font-size: 12px;
-  color: #909399;
+  color: var(--muted-1-color, #909399);
   margin-top: 4px;
 }
 
@@ -2006,20 +2332,20 @@ export default {
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px dashed #ebeef5;
-  color: #606266;
+  border-bottom: 1px dashed var(--border-color, #ebeef5);
+  color: var(--text-color, #606266);
   font-size: 13px;
 }
 
 .detail-row span:first-child {
-  color: #909399;
+  color: var(--muted-1-color, #909399);
 }
 
 .detail-snippet {
   padding: 10px;
-  background: #f4f6fa;
-  border-radius: 6px;
-  color: #606266;
+  background: var(--background-1, #f4f6fa);
+  border-radius: var(--gp-border-radius-base, 6px);
+  color: var(--text-color, #606266);
   font-size: 12px;
   line-height: 1.5;
 }
@@ -2027,11 +2353,11 @@ export default {
 .detail-snippet-label {
   margin-bottom: 6px;
   font-size: 12px;
-  color: #909399;
+  color: var(--muted-1-color, #909399);
 }
 
 .empty-icon-view {
-  color: #909399;
+  color: var(--muted-1-color, #909399);
   text-align: center;
   padding: 30px;
 }
@@ -2107,4 +2433,23 @@ export default {
   .search-container { width: 100%; }
   .toolbar { flex-direction: column; align-items: flex-start; gap: 10px; }
 } */
+</style>
+
+<style lang="scss">
+.fm-upload-drawer {
+  .el-drawer__body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 16px;
+  }
+  .upload-drawer {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+  }
+  .upload-dropzone {
+    flex: 1 1 auto;
+  }
+}
 </style>

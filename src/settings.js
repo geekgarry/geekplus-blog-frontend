@@ -40,7 +40,8 @@ module.exports = {
   blogLayout: 'top',
 
   /**
-   * 管理端菜单形式：sidebar=侧栏 | topbar=顶栏 | workbench=图标工作台
+   * 管理端菜单形式：sidebar=侧栏 | topbar=顶栏
+   * （后台图标工作台尚未落地；历史 workbench 读入迁回 sidebar。前台博客 /workbench 另论）
    */
   adminMenuLayout: 'sidebar',
 

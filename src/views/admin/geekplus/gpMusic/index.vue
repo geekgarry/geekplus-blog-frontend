@@ -125,7 +125,7 @@
                 </el-col>
                 <el-col :span="7">
                   <el-tooltip content="浏览并选择文件" placement="top">
-                    <el-button type="primary" @click="displayMusicFileList">浏览文件</el-button>
+                    <el-button type="primary" @click="openFilePick('audio')">浏览文件</el-button>
                   </el-tooltip>
                 </el-col>
               </el-row>
@@ -134,6 +134,7 @@
           <el-col :span="12">
             <el-form-item label="歌曲封面" prop="cover">
               <el-input v-model="form.cover" placeholder="请输入歌曲封面" />
+              <el-button type="primary" size="mini" style="margin-top:8px" @click="openFilePick('image')">从文件管理选择</el-button>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -172,40 +173,14 @@
       </div>
     </el-dialog>
 
-    <!-- 显示所有文件的对话框 -->
-    <el-dialog :title="title" :visible.sync="displayAllMusic" width="600px" append-to-body>
-      <!-- <el-row :gutter="20">
-        <el-col :span="6" v-for="(gpMusic, index) in allGpMusic" :key="index">
-          <div style="text-align: -webkit-center;border:1px dashed #57c98e; margin-bottom: 10px;
-          height: 130px; display: flex; flex-wrap: nowrap; align-items: center;
-          justify-content: space-between; flex-direction: column;">
-            <audio :id="index + 'music'" name="media" :src="gpMusic.fileUrl">
-              <span>不支持音频</span>
-            </audio>
-            <el-button :id="index + 'playMusic'" round @click="playMusicEvent(index)">播放</el-button>
-            <div>
-              <span>{{ gpMusic.fileName }}</span>
-              <span>{{ gpMusic.fileUrl }}</span>
-            </div>
-            <div style="">
-              <el-tooltip content="点击删除文件" placement="top">
-                <el-button @click="deleteFileByPath(gpMusic.filePath)" type="danger" icon="el-icon-delete"
-                  circle></el-button>
-              </el-tooltip>
-              <el-tooltip content="选择当前文件" placement="top">
-                <el-button @click="getGpMusicUrl(gpMusic.fileUrl)" type="success" icon="el-icon-check"
-                  circle></el-button>
-              </el-tooltip>
-            </div>
-          </div>
-        </el-col>
-      </el-row> -->
-      <file-manager initial-path="/upload/music" @select-file="getGpMusicUrl"></file-manager>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="displayAllMusic = false">取 消</el-button>
-        <el-button type="primary" @click="displayAllMusic = false">确 定</el-button>
-      </span>
-    </el-dialog>
+    <file-pick-modal
+      :visible="displayAllMusic"
+      :kind="pickKind"
+      initial-path="/upload/music"
+      :title="pickKind === 'image' ? '选择封面' : '选择音频'"
+      @cancel="displayAllMusic = false"
+      @pick="onPickFile"
+    />
   </div>
 </template>
 
@@ -213,11 +188,12 @@
 import { readMusicFile, listGpMusic, getGpMusic, delGpMusic, addGpMusic, updateGpMusic, uploadMusicFile, exportGpMusic } from "@/api/geekplus/gpMusic";
 //通用文件操作
 import { readCurrentFile, deleteSelectedFiles, deleteFileByRecursion, deleteCategoryFile } from "@/api/system/sysFile";
-import FileManager from "@/views/admin/system/file/index.vue";
+import FilePickModal from "@/components/FilePickModal";
+import { fileUrlFromRow } from "@/utils/fileUrl";
 
 export default {
   name: "GpMusic",
-  components: { FileManager },
+  components: { FilePickModal },
   data() {
     return {
       // 遮罩层
@@ -280,6 +256,7 @@ export default {
       },
       fileList: [],
       displayAllMusic: false,
+      pickKind: 'audio',
       allGpMusic: [],
       baseHost: window.location.host,
       baseApi: process.env.VUE_APP_BASE_API,
@@ -504,8 +481,20 @@ export default {
       })
     },
     //显示所有音乐文件，然后请求系统的资源
-    displayMusicFileList() {
+    openFilePick(kind) {
+      this.pickKind = kind || 'audio';
       this.displayAllMusic = true;
+    },
+    onPickFile(row) {
+      const url = fileUrlFromRow(row);
+      if (!url) {
+        this.$message.warning('无法解析文件地址');
+        return;
+      }
+      if (this.pickKind === 'image') this.form.cover = url;
+      else this.form.url = url;
+      this.displayAllMusic = false;
+      this.$message.success('已回填');
     },
     //系统路径转为网络地址，采取拼接前缀网络地址
     convertMusicUrl(musicList) {
@@ -558,11 +547,6 @@ export default {
         //console.log(error);
         this.displayImageList();
       })
-    },
-    //选取当前的音乐文件
-    getGpMusicUrl(files) {
-      this.form.url = files[0].fullPath;
-      this.displayAllMusic = false;
     },
     handleOrderIdChange(val) {
 

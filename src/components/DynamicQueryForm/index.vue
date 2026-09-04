@@ -434,7 +434,6 @@ export default {
 }
 .gp-dq-label {
   display: inline-block;
-  width: 64px;
   flex-shrink: 0;
   font-size: 13px;
   color: #606266;
@@ -469,9 +468,9 @@ export default {
 .gp-dynamic-query__config {
   padding: 8px 12px;
   margin-bottom: 8px;
-  background: #fafafa;
-  border: 1px dashed #e8e8e8;
-  border-radius: 2px;
+  background: var(--background, #fafafa);
+  border: 1px dashed var(--border-color-2, #e8e8e8);
+  border-radius: var(--gp-border-radius-base, 4px);
 }
 .gp-dynamic-query.is-compact .gp-dq-label {
   display: none;

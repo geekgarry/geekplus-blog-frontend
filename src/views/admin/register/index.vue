@@ -27,7 +27,8 @@
               autocomplete="off">
             </el-input>
           </el-form-item>
-          <el-form-item prop="validateCode" style="position: relative">
+          <!-- 验证码行右侧有按钮，输入需预留右内边距，避免文字与按钮粘连 -->
+          <el-form-item prop="validateCode" class="register-code-item">
             <span class="svg-container">
               <svg-icon slot="prefix" icon-class="validCode" class="el-input__icon input-icon" />
             </span>
@@ -291,39 +292,50 @@ export default {
     }
   }
 
+  /* 图标与输入同处不透明条内，深色图标保证对比度 */
   .svg-container {
-    position: absolute;
-    top: 8px;
-    left: 15px;
-    z-index: $base-z-index;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 47px;
+    padding: 0 0 0 12px;
+    box-sizing: border-box;
     font-size: 16px;
-    color: #d7dee3;
-    cursor: pointer;
+    color: var(--muted-1-color, #606266);
+    vertical-align: middle;
     user-select: none;
   }
 
   .show-pwd {
     position: absolute;
-    top: 6px;
+    top: 50%;
     right: 10px;
+    transform: translateY(-50%);
+    z-index: 2;
     font-size: 16px;
-    color: $base-font-color;
+    color: var(--text-color, #4f4c48);
     cursor: pointer;
     user-select: none;
   }
 
   ::v-deep {
+    /* 整行做成不透明表面条，图标+输入落在同一底色上 */
     .el-form-item {
       padding-right: 0;
       margin: 20px 0;
-      color: #454545;
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 2px;
+      color: var(--text-color, #4f4c48);
+      background: var(--background-origin, #ffffff);
+      border: 1px solid var(--border-color-2, #d4cfc8);
+      border-radius: var(--gp-border-radius-base, 4px);
 
       &__content {
+        display: flex;
+        align-items: center;
         min-height: $base-input-height;
         line-height: $base-input-height;
+        position: relative;
       }
 
       &__error {
@@ -337,33 +349,53 @@ export default {
     }
 
     .el-input {
+      flex: 1 1 auto;
+      width: auto !important;
       box-sizing: border-box;
 
       .el-input__count {
         .el-input__count-inner {
-          background: transparent;
+          background: transparent !important;
+          color: var(--muted-1-color, #8a8580);
         }
       }
 
-      .el-input__prefix {
-        left: 15px;
-        line-height: 45px;
-
-        .svg-inline--fa {
-          width: 20px;
-        }
-      }
-
-      input {
+      /* 条内输入透明即可（外层已不透明）；强制左内边距与图标拉开间距 */
+      .el-input__inner {
         height: 47px;
-        padding-left: 45px;
-        font-size: $base-font-size-default;
-        color: #d7dee3;
-        caret-color: #d7dee3;
         line-height: 47px;
-        background: #11101179;
-        border: 0;
+        padding: 0 12px 0 8px !important;
+        font-size: $base-font-size-default;
+        color: var(--text-color-2, #1f1e1d) !important;
+        caret-color: var(--theme-color, #5f7d80);
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        border-radius: 0;
+
+        &::placeholder {
+          color: var(--muted-1-color, #8a8580);
+        }
+
+        &:hover,
+        &:focus {
+          background: transparent !important;
+          border: 0 !important;
+          box-shadow: none !important;
+        }
+
+        &:-webkit-autofill,
+        &:-webkit-autofill:hover,
+        &:-webkit-autofill:focus {
+          -webkit-text-fill-color: var(--text-color-2, #1f1e1d) !important;
+          box-shadow: 0 0 0 1000px var(--background-origin, #fff) inset !important;
+        }
       }
+    }
+
+    /* 验证码行右侧按钮：勿压住输入文字 */
+    .register-code-item .el-input__inner {
+      padding-right: 108px !important;
     }
   }
 }

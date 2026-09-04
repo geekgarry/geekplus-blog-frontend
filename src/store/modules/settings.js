@@ -39,7 +39,13 @@ const {
 function readAdminMenuLayout() {
   try {
     const saved = localStorage.getItem('adminMenuLayout')
-    if (saved === 'sidebar' || saved === 'topbar' || saved === 'workbench') {
+    // 管理端 workbench 未实现：读到则迁回侧栏（前台博客 /workbench 不受影响）
+    if (saved === 'workbench') {
+      localStorage.setItem('adminMenuLayout', 'sidebar')
+      localStorage.setItem('leftMenuBar', '1')
+      return 'sidebar'
+    }
+    if (saved === 'sidebar' || saved === 'topbar') {
       return saved
     }
     const legacy = localStorage.getItem('leftMenuBar')
@@ -48,7 +54,7 @@ function readAdminMenuLayout() {
   } catch (e) {
     /* ignore */
   }
-  return adminMenuLayout || 'sidebar'
+  return adminMenuLayout === 'topbar' ? 'topbar' : 'sidebar'
 }
 
 function adminMenuLayoutToLeftMenuBar(mode) {
@@ -119,11 +125,14 @@ const mutations = {
       else if (key === 'blogLayout') {
         // 拒绝再写入 workbench
         next = value === 'side' ? 'side' : 'top'
+      } else if (key === 'adminMenuLayout') {
+        // 管理端仅 sidebar | topbar；工作台未落地
+        next = value === 'topbar' ? 'topbar' : 'sidebar'
       }
       state[key] = next
       localStorage.setItem(key, next)
       if (key === 'adminMenuLayout') {
-        state.leftMenuBar = adminMenuLayoutToLeftMenuBar(value)
+        state.leftMenuBar = adminMenuLayoutToLeftMenuBar(next)
         localStorage.setItem('leftMenuBar', state.leftMenuBar)
       }
     }

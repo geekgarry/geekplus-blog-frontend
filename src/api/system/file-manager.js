@@ -1,5 +1,7 @@
 import request from "@/utils/request";
 import { downloadFile } from "@/utils/downloadZip";
+import axios from "axios";
+import { getToken } from "@/utils/auth";
 
 export function list_file(query) {
   return request({
@@ -148,4 +150,41 @@ export function downloadCommonFile(path, preview) {
 
 export function getDownloadUrl(path, preview) {
   return `/sys/file-manager/download?path=${encodeURIComponent(path)}&preview=${preview}`;
+}
+
+/**
+ * 预览用：带 Plus-Token 拉 blob，再转 object URL。
+ * img/video/audio/iframe 直链不会带鉴权头，会 401。
+ */
+export function fetchFilePreviewBlob(path) {
+  const baseUrl = process.env.VUE_APP_BASE_API || "";
+  return axios({
+    method: "get",
+    url: `${baseUrl}/sys/file-manager/download`,
+    params: { path, preview: true },
+    responseType: "blob",
+    headers: { "Plus-Token": getToken() || "" },
+    timeout: 120000,
+  }).then((res) => {
+    const blob = res.data;
+    const type = String(
+      (res.headers && res.headers["content-type"]) || (blob && blob.type) || ""
+    ).toLowerCase();
+    if (type.includes("application/json")) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const json = JSON.parse(reader.result);
+            reject(new Error((json && (json.msg || json.message)) || "预览失败"));
+          } catch (e) {
+            reject(new Error("预览失败"));
+          }
+        };
+        reader.onerror = () => reject(new Error("预览失败"));
+        reader.readAsText(blob);
+      });
+    }
+    return URL.createObjectURL(blob);
+  });
 }

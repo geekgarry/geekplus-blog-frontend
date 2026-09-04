@@ -77,6 +77,10 @@ const mutations = {
   },
   SET_AVATAR: (state, avatar) => {
     state.avatar = avatar
+    // 同步 sysUser，避免个人中心等仍读旧头像字段
+    if (state.sysUser && typeof state.sysUser === 'object') {
+      state.sysUser = { ...state.sysUser, avatar }
+    }
   },
   SET_USER: (state, user) => {
     state.sysUser = user

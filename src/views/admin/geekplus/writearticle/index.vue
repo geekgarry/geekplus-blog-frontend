@@ -31,7 +31,7 @@
           </el-col>
           <el-col :xs="24" :sm="12" :md="12" :lg="24" :xl="24" style="text-align: right">
             <div style="margin: 0 0 10px 0">
-              <el-button type="primary" size="small" @click="showFileManager(true)">资源文件</el-button>
+              <el-button type="primary" size="small" @click="showFileManager('all')">资源文件</el-button>
             </div>
           </el-col>
         </el-row>
@@ -78,7 +78,7 @@
           <el-image :src="form.indexPicture" style="width: 100px; height: 100px;" v-if="form.indexPicture" />
         </div>
         <el-input v-model="form.indexPicture" placeholder="请输入文章封面图片URL地址" clearable />
-        <el-button style="margin-bottom: 10px;" type="primary" size="small" @click="showFileManager(true)">选择云端图片</el-button>
+        <el-button style="margin-bottom: 10px;" type="primary" size="small" @click="showFileManager('image')">选择云端图片</el-button>
         <span style="color: #9099a4; font-size: 12px;">文章封面图片URL地址（可选）</span>
         <span style="color: #9099a4; font-size: 12px;">（如果文章内容中有图片，且没有封面图片，则默认使用文章内容中的第一张图片作为封面图片）</span>
       </el-form-item>
@@ -117,14 +117,14 @@
       <publish-success :articleId="publishSuccessId"></publish-success>
     </el-dialog>
 
-    <!-- 显示所有文件的对话框 -->
-    <el-dialog :title="title" :visible.sync="fileManagerVisible" width="600px" append-to-body>
-      <file-manager initial-path="/upload" @select-file="getSelectedFilePath"></file-manager>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="fileManagerVisible = false">取 消</el-button>
-        <el-button type="primary" @click="confirmFileSelection">确 定</el-button>
-      </span>
-    </el-dialog>
+    <file-pick-modal
+      :visible="fileManagerVisible"
+      :kind="pickKind"
+      initial-path="/upload"
+      :title="pickKind === 'image' ? '选择封面' : '选择资源文件'"
+      @cancel="fileManagerVisible = false"
+      @pick="onPickFile"
+    />
   </div>
 </template>
 <script>
@@ -139,7 +139,9 @@ import JoditEditor from "@/components/JoditEditor";
 import GpDialog from '@/components/GpDialog'
 // import FroalaEditor from "@/components/FroalaEditor";
 import PublishSuccess from "@/views/admin/geekplus/writearticle/success.vue"
-import FileManager from "@/views/admin/system/file/index.vue";
+import FilePickModal from "@/components/FilePickModal";
+import { fileUrlFromRow } from "@/utils/fileUrl";
+import { copyToClipboard } from "@/utils/clipboard";
 
 export default {
   name: "WriteArticle",
@@ -150,7 +152,7 @@ export default {
     GpDialog,
     // FroalaEditor,
     PublishSuccess,
-    FileManager,
+    FilePickModal,
   },
   data() {
     return {
@@ -244,8 +246,8 @@ export default {
       publishSuccessVisible: false,
       publishSuccessTitle: "",
       publishSuccessId: 0,
-      fileManagerVisible: false, //显示文件管理器的对话框
-      articleCover: '', //文章封面图片URL地址
+      fileManagerVisible: false,
+      pickKind: 'image',
     };
   },
   created() {
@@ -579,27 +581,29 @@ export default {
     },
     // 移除文章封面图片
     removeArticleCover() {
-      this.articleCover = '';
       this.form.indexPicture = '';
     },
-    // 显示文件管理器的对话框,参数show为true显示文件管理器，参数show为false隐藏文件管理器
-    showFileManager(show) {
-      // console.log("show file manager: " + show);
-      this.title = "选择资源文件";
-      this.fileManagerVisible = show;
+    showFileManager(kind) {
+      this.pickKind = kind === true ? 'all' : (kind || 'image');
+      this.fileManagerVisible = true;
     },
-    // 选择资源文件后，点击确定按钮触发事件
-    confirmFileSelection() {
-      // console.log("confirm file selection");
-      this.form.indexPicture = this.articleCover;
+    onPickFile(row) {
+      const url = fileUrlFromRow(row);
+      if (!url) {
+        this.$message.warning('无法解析文件地址');
+        return;
+      }
+      if (this.pickKind === 'image') {
+        this.form.indexPicture = url;
+        this.$message.success('已回填封面');
+      } else {
+        copyToClipboard(url);
+        const type = (row.type || '').toLowerCase();
+        const isImg = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(type);
+        if (isImg && !this.form.indexPicture) this.form.indexPicture = url;
+        this.$message.success('已复制文件地址，可粘贴到正文');
+      }
       this.fileManagerVisible = false;
-      this.articleCover = '';
-    },
-    //选取当前的资源文件
-    getSelectedFilePath(files) {
-      //console.log(files[0].fullPath);
-      this.articleCover = files[0].fullPath;
-      // this.fileManagerVisible = false;
     },
     // 触发文件输入框点击事件，上传文件选择对话框
     uploadArticleCover() {
@@ -650,11 +654,12 @@ export default {
   align-items: flex-start;
   width: 112px;
   height: 112px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  border: 1px dashed var(--border-color, #dcdfe6);
+  border-radius: var(--gp-border-radius-base, 4px);
   padding: 5px;
   margin-bottom: 5px;
   position: relative;
+  background: var(--background, #fafafa);
 }
 .article-cover-tips {
   color: #9099a4;

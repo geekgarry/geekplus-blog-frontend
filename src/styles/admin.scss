@@ -169,12 +169,12 @@ aside {
 	margin-top: 6vh !important;
 }
 
+/* 表格底色/边框见 element-overrides.css；此处仅布局微调 */
 .el-table {
-	.el-table__header-wrapper, .el-table__fixed-header-wrapper {
+	.el-table__header-wrapper,
+	.el-table__fixed-header-wrapper {
 		th {
 			word-break: break-word;
-			background-color: #f8f8f9;
-			color: #515a6e;
 			height: 40px;
 			font-size: 13px;
 		}
@@ -204,13 +204,7 @@ aside {
 	/* padding: 10px 20px !important; */
 }
 
-/* tree border：圆角跟随管理端设置（编译默认对齐 $base-border-radius） */
-.tree-border {
-    margin-top: 5px;
-    border: 1px solid #e5e6e7;
-    background: #FFFFFF none;
-    border-radius: var(--gp-border-radius-base, #{$base-border-radius});
-}
+/* tree-border 颜色/圆角见 element-overrides.css */
 
 .pagination-container .el-pagination {
 	right: 0;

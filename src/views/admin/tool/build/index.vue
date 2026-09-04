@@ -107,7 +107,16 @@
                 :disabled="formConf.disabled"
                 :label-width="formConf.labelWidth + 'px'"
               >
-                <draggable class="drawing-board" :list="drawingList" :animation="340" group="componentsGroup">
+                <draggable
+                  class="drawing-board"
+                  :list="drawingList"
+                  :animation="180"
+                  group="componentsGroup"
+                  ghost-class="drawing-ghost"
+                  chosen-class="drawing-chosen"
+                  drag-class="drawing-drag"
+                  :empty-insert-threshold="12"
+                >
                   <draggable-item
                     v-for="(element, index) in drawingList"
                     :key="element.renderKey"
@@ -633,6 +642,13 @@ $lighterBlue: var(--theme-color, #5f7d80);
   border-right: 1px solid var(--border-color, #ebe6e0);
   box-sizing: border-box;
   background: var(--background-2, #f3f0eb);
+  .el-scrollbar__wrap {
+    overflow-x: hidden !important;
+  }
+  .el-scrollbar__view {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }
 .center-board {
   height: 100vh;
@@ -700,23 +716,57 @@ $lighterBlue: var(--theme-color, #5f7d80);
 .center-board-row {
   padding: 12px 12px 15px 12px;
   box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   & > .el-form {
     // 69 = 12+15+42
     height: calc(100vh - 69px);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
 }
 .drawing-board {
   height: 100%;
+  width: 100%;
+  max-width: 100%;
   position: relative;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  /* 防止 gutter 负 margin 撑破画布 */
+  .el-row {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .el-col {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
   .components-body {
     padding: 0;
     margin: 0;
     font-size: 0;
   }
+  /* 占位鬼影：固定高度，避免拖入行列时反复撑高抖动 */
+  .drawing-ghost,
   .sortable-ghost {
     position: relative;
-    display: block;
-    overflow: hidden;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    margin: 4px 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    opacity: 0.55;
+    background: $selectedColor !important;
+    border: 1px dashed $lighterBlue !important;
+    border-radius: 4px;
+    box-sizing: border-box !important;
     &::before {
       content: " ";
       position: absolute;
@@ -727,10 +777,26 @@ $lighterBlue: var(--theme-color, #5f7d80);
       background: $lighterBlue;
       z-index: 2;
     }
+    /* 鬼影内控件全部隐藏，减少布局计算 */
+    > * {
+      visibility: hidden !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
   }
-  .components-item.sortable-ghost {
-    width: 100%;
-    height: 60px;
+  .drawing-chosen {
+    opacity: 0.92;
+  }
+  .drawing-drag {
+    opacity: 0.85;
+  }
+  .components-item.sortable-ghost,
+  .components-item.drawing-ghost {
+    width: 100% !important;
+    height: 48px !important;
     background-color: $selectedColor;
   }
   .active-from-item {
@@ -747,37 +813,78 @@ $lighterBlue: var(--theme-color, #5f7d80);
   }
   .el-form-item{
     margin-bottom: 15px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  /* 画布内表单控件不超出列宽 */
+  .el-input,
+  .el-select,
+  .el-cascader,
+  .el-date-editor,
+  .el-autocomplete,
+  .el-textarea,
+  .el-slider,
+  .el-rate,
+  .el-upload,
+  .el-input-number,
+  .el-color-picker {
+    max-width: 100%;
+  }
+  .el-select,
+  .el-cascader,
+  .el-date-editor.el-input,
+  .el-date-editor.el-input__inner {
+    width: 100% !important;
+  }
+  .el-input-number {
+    width: 100%;
   }
 }
 .drawing-item{
   position: relative;
   cursor: move;
+  max-width: 100%;
+  box-sizing: border-box;
   &.unfocus-bordered:not(.activeFromItem) > div:first-child  {
     border: 1px dashed #ccc;
   }
   .el-form-item{
     padding: 12px 10px;
+    max-width: 100%;
+    box-sizing: border-box;
   }
+}
+.drawing-row-col {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .drawing-row-item{
   position: relative;
   cursor: move;
   box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
   border: 1px dashed #ccc;
   border-radius: 3px;
-  padding: 0 2px;
-  margin-bottom: 15px;
+  padding: 22px 6px 8px;
+  margin-bottom: 12px;
   .drawing-row-item {
     margin-bottom: 2px;
   }
+  /* 原先 margin-top:22 在拖入时反复撑高导致抖动，改为用父级 padding-top 预留标题 */
   .el-col{
-    margin-top: 22px;
+    margin-top: 0;
   }
   .el-form-item{
     margin-bottom: 0;
   }
   .drag-wrapper{
-    min-height: 80px;
+    min-height: 72px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
   &.active-from-item{
     border: 1px dashed $lighterBlue;

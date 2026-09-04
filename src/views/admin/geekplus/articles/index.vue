@@ -452,94 +452,15 @@
       </div>
     </el-dialog>
 
-    <!-- 图片资料库对话框 -->
-    <el-dialog
-      :title="fileFolderTitle"
-      :visible.sync="displayFileFolder"
-      width="600px"
-      append-to-body
-    >
-      <!-- <el-row :gutter="20">
-        <el-col :span="6">
-          <el-container>
-            <el-main type="flex" justify="center" align="middle">
-              <div>
-                <el-tooltip content="返回主资源库" placement="top">
-                  <el-button
-                    type="text"
-                    round
-                    icon="el-icon-s-home"
-                    @click="getFileFolderList()"
-                    >返回</el-button
-                  >
-                </el-tooltip>
-              </div>
-              <div>
-                <el-tooltip content="返回上一级" placement="bottom">
-                  <el-button
-                    type="text"
-                    round
-                    icon="el-icon-back"
-                    @click="backFileFolderList(backArticleFolder)"
-                    >返回</el-button
-                  >
-                </el-tooltip>
-              </div>
-            </el-main>
-          </el-container>
-        </el-col>
-        <el-col :span="6" v-for="(item, index) in fileFolderList" :key="index">
-          <el-container>
-            <el-main type="flex" justify="center" align="middle">
-              <div type="flex" justify="center" align="middle">
-                <span>{{ item.fileName }}</span>
-              </div>
-              <el-tooltip
-                v-if="item.type == 'folder'"
-                content="进入当前文件夹"
-                placement="top"
-              >
-                <el-button
-                  v-if="item.type == 'folder'"
-                  type="text"
-                  icon="el-icon-folder-opened"
-                  @click="getFileFolderList(item)"
-                ></el-button>
-              </el-tooltip>
-              <i v-if="item.type == 'folder'" class="el-icon-folder" @click="getFileFolderList(item.fileName)"></i>
-              <i v-else class="el-icon-picture"></i>
-              <div type="flex" justify="center" align="middle">
-                <el-tooltip
-                  v-if="item.type == 'folder'"
-                  content="浏览文件夹中的图片"
-                  placement="bottom"
-                >
-                  <el-button
-                    @click="displayImageList(item)"
-                    type="success"
-                    icon="el-icon-picture"
-                    circle
-                  ></el-button>
-                </el-tooltip>
-              </div>
-            </el-main>
-          </el-container>
-          <div style="text-align: -webkit-center">
-            <el-image
-              style="width: 100px; height: 100px"
-              :src="carouselImg"
-              :fit="fit"></el-image>
-          </div>
-        </el-col>
-      </el-row> -->
-      <file-manager :initialPath="'/upload'"></file-manager>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="displayFileFolder = false;">取 消</el-button>
-        <el-button type="primary" @click="displayFileFolder = false;"
-          >确 定</el-button
-        >
-      </span>
-    </el-dialog>
+    <!-- 文件资源库：完整文件管理，无底部确认 -->
+    <file-pick-modal
+      :visible="displayFileFolder"
+      :picker="false"
+      kind="all"
+      initial-path="/upload"
+      :title="fileFolderTitle || '文件资源库'"
+      @cancel="displayFileFolder = false"
+    />
 
     <!-- 显示所有图片的对话框 -->
     <el-dialog
@@ -615,14 +536,14 @@ import {
   getAllImageList,
 } from "@/api/geekplus/articles";
 import QuillEditor from "@/components/QuillEditor";
-import FileManager from "@/views/admin/system/file/index.vue";
+import FilePickModal from "@/components/FilePickModal";
 import { isBlogSiteAdmin } from "@/utils/blogAdmin";
 
 export default {
   name: "Articles",
   components: {
     QuillEditor,
-    FileManager
+    FilePickModal
   },
   computed: {
     isBlogAdmin() {

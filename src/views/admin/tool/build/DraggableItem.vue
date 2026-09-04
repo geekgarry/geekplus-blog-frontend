@@ -47,11 +47,23 @@ const layouts = {
             </el-row>
     }
     return (
-      <el-col span={element.span}>
+      <el-col span={element.span} class="drawing-row-col">
         <el-row gutter={element.gutter} class={className}
           nativeOnClick={event => { activeItem(element); event.stopPropagation() }}>
           <span class="component-name">{element.componentName}</span>
-          <draggable list={element.children} animation={340} group="componentsGroup" class="drag-wrapper">
+          {/*
+            容器内拖拽：缩短 animation、固定 ghost，减轻行列放置时布局抖动
+          */}
+          <draggable
+            list={element.children}
+            animation={160}
+            group="componentsGroup"
+            class="drag-wrapper"
+            ghost-class="drawing-ghost"
+            chosen-class="drawing-chosen"
+            drag-class="drawing-drag"
+            empty-insert-threshold={12}
+          >
             {child}
           </draggable>
           {components.itemBtns.apply(this, arguments)}
