@@ -1,0 +1,217 @@
+/**
+ * OA 办公模块主题适配（随管理端 Layout 加载）
+ * - 页面外壳 / 卡片周边走 Token，黑白主题一致
+ * - BPMN 设计器与详情查看器画布强制保持浅色原色，避免暗色破坏流程图对比度
+ */
+
+/* ---------- 页面外壳 ---------- */
+.designer,
+.dashboard.app-container,
+.process-list.app-container,
+.my-processes,
+.my-tasks.app-container,
+.process-detail.app-container {
+  color: var(--text-color-2, #303133);
+}
+
+.designer {
+  /* 覆盖组件内硬编码浅灰底，统一走站点 wash */
+  background: var(--gp-page-wash, var(--background-color, #f5f7fa));
+}
+
+.my-processes {
+  padding: 12px;
+  min-height: calc(100vh - 84px);
+  box-sizing: border-box;
+  background: var(--gp-page-wash, var(--background-color, #f5f7fa));
+}
+
+/* BPMN：编辑器 / 查看器保持原色（浅底）；绝对铺满时仍强制浅色 */
+.designer .canvas-container,
+.designer .canvas-container.show-grid,
+.process-detail .bpmn-viewer {
+  background-color: #ffffff !important;
+  border-color: #e4e7ed !important;
+}
+
+/* 网格仍用浅色线，不随暗色主题变暗 */
+.designer .canvas-container.show-grid {
+  background-image:
+    linear-gradient(#edf1f7 1px, transparent 1px),
+    linear-gradient(90deg, #edf1f7 1px, transparent 1px) !important;
+  background-size: 20px 20px !important;
+}
+
+/* 画布内 diagram-js 视口不吃暗色 page 背景 */
+.designer .canvas-container .djs-container,
+.designer .canvas-container .djs-palette,
+.process-detail .bpmn-viewer .djs-container {
+  color: #333;
+}
+
+/* bpmn.io 品牌：body.hide-bpmn-brand 时隐藏（设计器开关写入） */
+body.hide-bpmn-brand .bjs-powered-by,
+body.hide-bpmn-brand .bjs-powered-by-lightbox {
+  display: none !important;
+}
+
+/* ---------- 暗色：设计器壳层（画布除外） ---------- */
+body[theme-mode='dark'] .designer .toolbar {
+  background: var(--background-origin, #1b1b1b);
+  border: 1px solid var(--border-color, #3a3a36);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+body[theme-mode='dark'] .designer .palette-item {
+  background: var(--background-2, #333330);
+  border-color: transparent;
+}
+
+body[theme-mode='dark'] .designer .palette-item:hover,
+body[theme-mode='dark'] .designer .template-item:hover {
+  background: rgba(64, 158, 255, 0.16);
+  border-color: var(--theme-color, #409eff);
+}
+
+body[theme-mode='dark'] .designer .palette-label,
+body[theme-mode='dark'] .designer .canvas-guide,
+body[theme-mode='dark'] .designer .empty-tip,
+body[theme-mode='dark'] .designer .tip-sub {
+  color: var(--text-color, #d2cec8);
+}
+
+body[theme-mode='dark'] .designer .bpmn-brand-switch__label {
+  color: var(--text-color, #d2cec8);
+}
+
+body[theme-mode='dark'] .designer .designer-side-mask {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+body[theme-mode='dark'] .designer .compact-panel-hint {
+  color: var(--text-color, #d2cec8);
+}
+
+/* ---------- 暗色：工作台 ---------- */
+body[theme-mode='dark'] .dashboard .stat-value,
+body[theme-mode='dark'] .dashboard .tpl-card h4 {
+  color: var(--text-color-2, #fbfafa);
+}
+
+body[theme-mode='dark'] .dashboard .stat-label,
+body[theme-mode='dark'] .dashboard .tpl-card p,
+body[theme-mode='dark'] .dashboard .stat-arrow {
+  color: var(--text-color, #d2cec8);
+}
+
+body[theme-mode='dark'] .dashboard .tpl-card {
+  border-color: var(--border-color, #3a3a36);
+  background: var(--background-origin, #1b1b1b);
+}
+
+body[theme-mode='dark'] .dashboard .tpl-card:hover {
+  border-color: var(--theme-color, #409eff);
+  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.22);
+}
+
+/* ---------- 暗色：审批详情时间线 / 摘要 ---------- */
+body[theme-mode='dark'] .process-detail .summary-banner {
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.14) 0%, rgba(64, 158, 255, 0.06) 100%);
+  border-color: rgba(64, 158, 255, 0.28);
+}
+
+body[theme-mode='dark'] .process-detail .summary-banner.status-completed {
+  background: linear-gradient(135deg, rgba(103, 194, 58, 0.16) 0%, rgba(103, 194, 58, 0.06) 100%);
+  border-color: rgba(103, 194, 58, 0.28);
+}
+
+body[theme-mode='dark'] .process-detail .summary-banner.status-rejected {
+  background: linear-gradient(135deg, rgba(245, 108, 108, 0.16) 0%, rgba(245, 108, 108, 0.06) 100%);
+  border-color: rgba(245, 108, 108, 0.28);
+}
+
+body[theme-mode='dark'] .process-detail .summary-banner.status-canceled {
+  background: linear-gradient(135deg, rgba(144, 147, 153, 0.18) 0%, rgba(144, 147, 153, 0.06) 100%);
+  border-color: var(--border-color, #3a3a36);
+}
+
+body[theme-mode='dark'] .process-detail .summary-title,
+body[theme-mode='dark'] .process-detail .comment-body,
+body[theme-mode='dark'] .process-detail .current-task-name,
+body[theme-mode='dark'] .process-detail .extra-pre {
+  color: var(--text-color-2, #fbfafa);
+}
+
+body[theme-mode='dark'] .process-detail .summary-meta,
+body[theme-mode='dark'] .process-detail .progress-label,
+body[theme-mode='dark'] .process-detail .current-task p {
+  color: var(--text-color, #d2cec8);
+}
+
+body[theme-mode='dark'] .process-detail .timeline-card {
+  background: var(--background-origin, #1b1b1b);
+  border-color: var(--border-color, #3a3a36);
+}
+
+body[theme-mode='dark'] .process-detail .timeline-card.card-reject {
+  background: rgba(245, 108, 108, 0.1);
+  border-color: rgba(245, 108, 108, 0.35);
+}
+
+body[theme-mode='dark'] .process-detail .timeline-card.card-pass {
+  background: rgba(103, 194, 58, 0.1);
+  border-color: rgba(103, 194, 58, 0.35);
+}
+
+body[theme-mode='dark'] .process-detail .timeline-card.card-active {
+  background: rgba(64, 158, 255, 0.12);
+  border-color: rgba(64, 158, 255, 0.4);
+  box-shadow: none;
+}
+
+body[theme-mode='dark'] .process-detail .timeline-card.card-start,
+body[theme-mode='dark'] .process-detail .timeline-card.card-end {
+  background: var(--background-2, #333330);
+}
+
+body[theme-mode='dark'] .process-detail .timeline-comment {
+  background: var(--background-1, #2a2a28);
+}
+
+body[theme-mode='dark'] .process-detail .timeline-comment.reject {
+  background: rgba(245, 108, 108, 0.12);
+}
+
+body[theme-mode='dark'] .process-detail .current-task {
+  background: rgba(64, 158, 255, 0.08);
+  border-color: var(--border-color, #3a3a36);
+}
+
+body[theme-mode='dark'] .process-detail .timeline-attachments,
+body[theme-mode='dark'] .process-detail .history-step {
+  border-color: var(--border-color, #3a3a36);
+}
+
+body[theme-mode='dark'] .process-detail .extra-raw .el-collapse-item__wrap {
+  background: var(--background-1, #2a2a28);
+}
+
+/* ---------- 暗色：附件 / 我的申请预览块 ---------- */
+body[theme-mode='dark'] .attach-row {
+  background: var(--background-2, #333330);
+  border-color: var(--border-color, #3a3a36);
+}
+
+body[theme-mode='dark'] .preview-image-wrap,
+body[theme-mode='dark'] .payload-preview {
+  background: var(--background-1, #2a2a28);
+}
+
+body[theme-mode='dark'] .attach-thumb {
+  border-color: var(--border-color, #3a3a36);
+}
+
+/* 列表无数据：给空状态留出高度，避免卡片塌成一条线 */
+.oa-list-body {
+  min-height: 240px;
+}

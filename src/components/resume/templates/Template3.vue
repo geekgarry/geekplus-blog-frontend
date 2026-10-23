@@ -1,10 +1,16 @@
 <template>
+  <!-- 表格样式 -->
   <div class="table-resume-tpl bg-white text-black font-serif w-full max-w-[800px] min-h-[1131px] mx-auto p-8 shadow-lg print:shadow-none print:m-0">
     <h1 class="text-3xl font-bold text-center mb-6 tracking-widest">个人简历</h1>
 
     <div class="mb-6">
-      <h2 class="table-section-title text-lg tracking-widest">基础信息</h2>
+      <!-- 把标题放在表格里面，而不是在外面 -->
       <table class="w-full text-sm">
+        <thead>
+          <tr>
+            <th colspan="5" class="p-3 text-center table-section-title text-md tracking-widest">基础信息</th>
+          </tr>
+        </thead>
         <tbody>
           <tr>
             <td class="p-3 font-bold bg-gray-100 w-[18%] text-center">姓名</td>
@@ -51,8 +57,12 @@
     </div>
 
     <div v-if="data.basics.summary" class="mb-6">
-      <h2 class="table-section-title text-lg tracking-widest">个人介绍</h2>
       <table class="w-full text-sm">
+        <thead>
+          <tr>
+            <th colspan="5" class="p-3 text-center table-section-title text-md tracking-widest">个人介绍</th>
+          </tr>
+        </thead>
         <tbody>
           <tr>
             <td class="p-3 whitespace-pre-wrap leading-relaxed">{{ data.basics.summary }}</td>
@@ -62,8 +72,12 @@
     </div>
 
     <div v-if="data.education.length" class="mb-6">
-      <h2 class="table-section-title text-lg tracking-widest">教育经历</h2>
       <table class="w-full text-sm">
+        <thead>
+          <tr>
+            <th colspan="5" class="p-3 text-center table-section-title text-md tracking-widest">教育经历</th>
+          </tr>
+        </thead>
         <tbody>
           <tr v-for="edu in data.education" :key="edu.id">
             <td class="p-3 w-1/3">{{ edu.year }}</td>
@@ -75,8 +89,12 @@
     </div>
 
     <div v-if="hasJobIntention" class="mb-6">
-      <h2 class="table-section-title text-lg tracking-widest">求职意向</h2>
       <table class="w-full text-sm">
+        <thead>
+          <tr>
+            <th colspan="5" class="p-3 text-center table-section-title text-md tracking-widest">求职意向</th>
+          </tr>
+        </thead>
         <tbody>
           <tr v-if="data.jobIntention.targetJob">
             <td class="p-3 font-bold bg-gray-100 w-24 text-center">目标职业</td>
@@ -95,8 +113,12 @@
     </div>
 
     <div v-if="visibleWork.length" class="mb-6">
-      <h2 class="table-section-title text-lg tracking-widest">工作经历</h2>
       <table class="w-full text-sm">
+        <thead>
+          <tr>
+            <th colspan="5" class="p-3 text-center table-section-title text-md tracking-widest">工作经历</th>
+          </tr>
+        </thead>
         <tbody>
           <template v-for="w in visibleWork">
           <tr :key="w.id+'-1'">
@@ -113,8 +135,12 @@
     </div>
 
     <div v-if="visibleProjects.length" class="mb-6">
-      <h2 class="table-section-title text-lg tracking-widest">项目经验</h2>
       <table class="w-full text-sm">
+        <thead>
+          <tr>
+            <th colspan="5" class="p-3 text-center table-section-title text-md tracking-widest">项目经验</th>
+          </tr>
+        </thead>
         <tbody>
           <tr v-for="p in visibleProjects" :key="p.id">
             <td class="p-3 w-1/4 align-top">{{ p.duration }}</td>
@@ -131,8 +157,12 @@
     </div>
 
     <div v-if="data.skills || data.hobbies" class="mb-6">
-      <h2 class="table-section-title text-lg tracking-widest">附加信息</h2>
       <table class="w-full text-sm">
+        <thead>
+          <tr>
+            <th colspan="5" class="p-3 text-center table-section-title text-md tracking-widest">附加信息</th>
+          </tr>
+        </thead>
         <tbody>
           <tr v-if="data.skills">
             <td class="p-3 font-bold bg-gray-100 w-24 text-center">专业技能</td>
@@ -147,8 +177,12 @@
     </div>
 
     <div v-if="visibleAwards.length" class="mb-6">
-      <h2 class="table-section-title text-lg tracking-widest">获奖情况</h2>
       <table class="w-full text-sm">
+        <thead>
+          <tr>
+            <th colspan="5" class="p-3 text-center table-section-title text-md tracking-widest">获奖情况</th>
+          </tr>
+        </thead>
         <tbody>
           <tr v-for="a in visibleAwards" :key="a.id">
             <td class="p-3 w-1/4 align-top">{{ a.date }}</td>
@@ -162,8 +196,12 @@
     </div>
 
     <div v-if="visibleCertifications.length" class="mb-6">
-      <h2 class="table-section-title text-lg tracking-widest">资格证书</h2>
       <table class="w-full text-sm">
+        <thead>
+          <tr>
+            <th colspan="5" class="p-3 text-center table-section-title text-md tracking-widest">资格证书</th>
+          </tr>
+        </thead>
         <tbody>
           <tr v-for="c in visibleCertifications" :key="c.id">
             <td class="p-3 w-1/4 align-top">{{ c.date }}</td>
@@ -177,8 +215,12 @@
     </div>
 
     <div v-if="visiblePortfolio.length" class="mb-6">
-      <h2 class="table-section-title text-lg tracking-widest">个人作品</h2>
       <table class="w-full text-sm">
+        <thead>
+          <tr>
+            <th colspan="5" class="p-3 text-center table-section-title text-md tracking-widest">个人作品</th>
+          </tr>
+        </thead>
         <tbody>
           <tr v-for="p in visiblePortfolio" :key="p.id">
             <td class="p-3 w-1/4 align-top">{{ p.title }}</td>

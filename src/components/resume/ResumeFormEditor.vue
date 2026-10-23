@@ -1199,6 +1199,21 @@ export default {
   padding: 12px 16px 16px;
 }
 
+/* 输入框之间增加垂直间距，避免上下紧贴 */
+.resume-form-editor /deep/ .el-row .el-col {
+  margin-bottom: 10px;
+}
+
+.resume-form-editor /deep/ .el-row .el-col:last-child {
+  margin-bottom: 0;
+}
+
+/* textarea 允许拖拽调整高度 */
+.resume-form-editor /deep/ .el-textarea__inner {
+  resize: vertical;
+  min-height: 40px;
+}
+
 .section-title {
   font-size: 15px;
   font-weight: 700;

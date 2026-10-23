@@ -1,4 +1,5 @@
 <template>
+  <!-- 商务蓝调 -->
   <div class="bg-white text-gray-800 font-sans w-full max-w-[800px] min-h-[800px] md:min-h-[1131px] mx-auto shadow-lg print:shadow-none print:m-0 break-words overflow-hidden">
     <header class="bg-[#1e3a5f] text-white px-6 md:px-10 py-7 flex items-center gap-5">
       <div class="flex-1 min-w-0">

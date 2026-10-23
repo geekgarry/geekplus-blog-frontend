@@ -1,4 +1,5 @@
 <template>
+  <!-- 斜切标签 -->
   <div class="tpl9 bg-white text-gray-800 font-sans w-full max-w-[800px] min-h-[800px] md:min-h-[1131px] mx-auto shadow-lg print:shadow-none print:m-0 break-words overflow-hidden">
     <div class="tpl9-banner">
       <div class="tpl9-card-wrap">

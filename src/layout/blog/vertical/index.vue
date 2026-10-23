@@ -193,7 +193,7 @@
       </div>
     </div>
 
-    <el-dialog append-to-body :visible.sync="showLoginSignup" :center="true" :close-on-click-modal="false">
+    <el-dialog append-to-body :fullscreen="loginDialogWidth === '100%'" :width="loginDialogWidth" :visible.sync="showLoginSignup" :center="true" :close-on-click-modal="false">
       <login-signup></login-signup>
     </el-dialog>
     <realtime-chat-entry :fab="false" :value="isChatOpen" />
@@ -399,6 +399,16 @@ export default {
     },
     showLoginDialog() {
       return this.$store.getters.showLogin;
+    },
+    loginDialogWidth() {
+      if (this.windowWidth < 576) {
+        return '100%';
+      } else if (this.windowWidth < 768) {
+        return '75%';
+      } else {
+        return '50%';
+      }
+     //return this.windowWidth < 768 ? '100%' : '50%';
     }
   },
   methods: {

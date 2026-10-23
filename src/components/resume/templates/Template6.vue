@@ -1,4 +1,5 @@
 <template>
+  <!-- 清新卡片 -->
   <div class="bg-[#c8d6f0] text-gray-800 font-sans w-full max-w-[800px] min-h-[800px] md:min-h-[1131px] mx-auto shadow-lg print:shadow-none print:m-0 break-words pb-1">
     <div class="px-5 md:px-8 pt-6 pb-3 flex items-start gap-4 relative overflow-hidden">
       <div class="absolute right-4 top-8 text-5xl md:text-7xl font-black text-white/40 tracking-widest select-none pointer-events-none">

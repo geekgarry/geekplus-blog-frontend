@@ -159,6 +159,18 @@ export default {
         this.saving = true;
         updateUserProfile(this.form)
           .then((response) => {
+            const forceRelogin = !!(response && response.forceRelogin);
+            const usernameChanged =
+              String(this.form.username || "") !==
+              String((this.user && this.user.username) || "");
+            if (forceRelogin || usernameChanged) {
+              this.msgSuccess(response.msg || "用户名已修改，请重新登录");
+              const redirect = this.$route.fullPath;
+              return this.$store.dispatch("user/logout").then(() => {
+                this.$router.push({ path: "/login", query: { redirect } });
+              });
+            }
+            // 基本资料保存后仅同步会话展示字段，无需重新登录（改密才需要）
             this.msgSuccess(response.msg || "修改成功");
             this.$store.commit("user/SET_NICKNAME", this.form.nickname);
             this.$store.commit("user/SET_USERNAME", this.form.username);

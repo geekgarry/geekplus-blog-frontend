@@ -1,6 +1,8 @@
 <template>
+<!-- 简约通用 -->
 <div class="p-6 md:p-10 bg-white text-gray-800 font-sans w-full max-w-[800px] min-h-[800px] md:min-h-[1131px] mx-auto shadow-lg print:shadow-none print:m-0 break-words">
-      <header class="border-b-2 border-gray-800 pb-6 mb-6 flex flex-row justify-between items-center text-left">
+      <!-- 页眉底部分割线：偏黑实线，与正文区块分开 -->
+      <header class="t1-header pb-4 mb-5 flex flex-row justify-between items-center text-left">
         <div class="flex-1">
           <h1 class="text-3xl md:text-4xl font-bold mb-3 tracking-wider">{{ data.basics.name || '姓名' }}</h1>
           <div class="text-xs md:text-sm text-gray-600 flex flex-wrap justify-start gap-x-4 gap-y-1">
@@ -16,12 +18,12 @@
           <div class="ml-4 md:ml-6 shrink-0">
             <img :src="data.basics.avatar" alt="Avatar" class="w-20 h-28 md:w-24 md:h-32 object-cover border border-gray-200 shadow-sm" />
           </div>
-</div>
+        </div>
       </header>
-
+      <!-- 个人总结 -->
       <div v-if="data.basics.summary">
         <section class="mb-6">
-          <h2 class="text-lg font-bold border-b border-gray-300 mb-3 pb-1 flex items-center">
+          <h2 class="t1-section-title text-lg font-bold mb-3 pb-1 flex items-center">
             <span class="bg-gray-800 w-1.5 h-4 mr-2 inline-block"></span>
             个人总结
           </h2>
@@ -31,7 +33,7 @@
 
       <div v-if="data.education.length">
         <section class="mb-6">
-          <h2 class="text-lg font-bold border-b border-gray-300 mb-3 pb-1 flex items-center">
+          <h2 class="t1-section-title text-lg font-bold mb-3 pb-1 flex items-center">
             <span class="bg-gray-800 w-1.5 h-4 mr-2 inline-block"></span>
             教育经历
           </h2>
@@ -51,7 +53,7 @@
 
       <div v-if="hasJobIntention">
         <section class="mb-6">
-          <h2 class="text-lg font-bold border-b border-gray-300 mb-3 pb-1 flex items-center">
+          <h2 class="t1-section-title text-lg font-bold mb-3 pb-1 flex items-center">
             <span class="bg-gray-800 w-1.5 h-4 mr-2 inline-block"></span>
             求职意向
           </h2>
@@ -65,7 +67,7 @@
 
       <div v-if="visibleWork.length">
         <section class="mb-6">
-          <h2 class="text-lg font-bold border-b border-gray-300 mb-3 pb-1 flex items-center">
+          <h2 class="t1-section-title text-lg font-bold mb-3 pb-1 flex items-center">
             <span class="bg-gray-800 w-1.5 h-4 mr-2 inline-block"></span>
             工作经历
           </h2>
@@ -77,7 +79,8 @@
                   <span class="text-gray-600 font-medium text-sm">{{ w.duration }}</span>
                 </div>
                 <div class="font-medium text-gray-700 mb-2">职位：{{ w.position }}</div>
-                <p class="text-gray-600 whitespace-pre-wrap leading-relaxed pl-4 border-l-2 border-gray-200">{{ w.description }}</p>
+                <!-- 工作描述：左侧引用块竖线，与项目经验一致 -->
+                <p class="t1-quote text-gray-600 whitespace-pre-wrap leading-relaxed">{{ w.description }}</p>
               </div>
             </div>
           </div>
@@ -86,7 +89,7 @@
 
       <div v-if="visibleProjects.length">
         <section class="mb-6">
-          <h2 class="text-lg font-bold border-b border-gray-300 mb-3 pb-1 flex items-center">
+          <h2 class="t1-section-title text-lg font-bold mb-3 pb-1 flex items-center">
             <span class="bg-gray-800 w-1.5 h-4 mr-2 inline-block"></span>
             项目经验
           </h2>
@@ -101,7 +104,8 @@
                   <span v-if="p.role"><span class="font-medium">角色：</span>{{ p.role }}</span>
                   <span v-if="p.technologies"><span class="font-medium">技术栈：</span>{{ p.technologies }}</span>
                 </div>
-                <p class="text-gray-600 whitespace-pre-wrap leading-relaxed pl-4 border-l-2 border-gray-200">{{ p.description }}</p>
+                <!-- 项目描述：blockquote 风格左边竖线 -->
+                <p class="t1-quote text-gray-600 whitespace-pre-wrap leading-relaxed">{{ p.description }}</p>
               </div>
             </div>
           </div>
@@ -110,7 +114,7 @@
 
       <div v-if="data.skills || data.hobbies">
         <section class="mb-6">
-          <h2 class="text-lg font-bold border-b border-gray-300 mb-3 pb-1 flex items-center">
+          <h2 class="t1-section-title text-lg font-bold mb-3 pb-1 flex items-center">
             <span class="bg-gray-800 w-1.5 h-4 mr-2 inline-block"></span>
             其他信息
           </h2>
@@ -128,7 +132,7 @@
       
       <div v-if="visibleAwards.length">
         <section class="mb-6">
-          <h2 class="text-lg font-bold border-b border-gray-300 mb-3 pb-1 flex items-center">
+          <h2 class="t1-section-title text-lg font-bold mb-3 pb-1 flex items-center">
             <span class="bg-gray-800 w-1.5 h-4 mr-2 inline-block"></span>
             获奖情况
           </h2>
@@ -149,7 +153,7 @@
       
       <div v-if="visibleCertifications.length">
         <section class="mb-6">
-          <h2 class="text-lg font-bold border-b border-gray-300 mb-3 pb-1 flex items-center">
+          <h2 class="t1-section-title text-lg font-bold mb-3 pb-1 flex items-center">
             <span class="bg-gray-800 w-1.5 h-4 mr-2 inline-block"></span>
             资格证书
           </h2>
@@ -170,7 +174,7 @@
       
       <div v-if="visiblePortfolio.length">
         <section class="mb-6">
-          <h2 class="text-lg font-bold border-b border-gray-300 mb-3 pb-1 flex items-center">
+          <h2 class="t1-section-title text-lg font-bold mb-3 pb-1 flex items-center">
             <span class="bg-gray-800 w-1.5 h-4 mr-2 inline-block"></span>
             作品集
           </h2>
@@ -204,3 +208,21 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+/* 页眉底部偏黑横线：比原先 Tailwind gray-800 更实，打印时也保留 */
+.t1-header {
+  border-bottom: 2px solid #1f1f1f;
+}
+
+/* 各分节标题（个人总结、工作经历等）下方分割线，与页眉同色系但略细 */
+.t1-section-title {
+  border-bottom: 1.5px solid #d4d4d4;
+}
+
+/* 工作经历 / 项目经验描述：HTML 引用块式左边竖线 */
+.t1-quote {
+  padding-left: 12px;
+  border-left: 1.5px solid #e4e4e4;
+}
+</style>

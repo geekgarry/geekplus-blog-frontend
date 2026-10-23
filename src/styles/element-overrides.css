@@ -756,8 +756,8 @@ body[theme-mode='dark'] .el-tooltip__popper.is-dark[x-placement^='right'] .poppe
  * 7. 复选 / 单选（修复误用 --theme-color 作未选中底色）
  * ============================================================ */
 .el-checkbox__inner {
-  background-color: var(--background-origin, #fff) !important;
-  border: 1px solid var(--border-color-2, #dcdfe6) !important;
+  background-color: var(--background-origin, #fff);
+  border: 1px solid var(--border-color-2, #dcdfe6);
 }
 
 .el-checkbox__inner:hover {

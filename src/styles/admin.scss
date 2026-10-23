@@ -6,6 +6,8 @@
 @import './mixin.scss';
 @import './element-ui.scss';
 @import './btn.scss';
+/* OA 办公：暗色外壳 + BPMN 画布保持浅色原色 */
+@import './oa-theme.css';
 
 .no-padding {
   padding: 0px !important;

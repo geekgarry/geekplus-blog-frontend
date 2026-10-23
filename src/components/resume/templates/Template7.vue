@@ -1,4 +1,5 @@
 <template>
+  <!-- 图标专业 -->
   <div class="bg-white text-gray-800 font-sans w-full max-w-[800px] min-h-[800px] md:min-h-[1131px] mx-auto shadow-lg print:shadow-none print:m-0 break-words relative overflow-hidden">
     <div class="absolute right-0 top-0 w-10 md:w-12 bg-[#2563eb] text-white text-center py-3 text-xs font-bold tracking-widest writing-vertical-rl" :style="{ writingMode: 'vertical-rl', width: 'fit-content' }">
       简历

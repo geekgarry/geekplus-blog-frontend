@@ -31,6 +31,15 @@ const port = process.env.port || process.env.npm_config_port || 8080; // dev por
 /** 开发环境 */
 const DEV = process.env.NODE_ENV !== "production";
 
+/** 离线 Mock：须显式开启（非 none）；见 npm run dev:mock、docs/mock-offline.md */
+const useMock =
+  process.env.MOCK != null &&
+  process.env.MOCK !== '' &&
+  process.env.MOCK !== 'none' &&
+  process.env.HTTP_MOCK != null &&
+  process.env.HTTP_MOCK !== '' &&
+  process.env.HTTP_MOCK !== 'none'
+
 module.exports = {
   publicPath: process.env.NODE_ENV === "production" ? "/" : "/",
   outputDir: "dist",
@@ -51,37 +60,45 @@ module.exports = {
     port: port,
     open: false,
     allowedHosts: "all",
-    proxy: {
-      // 本地联调：VUE_APP_PROXY_TARGET 指向本机 API（见 .env.development）。
-      // secure:false 允许代理到 https://127.0.0.1 自签证书。
-      [process.env.VUE_APP_BASE_API]: {
-        target: process.env.VUE_APP_PROXY_TARGET || `https://127.0.0.1:8443`,
-        changeOrigin: true,
-        secure: false,
-        ws: true,
-        pathRewrite: {
-          ["^" + process.env.VUE_APP_BASE_API]: "",
-        },
-      },
-      "/profile": {
-        target: process.env.VUE_APP_PROXY_TARGET || `https://127.0.0.1:8443`,
-        changeOrigin: true,
-        secure: false,
-        pathRewrite: {
-          "^/profile": "/profile",
-        },
-      },
-      //配置多个代理服务器时，要把process.env.VUE_APP_BASE_API设置为 /,
-      //再设置不同代理服务器的地址，之后在写接口时，带上服务器的前缀地址，
-      //如：/api，在写这个服务器的接口时要带上/api/*，后面匹配上你的服务器的URL
-      // "/api": {
-      //   target: "api地址",
-      //   changeOrigin: true,
-      //   pathRewrite: {
-      //     "^/api": ''
-      //   }
-      // }
+    // Mock 离线：挂载 mock/ 中间件；开启时不代理真实后端
+    // webpack-dev-server v4+ 已移除 before，改用 setupMiddlewares
+    setupMiddlewares: (middlewares, devServer) => {
+      if (useMock && devServer && devServer.app) {
+        const app = devServer.app;
+        try {
+          const express = require("express");
+          app.use(express.json({ limit: "2mb" }));
+          app.use(express.urlencoded({ extended: true }));
+        } catch (e) {
+          /* express 随 webpack-dev-server 提供 */
+        }
+        app.use(require("./mock/createMiddleware")());
+      }
+      return middlewares;
     },
+    proxy: useMock
+      ? {}
+      : {
+          // 本地联调：VUE_APP_PROXY_TARGET 指向本机 API（见 .env.development）。
+          // secure:false 允许代理到 https://127.0.0.1 自签证书。
+          [process.env.VUE_APP_BASE_API]: {
+            target: process.env.VUE_APP_PROXY_TARGET || `https://127.0.0.1:8443`,
+            changeOrigin: true,
+            secure: false,
+            ws: true,
+            pathRewrite: {
+              ["^" + process.env.VUE_APP_BASE_API]: "",
+            },
+          },
+          "/profile": {
+            target: process.env.VUE_APP_PROXY_TARGET || `https://127.0.0.1:8443`,
+            changeOrigin: true,
+            secure: false,
+            pathRewrite: {
+              "^/profile": "/profile",
+            },
+          },
+        },
     client: {
       // webSocketURL: 'ws://0.0.0.0:8898/ws',
       progress: true,

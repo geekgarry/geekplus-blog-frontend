@@ -40,6 +40,8 @@ module.exports = {
         }
       }
     ],
+    // Vue 2 项目应关闭此规则
+    "vue/no-v-for-template-key-on-child": "off",
     "vue/singleline-html-element-content-newline": "off",
     "vue/multiline-html-element-content-newline":"off",
     "vue/name-property-casing": ["error", "PascalCase"],

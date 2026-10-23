@@ -1,4 +1,5 @@
 <template>
+  <!-- PPT风格 -->
   <div class="bg-slate-900 text-white font-sans w-full overflow-hidden max-w-[960px] mx-auto p-10 shadow-2xl print:shadow-none print:m-0 relative flex flex-col">
     <div class="absolute top-0 right-[-5%] w-[50%] h-full bg-gradient-to-bl from-blue-600/30 to-purple-600/10 transform rotate-12 skew-x-12 pointer-events-none"></div>
     <div class="absolute bottom-[-5%] left-[-10%] w-[40%] h-[60%] bg-gradient-to-tr from-teal-500/20 to-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>

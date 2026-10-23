@@ -24,6 +24,8 @@
 
 配图在 [`assets/`](./assets/)。第一版合集仍保留在上一级：`docs/极客普拉斯博客前端架构实践-双布局导航与网络优化.md`。
 
+**无后端 Mock**：见上级 [docs/mock-offline.md](../mock-offline.md)（`npm run dev:mock`）。
+
 ---
 
 ## 后端文档（已迁出本仓）

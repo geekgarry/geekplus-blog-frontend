@@ -110,10 +110,13 @@ browser
 # 依赖
 npm install
 
-# 本地开发（默认读取 .env.development）
+# 本地开发（默认读取 .env.development，代理真实 API）
 npm run serve
 # 或
 npm run dev
+
+# 无后端 Mock 演示（管理端登录等，见 docs/mock-offline.md）
+npm run dev:mock
 
 # 生产构建
 npm run build
@@ -133,8 +136,10 @@ Node 版本建议与团队现网一致（Vue CLI 5 / webpack 体系）。首次�
 | 变量 | 含义 |
 |------|------|
 | `VUE_APP_BASE_API` | axios `baseURL`，开发多为 `/dev-api`，生产多为 `/pro-api` |
+| `MOCK` / `HTTP_MOCK` | 均非 `none` 时启用 `mock/` 离线接口（`npm run dev:mock`）；联调保持 `none` |
 
-`vue.config.js` 将 `VUE_APP_BASE_API` 代理到后端（如 `https://api.xxx.xxx:8443`），并去掉前缀。`/profile` 等静态上传路径可另配代理。
+`vue.config.js` 将 `VUE_APP_BASE_API` 代理到后端（如 `https://api.xxx.xxx:8443`），并去掉前缀。`/profile` 等静态上传路径可另配代理。  
+**Mock 开启时关闭真实代理**。手册：[docs/mock-offline.md](./docs/mock-offline.md)。
 
 ---
 
@@ -150,7 +155,8 @@ Node 版本建议与团队现网一致（Vue CLI 5 / webpack 体系）。首次�
 
 ## 文档与实践文章
 
-推荐阅读入口：[docs/v2/README.md](./docs/v2/README.md)
+推荐阅读入口：[docs/v2/README.md](./docs/v2/README.md)  
+无后端演示：[docs/mock-offline.md](./docs/mock-offline.md)
 
 | 篇 | 主题 |
 |----|------|
@@ -172,6 +178,33 @@ Node 版本建议与团队现网一致（Vue CLI 5 / webpack 体系）。首次�
 ## 变更记录（重点优化）
 
 > **约定**：以后每一次**重点优化 / 架构改动 / 体验向修复**，必须在本小节**置顶追加**一条（日期 + 摘要 + 关键路径）。日常文案微调可不记。
+
+### 2026-09-08
+
+- **OA 文档**：去掉方式分两种——逻辑去掉（代码保留、启动不用、不建表）与物理删除；见 `docs/oa/03`。
+  - 文档：`docs/oa/02-模块化拆解与独立定制.md`、`docs/oa/03-裁剪与去除操作手册.md`（索引 `docs/oa/README.md`）
+  - 后端对照：`GeekPlus-Blog-API/docs/19-OA-Flowable.md`
+
+### 2026-09-07
+
+- **OA BPMN 设计器高度**：桌面与窗口对齐（`100vh - 84` 三栏填满）；窄屏随内容撑开，并按 `.djs-palette` 实测抬高 CSS 变量保证左下工具栏完整；`app-main` 仅窄屏可滚。
+  - 代码：`src/views/admin/oa/designer/index.vue`（`ensurePaletteFitsCanvas`）
+  - 文档：`docs/oa/01-BPMN设计器布局与画布高度.md`
+- **OA 暗色主题适配**：工作台/流程/审批详情/设计器外壳走 Token；BPMN 画布与详情查看器强制保持浅色原色；工具栏「编辑器品牌」开关默认隐藏并持久化，详情页 Viewer 共用。设计器 `< md`（&lt;992px）时节点/属性收起为左右滑出抽屉。
+  - 代码：`src/styles/oa-theme.css`、`src/utils/oaBpmnBrand.js`、`src/views/admin/oa/**`
+  - 文档：`docs/oa/01-BPMN设计器布局与画布高度.md`
+- **OA 工作台响应式**：统计卡可点跳转待办/已办/我的申请/已发布；栅格与模板列随屏宽断行。
+  - 代码：`src/views/admin/oa/workbench/index.vue`、`task/index.vue`、`process/index.vue`（`?tab=`）
+
+### 2026-09-06
+
+- **OA Flowable 管理端模块**：从 oa-flowable-demo 移植流程工作台、BPMN 设计器、流程管理、待办与我的申请；API 走 `/oa/designer`、`/oa/files`，鉴权复用 `Plus-Token` 与 `@/utils/request`；用户/角色选人对接 `listUser`、`listAllRole`；隐藏路由支持编辑流程与审批详情。  
+  - 代码：`src/api/oa/`、`src/views/admin/oa/`、`src/router/local-routes.js`、`bpmn-js`  
+  - Mock：`mock/data/menus.js` 增加 OA 五页菜单  
+  - 打开：`/oa/workbench`（侧栏 **OA办公 → OA工作台**）
+- **离线 Mock 模块**：无后端可登录管理端；种子对齐 Blog-API `sql/geekplus.sql`，与 plus-admin-antd 同源同步。  
+  - 代码：`mock/`、`vue.config.js`（`dev:mock`）、`.env.mock`  
+  - 文档：`docs/mock-offline.md`；规则：`.cursor/rules/sync-mock-seed.mdc`
 
 ### 2026-09-02
 
@@ -388,7 +421,8 @@ Node 版本建议与团队现网一致（Vue CLI 5 / webpack 体系）。首次�
 
 | 命令 | 说明 |
 |------|------|
-| `npm run serve` / `dev` | 开发服务器 |
+| `npm run serve` / `dev` | 开发服务器（代理真实 API） |
+| `npm run dev:mock` | 无后端 Mock 演示 |
 | `npm run build` | 生产构建 |
 | `npm run lint` | ESLint |
 
